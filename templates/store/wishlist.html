@@ -1,0 +1,16 @@
+{% extends 'base.html' %}
+
+{% block title %}Danh sách yêu thích - QHUN22 Mobile{% endblock %}
+
+{% block content %}
+<div class="qh-wishlist-page">
+    <h1 class="qh-page-title">Danh sách yêu thích</h1>
+    
+    <div class="qh-card" style="padding: 40px; text-align: center;">
+        <p style="color: var(--qh-text-light); margin-bottom: 16px;">Chưa có sản phẩm yêu thích</p>
+        <a href="{% url 'store:home' %}" class="qh-btn qh-btn-primary">
+            Khám phá sản phẩm
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+
+{% block title %}Tìm kiếm - QHUN22 Mobile{% endblock %}
+
+{% block content %}
+<div class="qh-search-page">
+    <h1 class="qh-page-title">Kết quả tìm kiếm</h1>
+    
+    {% if query %}
+        <p style="color: var(--qh-text-light); margin-bottom: 24px;">
+            Từ khóa: <strong>{{ query }}</strong>
+        </p>
+        
+        <div class="qh-card" style="padding: 40px; text-align: center;">
+            <p style="color: var(--qh-text-light);">Đang tìm kiếm sản phẩm...</p>
+        </div>
+    {% else %}
+        <div class="qh-card" style="padding: 40px; text-align: center;">
+            <p style="color: var(--qh-text-light);">Vui lòng nhập từ khóa tìm kiếm</p>
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

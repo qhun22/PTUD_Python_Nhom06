@@ -1,0 +1,435 @@
+/*
+ * QHUN22 Mobile - Custom Styles
+ * Màu sắc thương hiệu: #A9CCF0 (xanh pastel), #D3BAFF (tím pastel)
+ * Font: Signika
+ */
+
+/* Import Google Font */
+@import url('https://fonts.googleapis.com/css2?family=Signika:wght@300;400;500;600;700&display=swap');
+
+/* CSS Variables - Brand Colors */
+:root {
+    --qh-primary: #A9CCF0;
+    --qh-secondary: #D3BAFF;
+    --qh-primary-dark: #8BB8E0;
+    --qh-secondary-dark: #C0A8E8;
+    --qh-text: #333333;
+    --qh-text-light: #666666;
+    --qh-bg: #FAFAFA;
+    --qh-white: #FFFFFF;
+    --qh-border: #E0E0E0;
+    --qh-shadow: rgba(0, 0, 0, 0.08);
+    --qh-radius: 12px;
+    --qh-radius-sm: 8px;
+    --qh-radius-lg: 16px;
+}
+
+/* Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Signika', sans-serif;
+    background-color: var(--qh-bg);
+    color: var(--qh-text);
+    line-height: 1.6;
+}
+
+a {
+    text-decoration: none;
+    color: inherit;
+}
+
+/* ==================== HEADER STYLES ==================== */
+.qh-header {
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    background: var(--qh-white);
+    box-shadow: 0 2px 12px var(--qh-shadow);
+}
+
+.qh-header-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+.qh-header-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 80px;
+    gap: 24px;
+}
+
+/* Logo */
+.qh-logo {
+    flex-shrink: 0;
+}
+
+.qh-logo-img {
+    height: 48px;
+    width: auto;
+    object-fit: contain;
+}
+
+/* Search Bar */
+.qh-search {
+    flex: 1;
+    max-width: 600px;
+}
+
+.qh-search-form {
+    width: 100%;
+}
+
+.qh-search-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 20px;
+    border: 2px solid var(--qh-border);
+    border-radius: var(--qh-radius-lg);
+    font-family: 'Signika', sans-serif;
+    font-size: 15px;
+    background: var(--qh-bg);
+    transition: all 0.3s ease;
+}
+
+.qh-search-input:focus {
+    outline: none;
+    border-color: var(--qh-primary);
+    background: var(--qh-white);
+    box-shadow: 0 4px 12px rgba(169, 204, 240, 0.3);
+}
+
+.qh-search-input::placeholder {
+    color: #999;
+}
+
+/* Header Icons */
+.qh-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.qh-header-icon {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 16px;
+    border-radius: var(--qh-radius);
+    color: var(--qh-text-light);
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+.qh-header-icon:hover {
+    /* Không có background, chỉ nổi nhẹ lên */
+    transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(169, 204, 240, 0.3);
+}
+
+.qh-icon-circle {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    background: var(--qh-bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+/* Icon circle giữ nguyên màu nền khi hover */
+
+.qh-icon-svg {
+    width: 22px;
+    height: 22px;
+    color: var(--qh-text-light);
+    transition: all 0.3s ease;
+}
+
+.qh-header-icon:hover .qh-icon-svg {
+    color: var(--qh-text);
+}
+
+.qh-icon-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background: linear-gradient(135deg, var(--qh-secondary) 0%, var(--qh-secondary-dark) 100%);
+    color: var(--qh-text);
+    font-size: 11px;
+    font-weight: 600;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qh-icon-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    min-width: 70px;
+}
+
+.qh-icon-label {
+    font-size: 11px;
+    color: #999;
+}
+
+.qh-icon-title {
+    font-size: 14px;
+    font-weight: 500;
+    white-space: nowrap;
+}
+
+/* ==================== BUTTON STYLES ==================== */
+.qh-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 24px;
+    border-radius: var(--qh-radius);
+    font-family: 'Signika', sans-serif;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.qh-btn-primary {
+    background: linear-gradient(135deg, var(--qh-primary) 0%, var(--qh-primary-dark) 100%);
+    color: var(--qh-text);
+}
+
+.qh-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(169, 204, 240, 0.4);
+}
+
+.qh-btn-secondary {
+    background: linear-gradient(135deg, var(--qh-secondary) 0%, var(--qh-secondary-dark) 100%);
+    color: var(--qh-text);
+}
+
+.qh-btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(211, 186, 255, 0.4);
+}
+
+/* ==================== CARD STYLES ==================== */
+.qh-card {
+    background: var(--qh-white);
+    border-radius: var(--qh-radius);
+    box-shadow: 0 4px 16px var(--qh-shadow);
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.qh-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px var(--qh-shadow);
+}
+
+/* ==================== TOAST NOTIFICATIONS ==================== */
+.qh-toast-container {
+    position: fixed;
+    top: 100px;
+    right: 24px;
+    z-index: 9999;
+}
+
+.qh-toast {
+    background: var(--qh-white);
+    border-radius: var(--qh-radius);
+    box-shadow: 0 8px 32px var(--qh-shadow);
+    padding: 16px 24px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    min-width: 300px;
+    animation: slideIn 0.3s ease;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+.qh-toast-success {
+    border-left: 4px solid var(--qh-primary);
+}
+
+.qh-toast-error {
+    border-left: 4px solid var(--qh-secondary);
+}
+
+/* ==================== MODAL STYLES ==================== */
+.qh-modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.qh-modal.active {
+    opacity: 1;
+    visibility: visible;
+}
+
+.qh-modal-content {
+    background: var(--qh-white);
+    border-radius: var(--qh-radius-lg);
+    padding: 32px;
+    max-width: 450px;
+    width: 90%;
+    transform: scale(0.9);
+    transition: all 0.3s ease;
+}
+
+.qh-modal.active .qh-modal-content {
+    transform: scale(1);
+}
+
+.qh-modal-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 16px;
+}
+
+.qh-modal-text {
+    color: var(--qh-text-light);
+    margin-bottom: 24px;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+    .qh-header-inner {
+        gap: 16px;
+    }
+    
+    .qh-search {
+        max-width: 400px;
+    }
+    
+    .qh-icon-text {
+        display: none;
+    }
+    
+    .qh-header-icon {
+        padding: 10px;
+    }
+}
+
+@media (max-width: 768px) {
+    .qh-header-container {
+        padding: 0 16px;
+    }
+    
+    .qh-header-inner {
+        height: 70px;
+        flex-wrap: wrap;
+    }
+    
+    .qh-logo-img {
+        height: 40px;
+    }
+    
+    .qh-search {
+        order: 3;
+        max-width: 100%;
+        flex-basis: 100%;
+        margin-top: 12px;
+    }
+    
+    .qh-header-actions {
+        gap: 4px;
+    }
+}
+
+/* ==================== FORMS ==================== */
+.qh-form-group {
+    margin-bottom: 20px;
+}
+
+.qh-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    margin-bottom: 8px;
+    color: var(--qh-text);
+}
+
+.qh-input {
+    width: 100%;
+    height: 48px;
+    padding: 0 16px;
+    border: 2px solid var(--qh-border);
+    border-radius: var(--qh-radius);
+    font-family: 'Signika', sans-serif;
+    font-size: 15px;
+    transition: all 0.3s ease;
+}
+
+.qh-input:focus {
+    outline: none;
+    border-color: var(--qh-primary);
+}
+
+/* ==================== FOOTER ==================== */
+.qh-footer {
+    background: var(--qh-white);
+    padding: 40px 0;
+    margin-top: 60px;
+    border-top: 1px solid var(--qh-border);
+}
+
+.qh-footer-content {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px;
+    text-align: center;
+    color: var(--qh-text-light);
+}
+
+/* ==================== MAIN CONTENT ==================== */
+.qh-main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 40px 24px;
+    min-height: calc(100vh - 200px);
+}
+
+.qh-page-title {
+    font-size: 28px;
+    font-weight: 600;
+    margin-bottom: 24px;
+    color: var(--qh-text);
+}

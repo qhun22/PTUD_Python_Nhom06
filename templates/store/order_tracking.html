@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+
+{% block title %}Tra cứu đơn hàng - QHUN22 Mobile{% endblock %}
+
+{% block content %}
+<div class="qh-order-tracking-page">
+    <h1 class="qh-page-title">Tra cứu đơn hàng</h1>
+    
+    <div class="qh-card" style="padding: 40px; text-align: center;">
+        <p style="color: var(--qh-text-light); margin-bottom: 16px;">Nhập mã đơn hàng để tra cứu</p>
+        
+        <form method="GET" style="max-width: 400px; margin: 0 auto;">
+            <div class="qh-form-group">
+                <input type="text" 
+                       name="order_id" 
+                       placeholder="Nhập mã đơn hàng" 
+                       class="qh-input"
+                       style="text-align: center;">
+            </div>
+            <button type="submit" class="qh-btn qh-btn-primary" style="width: 100%;">
+                Tra cứu
+            </button>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+
+{% block title %}Đăng nhập - QHUN22 Mobile{% endblock %}
+
+{% block content %}
+<div class="qh-login-page" style="max-width: 450px; margin: 0 auto;">
+    <h1 class="qh-page-title" style="text-align: center;">Đăng nhập</h1>
+    
+    <div class="qh-card" style="padding: 32px;">
+        {% if messages %}
+            {% for message in messages %}
+                <div class="qh-toast qh-toast-{{ message.tags }}" style="margin-bottom: 16px;">
+                    {{ message }}
+                </div>
+            {% endfor %}
+        {% endif %}
+        
+        <form method="POST">
+            {% csrf_token %}
+            
+            <div class="qh-form-group">
+                <label class="qh-label">Tên đăng nhập</label>
+                <input type="text" name="username" class="qh-input" placeholder="Nhập tên đăng nhập" required>
+            </div>
+            
+            <div class="qh-form-group">
+                <label class="qh-label">Mật khẩu</label>
+                <input type="password" name="password" class="qh-input" placeholder="Nhập mật khẩu" required>
+            </div>
+            
+            <button type="submit" class="qh-btn qh-btn-primary" style="width: 100%;">
+                Đăng nhập
+            </button>
+        </form>
+        
+        <p style="text-align: center; margin-top: 20px; color: var(--qh-text-light);">
+            Chưa có tài khoản? <a href="#" style="color: var(--qh-primary-dark); font-weight: 500;">Đăng ký ngay</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

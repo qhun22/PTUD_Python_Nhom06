@@ -1,0 +1,44 @@
+{% extends 'base.html' %}
+
+{% block title %}Tài khoản - QHUN22 Mobile{% endblock %}
+
+{% block content %}
+<div class="qh-profile-page">
+    <h1 class="qh-page-title">Thông tin tài khoản</h1>
+    
+    <div class="qh-card" style="padding: 32px;">
+        <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 32px;">
+            <div style="width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, var(--qh-primary) 0%, var(--qh-secondary) 100%); display: flex; align-items: center; justify-content: center;">
+                <svg style="width: 40px; height: 40px; color: var(--qh-text);" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                </svg>
+            </div>
+            <div>
+                <h2 style="font-size: 24px; margin-bottom: 4px;">
+                    {% if user.get_full_name %}
+                        {{ user.get_full_name }}
+                    {% else %}
+                        {{ user.username }}
+                    {% endif %}
+                </h2>
+                <p style="color: var(--qh-text-light);">{{ user.email }}</p>
+            </div>
+        </div>
+        
+        <div style="display: grid; gap: 16px;">
+            <a href="#" class="qh-btn qh-btn-secondary" style="justify-content: flex-start;">
+                Chỉnh sửa thông tin cá nhân
+            </a>
+            <a href="#" class="qh-btn qh-btn-secondary" style="justify-content: flex-start;">
+                Lịch sử đơn hàng
+            </a>
+            <a href="#" class="qh-btn qh-btn-secondary" style="justify-content: flex-start;">
+                Địa chỉ giao hàng
+            </a>
+            <a href="#" class="qh-btn qh-btn-secondary" style="justify-content: flex-start;">
+                Đổi mật khẩu
+            </a>
+        </div>
+    </div>
+</div>
+{% endblock %}
