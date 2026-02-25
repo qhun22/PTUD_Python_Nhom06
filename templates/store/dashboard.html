@@ -348,6 +348,12 @@
                 </svg>
                 Nội dung SP
             </li>
+            <li class="qh-sidebar-item" data-section="qr-approval" onclick="window.location.href='?section=qr-approval'">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+                Duyệt đơn hàng
+            </li>
         </ul>
         <div class="qh-sidebar-pagination" id="qhSidebarPagination" style="display: none;"></div>
     </div>
@@ -971,6 +977,84 @@
             </div>
         </div>
 
+        <!-- ==================== QR Approval Section ==================== -->
+        <div id="qr-approval-section" style="display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                <h1 class="qh-content-title">Duyệt đơn hàng (VietQR)</h1>
+                <button type="button" onclick="loadQrApprovalList()" style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                    Làm mới
+                </button>
+            </div>
+
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+                    <thead>
+                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
+                            <th style="padding: 12px 16px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b;">STT</th>
+                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Khách hàng</th>
+                            <th style="padding: 12px 16px; text-align: right; font-size: 13px; font-weight: 600; color: #64748b;">Số tiền</th>
+                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Nội dung CK</th>
+                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Thời gian</th>
+                            <th style="padding: 12px 16px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b;">Hành động</th>
+                        </tr>
+                    </thead>
+                    <tbody id="qrApprovalTableBody">
+                        <tr>
+                            <td colspan="6" style="padding: 40px 16px; text-align: center; color: #94a3b8; font-size: 14px;">
+                                Đang tải dữ liệu...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <p style="margin-top: 12px; font-size: 12px; color: #94a3b8; font-style: italic;">
+                * QR quá 15 phút chưa được duyệt sẽ tự động bị xoá khỏi hệ thống.
+                Danh sách tự làm mới mỗi 30 giây.
+            </p>
+        </div>
+
+        <!-- QR Detail Modal -->
+        <div id="qrDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div style="background: white; border-radius: 12px; width: 480px; max-width: 94%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
+                <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
+                    <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0; color: #1e293b;">Chi tiết QR chuyển khoản</h3>
+                    <button type="button" onclick="closeQrDetailModal()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
+                </div>
+                <div style="padding: 20px 24px; overflow-y: auto; flex: 1;">
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <img id="qrDetailImage" src="" alt="VietQR" style="max-width: 220px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+                            <span style="font-size: 14px; color: #64748b;">Khách hàng</span>
+                            <strong id="qrDetailUser" style="font-size: 14px; color: #1e293b;"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+                            <span style="font-size: 14px; color: #64748b;">Email</span>
+                            <strong id="qrDetailEmail" style="font-size: 14px; color: #1e293b;"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+                            <span style="font-size: 14px; color: #64748b;">Số tiền</span>
+                            <strong id="qrDetailAmount" style="font-size: 14px; color: #dc2626;"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
+                            <span style="font-size: 14px; color: #64748b;">Nội dung CK</span>
+                            <strong id="qrDetailCode" style="font-size: 14px; color: #1e293b; font-family: monospace;"></strong>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; padding: 10px 0;">
+                            <span style="font-size: 14px; color: #64748b;">Thời gian tạo</span>
+                            <strong id="qrDetailTime" style="font-size: 14px; color: #1e293b;"></strong>
+                        </div>
+                    </div>
+                </div>
+                <div style="padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 10px; flex-shrink: 0;">
+                    <button type="button" onclick="cancelQrFromDetail()" style="padding: 10px 20px; background: #fee2e2; color: #dc2626; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">Hủy QR</button>
+                    <button type="button" onclick="approveQrFromDetail()" style="padding: 10px 20px; background: #10b981; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">Duyệt</button>
+                </div>
+            </div>
+        </div>
+
         <!-- Add Banner Modal -->
         <div id="addBannerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
             <div style="background: white; border-radius: 12px; width: 620px; max-width: 94%; max-height: 92vh; display: flex; flex-direction: column;">
@@ -1185,6 +1269,10 @@
     window.productDeleteUrl = '{% url "store:product_delete" %}';
     window.specUploadUrl = '{% url "store:product_specification_upload" %}';
     window.specDeleteUrl = '{% url "store:product_specification_delete" %}';
+    window.qrListUrl = '{% url "store:qr_payment_list" %}';
+    window.qrDetailUrl = '{% url "store:qr_payment_detail" %}';
+    window.qrApproveUrl = '{% url "store:qr_payment_approve" %}';
+    window.qrCancelUrl = '{% url "store:qr_payment_cancel" %}';
 </script>
 <script src="https://cdn.ckeditor.com/ckeditor5/41.0.0/classic/ckeditor.js"></script>
 <script src="https://cdn.ckeditor.com/ckeditor5/41.0.0/classic/translations/vi.js"></script>

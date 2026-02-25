@@ -609,6 +609,62 @@ class PasswordHistory(models.Model):
         return f"{self.user.email} - {self.changed_at.strftime('%d/%m/%Y %H:%M')}"
 
 
+class PendingQRPayment(models.Model):
+    """
+    QR chuyển khoản chờ duyệt.
+    Khi khách chọn VietQR trên checkout, 1 bản ghi được tạo ở đây.
+    Admin duyệt / hủy trên dashboard.
+    Sau 15 phút không duyệt → tự xóa (cleanup khi load danh sách).
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Chờ duyệt'),
+        ('approved', 'Đã duyệt'),
+        ('cancelled', 'Đã hủy'),
+    ]
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='pending_qr_payments', verbose_name='Khách hàng')
+    amount = models.DecimalField(max_digits=15, decimal_places=0, verbose_name='Số tiền')
+    transfer_code = models.CharField(max_length=20, unique=True, verbose_name='Nội dung CK')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', verbose_name='Trạng thái')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Thời gian tạo QR')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Ngày cập nhật')
+
+    class Meta:
+        verbose_name = 'QR chờ duyệt'
+        verbose_name_plural = 'QR chờ duyệt'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"QR {self.transfer_code} - {self.amount}"
+
+    @staticmethod
+    def cleanup_expired():
+        """Xóa tất cả QR pending quá 15 phút"""
+        from django.utils import timezone
+        from datetime import timedelta
+        cutoff = timezone.now() - timedelta(minutes=15)
+        PendingQRPayment.objects.filter(status='pending', created_at__lt=cutoff).delete()
+
+    @property
+    def is_expired(self):
+        from django.utils import timezone
+        from datetime import timedelta
+        return self.status == 'pending' and self.created_at < timezone.now() - timedelta(minutes=15)
+
+    def qr_url(self):
+        """Build VietQR URL"""
+        import urllib.parse
+        bank_id = 'TCB'
+        account_no = '22100588888888'
+        account_name = 'TRUONG QUANG HUY'
+        return (
+            f'https://img.vietqr.io/image/{bank_id}-{account_no}-vietqr_net_2.jpg'
+            f'?amount={int(self.amount)}'
+            f'&addInfo={urllib.parse.quote(self.transfer_code)}'
+            f'&accountName={urllib.parse.quote(account_name)}'
+        )
+
+
 class ProductContent(models.Model):
     """
     Model lưu trữ nội dung sản phẩm theo hãng và sản phẩm

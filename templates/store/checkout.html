@@ -184,9 +184,9 @@
                             <div class="qh-checkout-qr-timer">
                                 <i class="ri-time-line"></i> Thời gian còn lại: <span id="vietqrTimer">15:00</span>
                             </div>
-                            <button class="qh-checkout-qr-confirm" id="vietqrConfirmBtn">
-                                <i class="ri-check-line"></i> Đã thanh toán
-                            </button>
+                            <div class="qh-checkout-qr-notice">
+                                Sau khi chuyển khoản hệ thống sẽ tự động cập nhập. Bạn chờ một chút nhé !
+                            </div>
                         </div>
                     </div>
                     <!-- Success State -->
@@ -195,7 +195,7 @@
                             <i class="ri-checkbox-circle-fill"></i>
                         </div>
                         <div class="qh-checkout-qr-success-title">Thanh toán thành công!</div>
-                        <div class="qh-checkout-qr-success-desc">Chuyển khoản VietQR đã được xác nhận</div>
+                        <div class="qh-checkout-qr-success-desc">Bây giờ bạn có thể ấn đặt hàng.</div>
                     </div>
                 </div>
             </div>
@@ -262,6 +262,9 @@
 {% block extra_js %}
 <script>
     var QH_CHECKOUT_TOTAL = {{ total }};
+    var QH_CSRF_TOKEN = '{{ csrf_token }}';
+    var QH_QR_CREATE_URL = '{% url "store:qr_payment_create" %}';
+    var QH_QR_STATUS_URL = '{% url "store:qr_payment_status" %}';
 </script>
 <script src="{% static 'js/checkout.js' %}"></script>
 {% endblock %}

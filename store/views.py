@@ -3204,3 +3204,174 @@ def upload_temp_image(request):
     return JsonResponse({
         'url': temp_url
     })
+
+
+# ==================== Pending QR Payment APIs ====================
+
+@csrf_exempt
+@login_required
+@require_POST
+def qr_payment_create(request):
+    """
+    Khách tạo QR trên checkout → lưu PendingQRPayment.
+    POST: amount, transfer_code
+    """
+    from store.models import PendingQRPayment
+    import json
+
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Dữ liệu không hợp lệ'}, status=400)
+
+    amount = data.get('amount')
+    transfer_code = data.get('transfer_code')
+
+    if not amount or not transfer_code:
+        return JsonResponse({'success': False, 'message': 'Thiếu thông tin'}, status=400)
+
+    # Kiểm tra trùng mã CK
+    if PendingQRPayment.objects.filter(transfer_code=transfer_code).exists():
+        return JsonResponse({'success': False, 'message': 'Mã chuyển khoản đã tồn tại'}, status=400)
+
+    qr = PendingQRPayment.objects.create(
+        user=request.user,
+        amount=amount,
+        transfer_code=transfer_code,
+    )
+    return JsonResponse({'success': True, 'id': qr.id, 'message': 'Đã tạo QR thành công'})
+
+
+@login_required
+def qr_payment_list(request):
+    """
+    Admin: lấy danh sách QR đang pending (auto-cleanup expired).
+    """
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Không có quyền'}, status=403)
+
+    from store.models import PendingQRPayment
+    # Xoá hết QR pending quá 15 phút
+    PendingQRPayment.cleanup_expired()
+
+    qrs = PendingQRPayment.objects.filter(status='pending').order_by('-created_at')
+    items = []
+    for idx, qr in enumerate(qrs, 1):
+        items.append({
+            'id': qr.id,
+            'stt': idx,
+            'amount': int(qr.amount),
+            'transfer_code': qr.transfer_code,
+            'created_at': qr.created_at.strftime('%d/%m/%Y %H:%M:%S'),
+            'user_email': qr.user.email,
+            'qr_url': qr.qr_url(),
+        })
+    return JsonResponse({'success': True, 'items': items})
+
+
+@login_required
+def qr_payment_detail(request):
+    """
+    Admin: lấy chi tiết 1 QR (ảnh, số tiền, nội dung CK).
+    GET: id
+    """
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Không có quyền'}, status=403)
+
+    from store.models import PendingQRPayment
+    qr_id = request.GET.get('id')
+    try:
+        qr = PendingQRPayment.objects.get(id=qr_id)
+    except PendingQRPayment.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Không tìm thấy QR'}, status=404)
+
+    return JsonResponse({
+        'success': True,
+        'data': {
+            'id': qr.id,
+            'amount': int(qr.amount),
+            'transfer_code': qr.transfer_code,
+            'created_at': qr.created_at.strftime('%d/%m/%Y %H:%M:%S'),
+            'user_email': qr.user.email,
+            'user_name': qr.user.get_full_name(),
+            'qr_url': qr.qr_url(),
+            'status': qr.status,
+        }
+    })
+
+
+@csrf_exempt
+@login_required
+@require_POST
+def qr_payment_approve(request):
+    """Admin duyệt QR → status = approved."""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Không có quyền'}, status=403)
+
+    from store.models import PendingQRPayment
+    import json
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Dữ liệu không hợp lệ'}, status=400)
+
+    qr_id = data.get('id')
+    try:
+        qr = PendingQRPayment.objects.get(id=qr_id, status='pending')
+    except PendingQRPayment.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Không tìm thấy QR hoặc đã xử lý'}, status=404)
+
+    qr.status = 'approved'
+    qr.save()
+    return JsonResponse({'success': True, 'message': f'Đã duyệt QR {qr.transfer_code}'})
+
+
+@csrf_exempt
+@login_required
+@require_POST
+def qr_payment_cancel(request):
+    """Admin hủy QR → status = cancelled."""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Không có quyền'}, status=403)
+
+    from store.models import PendingQRPayment
+    import json
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Dữ liệu không hợp lệ'}, status=400)
+
+    qr_id = data.get('id')
+    try:
+        qr = PendingQRPayment.objects.get(id=qr_id, status='pending')
+    except PendingQRPayment.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Không tìm thấy QR hoặc đã xử lý'}, status=404)
+
+    qr.status = 'cancelled'
+    qr.save()
+    return JsonResponse({'success': True, 'message': f'Đã hủy QR {qr.transfer_code}'})
+
+
+@login_required
+def qr_payment_status(request):
+    """
+    Checkout polling: kiểm tra trạng thái QR theo transfer_code.
+    GET: transfer_code
+    Trả về: status = 'pending' | 'approved' | 'cancelled' | 'expired'
+    """
+    from store.models import PendingQRPayment
+    code = request.GET.get('code', '')
+    if not code:
+        return JsonResponse({'success': False, 'status': 'error'})
+
+    try:
+        qr = PendingQRPayment.objects.get(transfer_code=code, user=request.user)
+    except PendingQRPayment.DoesNotExist:
+        # Có thể đã bị cleanup (hết 15 phút) → coi như expired
+        return JsonResponse({'success': True, 'status': 'expired'})
+
+    if qr.is_expired:
+        qr.delete()
+        return JsonResponse({'success': True, 'status': 'expired'})
+
+    return JsonResponse({'success': True, 'status': qr.status})

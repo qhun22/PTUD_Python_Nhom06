@@ -92,4 +92,12 @@ urlpatterns = [
     path('address/add/', views.address_add, name='address_add'),
     path('address/delete/', views.address_delete, name='address_delete'),
     path('address/set-default/', views.address_set_default, name='address_set_default'),
+
+    # QR Payment
+    path('qr-payment/create/', views.qr_payment_create, name='qr_payment_create'),
+    path('qr-payment/list/', views.qr_payment_list, name='qr_payment_list'),
+    path('qr-payment/detail/', views.qr_payment_detail, name='qr_payment_detail'),
+    path('qr-payment/approve/', views.qr_payment_approve, name='qr_payment_approve'),
+    path('qr-payment/status/', views.qr_payment_status, name='qr_payment_status'),
+    path('qr-payment/cancel/', views.qr_payment_cancel, name='qr_payment_cancel'),
 ]

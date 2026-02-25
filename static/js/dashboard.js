@@ -229,6 +229,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const skuSection = document.getElementById('sku-section');
     const bannerImagesSection = document.getElementById('banner-images-section');
     const productContentSection = document.getElementById('product-content-section');
+    const qrApprovalSection = document.getElementById('qr-approval-section');
 
     if (statsSection) statsSection.style.display = (currentSection === 'stats') ? 'block' : 'none';
     if (usersSection) usersSection.style.display = (currentSection === 'users') ? 'block' : 'none';
@@ -244,10 +245,20 @@ document.addEventListener('DOMContentLoaded', function () {
     if (productContentSection) {
         productContentSection.style.display = (currentSection === 'product-content') ? 'block' : 'none';
     }
+    if (qrApprovalSection) {
+        qrApprovalSection.style.display = (currentSection === 'qr-approval') ? 'block' : 'none';
+    }
 
     // Load SKU list if on SKU section (hoặc khi vào phần Ảnh sản phẩm để dùng dropdown SKU)
     if (currentSection === 'sku' || currentSection === 'product-images') {
         loadSkuList();
+    }
+
+    // Load QR list if on qr-approval section
+    if (currentSection === 'qr-approval') {
+        loadQrApprovalList();
+        // Auto-refresh mỗi 30 giây
+        setInterval(loadQrApprovalList, 30000);
     }
 
     // Add Brand Form Submit
@@ -2384,4 +2395,168 @@ function performDeleteProductContent(id, indexInPreview = null) {
             console.error('Error deleting product content:', error);
             window.QHToast && window.QHToast.show && window.QHToast.show('Có lỗi xảy ra!', 'error');
         });
+}
+
+// ==================== QR Approval ====================
+
+var _qrDetailCurrentId = null;
+
+function formatQrPrice(num) {
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + 'đ';
+}
+
+function loadQrApprovalList() {
+    if (!window.qrListUrl) return;
+    var tbody = document.getElementById('qrApprovalTableBody');
+    if (!tbody) return;
+
+    fetch(window.qrListUrl)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data.success) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Lỗi tải dữ liệu</td></tr>';
+                return;
+            }
+            if (data.items.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="6" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Không có QR nào đang chờ duyệt</td></tr>';
+                return;
+            }
+            var html = '';
+            data.items.forEach(function (item) {
+                html += '<tr style="border-bottom: 1px solid #f1f5f9;">'
+                    + '<td style="padding:12px 16px;text-align:center;font-size:14px;color:#334155;">' + item.stt + '</td>'
+                    + '<td style="padding:12px 16px;font-size:14px;color:#334155;">' + item.user_email + '</td>'
+                    + '<td style="padding:12px 16px;text-align:right;font-size:14px;font-weight:600;color:#dc2626;">' + formatQrPrice(item.amount) + '</td>'
+                    + '<td style="padding:12px 16px;font-size:14px;color:#334155;font-family:monospace;font-weight:600;">' + item.transfer_code + '</td>'
+                    + '<td style="padding:12px 16px;font-size:13px;color:#64748b;">' + item.created_at + '</td>'
+                    + '<td style="padding:12px 16px;text-align:center;">'
+                    + '  <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'
+                    + '    <button onclick="openQrDetail(' + item.id + ')" style="padding:6px 12px;background:#eff6ff;color:#2563eb;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-family:\'Signika\',sans-serif;font-weight:500;">Xem</button>'
+                    + '    <button onclick="approveQr(' + item.id + ')" style="padding:6px 12px;background:#d1fae5;color:#059669;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-family:\'Signika\',sans-serif;font-weight:500;">Duyệt</button>'
+                    + '    <button onclick="cancelQr(' + item.id + ')" style="padding:6px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-family:\'Signika\',sans-serif;font-weight:500;">Hủy</button>'
+                    + '  </div>'
+                    + '</td>'
+                    + '</tr>';
+            });
+            tbody.innerHTML = html;
+        })
+        .catch(function () {
+            tbody.innerHTML = '<tr><td colspan="6" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Lỗi kết nối</td></tr>';
+        });
+}
+
+function openQrDetail(id) {
+    if (!window.qrDetailUrl) return;
+    fetch(window.qrDetailUrl + '?id=' + id)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data.success) {
+                window.QHToast && window.QHToast.show(data.message || 'Lỗi', 'error');
+                return;
+            }
+            var d = data.data;
+            _qrDetailCurrentId = d.id;
+
+            var img = document.getElementById('qrDetailImage');
+            if (img) img.src = d.qr_url;
+
+            var user = document.getElementById('qrDetailUser');
+            if (user) user.textContent = d.user_name;
+
+            var email = document.getElementById('qrDetailEmail');
+            if (email) email.textContent = d.user_email;
+
+            var amount = document.getElementById('qrDetailAmount');
+            if (amount) amount.textContent = formatQrPrice(d.amount);
+
+            var code = document.getElementById('qrDetailCode');
+            if (code) code.textContent = d.transfer_code;
+
+            var time = document.getElementById('qrDetailTime');
+            if (time) time.textContent = d.created_at;
+
+            var modal = document.getElementById('qrDetailModal');
+            if (modal) modal.style.display = 'flex';
+        })
+        .catch(function () {
+            window.QHToast && window.QHToast.show('Lỗi kết nối', 'error');
+        });
+}
+
+function closeQrDetailModal() {
+    var modal = document.getElementById('qrDetailModal');
+    if (modal) modal.style.display = 'none';
+    _qrDetailCurrentId = null;
+}
+
+function approveQr(id) {
+    if (!window.qrApproveUrl) return;
+    if (!window.QHConfirm) {
+        _doApproveQr(id);
+        return;
+    }
+    window.QHConfirm.show('Xác nhận duyệt QR chuyển khoản này?', function () {
+        _doApproveQr(id);
+    });
+}
+
+function _doApproveQr(id) {
+    fetch(window.qrApproveUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': window.csrfToken },
+        body: JSON.stringify({ id: id })
+    })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                window.QHToast && window.QHToast.show(data.message, 'success');
+                loadQrApprovalList();
+                closeQrDetailModal();
+            } else {
+                window.QHToast && window.QHToast.show(data.message || 'Lỗi', 'error');
+            }
+        })
+        .catch(function () {
+            window.QHToast && window.QHToast.show('Lỗi kết nối', 'error');
+        });
+}
+
+function cancelQr(id) {
+    if (!window.qrCancelUrl) return;
+    if (!window.QHConfirm) {
+        _doCancelQr(id);
+        return;
+    }
+    window.QHConfirm.show('Xác nhận hủy QR chuyển khoản này?', function () {
+        _doCancelQr(id);
+    });
+}
+
+function _doCancelQr(id) {
+    fetch(window.qrCancelUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': window.csrfToken },
+        body: JSON.stringify({ id: id })
+    })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                window.QHToast && window.QHToast.show(data.message, 'success');
+                loadQrApprovalList();
+                closeQrDetailModal();
+            } else {
+                window.QHToast && window.QHToast.show(data.message || 'Lỗi', 'error');
+            }
+        })
+        .catch(function () {
+            window.QHToast && window.QHToast.show('Lỗi kết nối', 'error');
+        });
+}
+
+function approveQrFromDetail() {
+    if (_qrDetailCurrentId) approveQr(_qrDetailCurrentId);
+}
+
+function cancelQrFromDetail() {
+    if (_qrDetailCurrentId) cancelQr(_qrDetailCurrentId);
 }

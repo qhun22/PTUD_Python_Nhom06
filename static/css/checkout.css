@@ -434,28 +434,25 @@
     font-variant-numeric: tabular-nums;
 }
 
-.qh-checkout-qr-confirm {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    background: #10b981;
-    color: #fff;
-    border: none;
-    padding: 8px 20px;
+.qh-checkout-qr-notice {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #fef3c7;
+    border: 1px solid #fbbf24;
+    color: #92400e;
+    padding: 10px 14px;
     border-radius: 8px;
-    font-size: 14px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s;
-    font-family: 'Signika', sans-serif;
+    font-size: 13px;
+    line-height: 1.5;
+    font-weight: 500;
 }
 
-.qh-checkout-qr-confirm:hover {
-    background: #059669;
-}
-
-.qh-checkout-qr-confirm i {
-    font-size: 16px;
+.qh-checkout-qr-notice i {
+    font-size: 18px;
+    color: #f59e0b;
+    flex-shrink: 0;
+    margin-top: 1px;
 }
 
 /* QR Success State */
@@ -500,13 +497,16 @@
 
 /* ==================== Right Sidebar - Summary ==================== */
 /* Đồng bộ với .qh-cart-summary */
+.qh-checkout-right {
+    position: sticky;
+    top: 100px;
+}
+
 .qh-checkout-summary {
     background: var(--qh-card-bg);
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-    position: sticky;
-    top: 100px;
 }
 
 .qh-checkout-summary-title {
@@ -679,7 +679,7 @@
         grid-template-columns: 1fr;
     }
 
-    .qh-checkout-summary {
+    .qh-checkout-right {
         position: static;
     }
 

@@ -11,8 +11,10 @@ document.addEventListener('DOMContentLoaded', function () {
     var QR_TIMEOUT = 15 * 60; // 15 phút (giây)
 
     var totalAmount = window.QH_CHECKOUT_TOTAL || 0;
-    var vietqrPaid = false;
     var qrTimerInterval = null;
+    var qrPollInterval = null;
+    var currentTransferCode = null;
+    var vietqrPaid = false;
 
     /* ==================== Elements ==================== */
     var payOpts = document.querySelectorAll('.qh-checkout-pay-opt:not(.disabled)');
@@ -28,7 +30,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var qrAmount = document.getElementById('vietqrAmount');
     var qrCode = document.getElementById('vietqrCode');
     var qrTimer = document.getElementById('vietqrTimer');
-    var qrConfirmBtn = document.getElementById('vietqrConfirmBtn');
 
     /* ==================== Helpers ==================== */
     function formatPrice(num) {
@@ -36,10 +37,10 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     function generateTransferCode() {
-        var chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-        var code = 'QH';
-        for (var i = 0; i < 6; i++) {
-            code += chars.charAt(Math.floor(Math.random() * chars.length));
+        var digits = '0123456789';
+        var code = 'QHUN';
+        for (var i = 0; i < 5; i++) {
+            code += digits.charAt(Math.floor(Math.random() * digits.length));
         }
         return code;
     }
@@ -60,12 +61,9 @@ document.addEventListener('DOMContentLoaded', function () {
             remaining--;
             if (remaining <= 0) {
                 stopTimer();
-                // Hết thời gian
-                if (!vietqrPaid) {
-                    hideQrBox();
-                    if (window.QHToast) {
-                        QHToast.show('Hết thời gian thanh toán QR. Vui lòng thử lại.', 'error');
-                    }
+                hideQrBox();
+                if (window.QHToast) {
+                    QHToast.show('Hết thời gian thanh toán QR. Vui lòng thử lại.', 'error');
                 }
                 return;
             }
@@ -108,44 +106,117 @@ document.addEventListener('DOMContentLoaded', function () {
         // Reset states
         if (qrContent) qrContent.style.display = '';
         if (qrSuccess) qrSuccess.style.display = 'none';
-        vietqrPaid = false;
 
         qrBox.style.display = '';
         startTimer();
+        currentTransferCode = transferCode;
+
+        // POST to server → lưu PendingQRPayment
+        if (window.QH_QR_CREATE_URL && window.QH_CSRF_TOKEN) {
+            fetch(QH_QR_CREATE_URL, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': QH_CSRF_TOKEN
+                },
+                body: JSON.stringify({
+                    amount: totalAmount,
+                    transfer_code: transferCode
+                })
+            })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                console.log('[QR Create]', data);
+                if (data.success) {
+                    // Bắt đầu polling trạng thái
+                    startPolling();
+                }
+            })
+            .catch(function (err) {
+                console.error('[QR Create Error]', err);
+            });
+        }
     }
 
     function hideQrBox() {
         if (qrBox) qrBox.style.display = 'none';
         stopTimer();
+        stopPolling();
     }
 
-    /* ==================== Payment Confirm ==================== */
-    function confirmVietqrPayment() {
+    /* ==================== QR Status Polling ==================== */
+    function startPolling() {
+        stopPolling();
+        if (!currentTransferCode || !window.QH_QR_STATUS_URL) return;
+        qrPollInterval = setInterval(function () {
+            fetch(QH_QR_STATUS_URL + '?code=' + encodeURIComponent(currentTransferCode))
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    if (!data.success) return;
+                    if (data.status === 'approved') {
+                        onQrApproved();
+                    } else if (data.status === 'cancelled') {
+                        onQrCancelled();
+                    } else if (data.status === 'expired') {
+                        onQrExpired();
+                    }
+                })
+                .catch(function () {});
+        }, 3000); // mỗi 3 giây
+    }
+
+    function stopPolling() {
+        if (qrPollInterval) {
+            clearInterval(qrPollInterval);
+            qrPollInterval = null;
+        }
+    }
+
+    function onQrApproved() {
         vietqrPaid = true;
         stopTimer();
+        stopPolling();
 
-        // Hide QR content, show success
+        // Hiển thị trạng thái thành công
         if (qrContent) qrContent.style.display = 'none';
         if (qrSuccess) qrSuccess.style.display = '';
 
-        // Add verified checkmark to VIETQR option
+        // Thêm verified checkmark vào VIETQR option
         var vietqrOpt = document.querySelector('[data-pay-type="vietqr"]');
-        if (vietqrOpt) {
-            vietqrOpt.classList.add('verified');
-        }
+        if (vietqrOpt) vietqrOpt.classList.add('verified');
 
-        // Update summary total to 0đ
-        if (summaryTotalEl) {
-            summaryTotalEl.textContent = '0đ';
-        }
+        // Cập nhật tổng tiền = 0đ
+        if (summaryTotalEl) summaryTotalEl.textContent = '0đ';
 
         if (window.QHToast) {
-            QHToast.show('Thanh toán chuyển khoản thành công!', 'success');
+            QHToast.show('Thanh toán chuyển khoản đã được admin xác nhận!', 'success');
         }
     }
 
-    if (qrConfirmBtn) {
-        qrConfirmBtn.addEventListener('click', confirmVietqrPayment);
+    function onQrCancelled() {
+        stopTimer();
+        stopPolling();
+        hideQrBox();
+
+        // Bỏ verified
+        var vietqrOpt = document.querySelector('[data-pay-type="vietqr"]');
+        if (vietqrOpt) vietqrOpt.classList.remove('verified');
+
+        if (summaryTotalEl) summaryTotalEl.textContent = formatPrice(totalAmount);
+
+        if (window.QHToast) {
+            QHToast.show('QR chuyển khoản đã bị admin từ chối. Vui lòng thử lại.', 'error');
+        }
+    }
+
+    function onQrExpired() {
+        stopTimer();
+        stopPolling();
+        hideQrBox();
+
+        if (window.QHToast) {
+            QHToast.show('QR đã hết hạn (15 phút). Vui lòng thử lại.', 'error');
+        }
     }
 
     /* ==================== Payment Selection ==================== */
@@ -164,13 +235,10 @@ document.addEventListener('DOMContentLoaded', function () {
         opt.addEventListener('click', function () {
             var payType = this.getAttribute('data-pay-type');
 
-            // Deselect all, remove verified from non-paid
+            // Deselect all
             document.querySelectorAll('.qh-checkout-pay-opt').forEach(function (o) {
                 o.classList.remove('selected');
-                // Only remove verified if not vietqr-paid
-                if (o.getAttribute('data-pay-type') !== 'vietqr' || !vietqrPaid) {
-                    o.classList.remove('verified');
-                }
+                o.classList.remove('verified');
             });
 
             // Select this
@@ -185,10 +253,10 @@ document.addEventListener('DOMContentLoaded', function () {
                     summaryTotalEl.textContent = formatPrice(totalAmount);
                 }
             }
-            // VIETQR → show QR box, no verified yet
+            // VIETQR → show QR box
             else if (payType === 'vietqr') {
                 if (vietqrPaid) {
-                    // Already paid, re-show success, keep verified, total = 0
+                    // Đã thanh toán trước đó → hiển thị lại trạng thái success
                     this.classList.add('verified');
                     if (qrBox) qrBox.style.display = '';
                     if (qrContent) qrContent.style.display = 'none';
@@ -224,12 +292,15 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
             var payType = selected.getAttribute('data-pay-type');
+
+            // Chặn nếu chọn vietqr nhưng chưa được admin duyệt
             if (payType === 'vietqr' && !vietqrPaid) {
                 if (window.QHToast) {
-                    QHToast.show('Vui lòng hoàn tất thanh toán chuyển khoản trước khi đặt hàng', 'error');
+                    QHToast.show('Vui lòng chờ admin xác nhận thanh toán chuyển khoản', 'error');
                 }
                 return;
             }
+
             if (window.QHToast) {
                 QHToast.show('Chức năng đặt hàng đang được phát triển!', 'error');
             }
