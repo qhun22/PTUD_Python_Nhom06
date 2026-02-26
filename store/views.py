@@ -413,10 +413,39 @@ def order_tracking(request):
     
     context = {}
     if request.user.is_authenticated:
-        orders = Order.objects.filter(user=request.user).order_by('-created_at')
+        orders = Order.objects.filter(user=request.user).prefetch_related('items').order_by('-created_at')
         context['orders'] = orders
     
     return render(request, 'store/order_tracking.html', context)
+
+
+@login_required
+@require_POST
+def cancel_order(request):
+    """
+    API hủy đơn hàng - chỉ cho phép hủy khi status là pending hoặc processing
+    """
+    import json
+    from store.models import Order
+    
+    try:
+        data = json.loads(request.body)
+        order_code = data.get('order_code', '')
+        
+        order = Order.objects.get(order_code=order_code, user=request.user)
+        
+        if order.status not in ('pending', 'processing'):
+            return JsonResponse({'success': False, 'message': 'Đơn hàng không thể hủy ở trạng thái này'})
+        
+        order.status = 'cancelled'
+        order.save()
+        
+        return JsonResponse({'success': True, 'message': 'Đã hủy đơn hàng ' + order_code})
+    
+    except Order.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Không tìm thấy đơn hàng'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)})
 
 
 def wishlist(request):
@@ -3451,7 +3480,7 @@ def vnpay_return(request):
     Xử lý return từ VNPay sau khi thanh toán
     VNPay sẽ redirect về URL này với các tham số response
     """
-    from store.models import VNPayPayment, Order, Cart
+    from store.models import VNPayPayment, Order, OrderItem, Cart, FolderColorImage, ProductDetail
     from store.vnpay_utils import VNPayUtil
     
     try:
@@ -3504,16 +3533,49 @@ def vnpay_return(request):
                 total_amount=vnpay_payment.amount,
                 payment_method='vnpay',
                 vnpay_order_code=order_code,
-                status='pending'
+                status='processing'
             )
             
-            # Xóa các items khỏi giỏ hàng nếu có
+            # Lưu sản phẩm vào OrderItem trước khi xóa cart
             if items_param:
                 try:
                     item_ids = [int(x) for x in items_param.split(',') if x.strip()]
                     cart = Cart.get_or_create_for_user(request.user)
                     if cart:
-                        cart.items.filter(id__in=item_ids).delete()
+                        cart_items = cart.items.filter(id__in=item_ids).select_related('product', 'product__brand')
+                        for ci in cart_items:
+                            # Tìm thumbnail
+                            thumb_url = ''
+                            try:
+                                if ci.product and ci.product.brand_id:
+                                    detail = ProductDetail.objects.get(product=ci.product)
+                                    variant = detail.variants.filter(
+                                        is_active=True, color_name=ci.color_name
+                                    ).first()
+                                    if variant and variant.sku:
+                                        img = FolderColorImage.objects.filter(
+                                            brand_id=ci.product.brand_id,
+                                            sku=variant.sku
+                                        ).order_by('order').first()
+                                        if img:
+                                            thumb_url = img.image.url
+                                if not thumb_url and ci.product and ci.product.image:
+                                    thumb_url = ci.product.image.url
+                            except Exception:
+                                pass
+                            
+                            OrderItem.objects.create(
+                                order=order,
+                                product=ci.product,
+                                product_name=ci.product.name if ci.product else 'Sản phẩm',
+                                color_name=ci.color_name,
+                                storage=ci.storage,
+                                quantity=ci.quantity,
+                                price=ci.price_at_add,
+                                thumbnail=thumb_url,
+                            )
+                        # Xóa cart items sau khi đã lưu
+                        cart_items.delete()
                 except (ValueError, TypeError):
                     pass
             
@@ -3598,11 +3660,12 @@ def order_success(request, order_code):
     from store.models import Order
     
     try:
-        order = Order.objects.get(order_code=order_code, user=request.user)
+        order = Order.objects.prefetch_related('items').get(order_code=order_code, user=request.user)
     except Order.DoesNotExist:
         messages.error(request, 'Không tìm thấy đơn hàng')
         return redirect('store:home')
     
     return render(request, 'store/order_success.html', {
         'order': order,
+        'order_items': order.items.all(),
     })

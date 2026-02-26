@@ -35,8 +35,13 @@ def qhun22_context(request):
             context['cart_count'] = cart.get_total_items()
         else:
             context['cart_count'] = 0
+
+        # Thêm số lượng đơn hàng
+        from store.models import Order
+        context['order_count'] = Order.objects.filter(user=request.user).count()
     else:
         context['wishlist_count'] = 0
         context['cart_count'] = 0
+        context['order_count'] = 0
 
     return context

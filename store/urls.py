@@ -106,4 +106,7 @@ urlpatterns = [
 
     # Order Success
     path('order/success/<str:order_code>/', views.order_success, name='order_success'),
+    
+    # Cancel Order API
+    path('api/cancel-order/', views.cancel_order, name='cancel_order'),
 ]

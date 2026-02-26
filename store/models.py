@@ -556,6 +556,30 @@ class Order(models.Model):
         return f"Order {self.order_code}"
 
 
+class OrderItem(models.Model):
+    """
+    Sản phẩm trong đơn hàng - snapshot tại thời điểm mua
+    """
+    order = models.ForeignKey(Order, on_delete=models.CASCADE, related_name='items', verbose_name='Đơn hàng')
+    product = models.ForeignKey(Product, on_delete=models.SET_NULL, null=True, related_name='order_items', verbose_name='Sản phẩm')
+    product_name = models.CharField(max_length=255, verbose_name='Tên sản phẩm')
+    color_name = models.CharField(max_length=50, blank=True, verbose_name='Màu')
+    storage = models.CharField(max_length=20, blank=True, verbose_name='Dung lượng')
+    quantity = models.PositiveIntegerField(default=1, verbose_name='Số lượng')
+    price = models.DecimalField(max_digits=15, decimal_places=0, default=0, verbose_name='Đơn giá')
+    thumbnail = models.CharField(max_length=500, blank=True, verbose_name='Ảnh thumbnail URL')
+
+    class Meta:
+        verbose_name = 'Sản phẩm đơn hàng'
+        verbose_name_plural = 'Sản phẩm đơn hàng'
+
+    def __str__(self):
+        return f"{self.product_name} x{self.quantity}"
+
+    def get_total_price(self):
+        return self.price * self.quantity
+
+
 class Banner(models.Model):
     """
     Model lưu trữ ảnh banner với ID riêng

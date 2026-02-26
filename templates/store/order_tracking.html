@@ -5,122 +5,153 @@
 
 {% block content %}
 <style>
-/* ==================== ORDER TRACKING PAGE ==================== */
-.qh-order-tracking-page {
-    /* Inherits from .qh-main */
-}
+/* ==================== ORDER TRACKING PAGE ====================
+   Đồng bộ design system: CSS variables, card pattern, checkout-item layout
+   =========================================================== */
+.qh-ot-page { /* Inherits .qh-main */ }
 
-/* Order Result Card */
-.qh-ot-result {
+/* ===== Single Order Card ===== */
+.qh-ot-card {
     background: var(--qh-card-bg, var(--qh-white));
     border-radius: 12px;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
     overflow: hidden;
+    transition: box-shadow 0.2s;
+}
+.qh-ot-card:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.09);
+}
+.qh-ot-card + .qh-ot-card {
+    margin-top: 20px;
 }
 
-/* Order Header */
-.qh-ot-header {
-    padding: 24px;
-    border-bottom: 1px solid var(--qh-border);
+/* ===== Collapsible header ===== */
+.qh-ot-toggle {
+    width: 100%;
     display: flex;
     align-items: center;
     justify-content: space-between;
     flex-wrap: wrap;
     gap: 12px;
+    padding: 20px 24px;
+    border: none;
+    background: none;
+    cursor: pointer;
+    text-align: left;
+    font-family: 'Signika', sans-serif;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s;
 }
-.qh-ot-order-id {
-    font-size: 20px;
+.qh-ot-card.open .qh-ot-toggle {
+    border-bottom-color: var(--qh-border);
+}
+.qh-ot-left-info {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+}
+.qh-ot-code {
+    font-size: 17px;
     font-weight: 700;
     color: var(--qh-text);
+    letter-spacing: 0.5px;
 }
-.qh-ot-order-id span {
-    color: var(--qh-primary);
-}
-.qh-ot-order-date {
-    font-size: 14px;
+.qh-ot-code span { color: var(--qh-primary); }
+.qh-ot-date {
+    font-size: 13px;
     color: var(--qh-text-light);
 }
+.qh-ot-right-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+.qh-ot-chevron {
+    width: 20px; height: 20px;
+    color: var(--qh-text-light);
+    transition: transform 0.3s;
+    flex-shrink: 0;
+}
+.qh-ot-card.open .qh-ot-chevron {
+    transform: rotate(180deg);
+}
 
-/* Status Badge */
+/* ===== Status badge ===== */
 .qh-ot-status {
     display: inline-flex;
     align-items: center;
-    gap: 6px;
-    padding: 6px 14px;
+    gap: 5px;
+    padding: 5px 12px;
     border-radius: 20px;
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
+    flex-shrink: 0;
 }
-.qh-ot-status.pending {
-    background: #fef3c7;
-    color: #d97706;
+.qh-ot-status svg { width: 14px; height: 14px; }
+.qh-ot-status.pending    { background: #fef3c7; color: #d97706; }
+.qh-ot-status.processing { background: #dbeafe; color: #2563eb; }
+.qh-ot-status.shipped    { background: #e0e7ff; color: #4f46e5; }
+.qh-ot-status.delivered  { background: #d1fae5; color: #059669; }
+.qh-ot-status.cancelled  { background: #fee2e2; color: #dc2626; }
+
+/* ===== Collapsible body ===== */
+.qh-ot-body {
+    display: none;
 }
-.qh-ot-status.processing {
-    background: #dbeafe;
-    color: #2563eb;
-}
-.qh-ot-status.shipped {
-    background: #e0e7ff;
-    color: #4f46e5;
-}
-.qh-ot-status.delivered {
-    background: #d1fae5;
-    color: #059669;
-}
-.qh-ot-status.cancelled {
-    background: #fee2e2;
-    color: #dc2626;
+.qh-ot-card.open .qh-ot-body {
+    display: block;
 }
 
-/* Progress Tracker */
+/* ===== Progress stepper (horizontal) ===== */
 .qh-ot-progress {
-    padding: 32px 24px;
+    padding: 28px 24px;
     border-bottom: 1px solid var(--qh-border);
 }
 .qh-ot-steps {
     display: flex;
     justify-content: space-between;
     position: relative;
-    max-width: 700px;
+    max-width: 600px;
     margin: 0 auto;
 }
+/* Track line BG */
 .qh-ot-steps::before {
     content: '';
     position: absolute;
-    top: 20px;
-    left: 40px;
-    right: 40px;
+    top: 18px;
+    left: 36px;
+    right: 36px;
     height: 3px;
     background: var(--qh-border);
     z-index: 0;
 }
+/* Track line active */
 .qh-ot-steps::after {
     content: '';
     position: absolute;
-    top: 20px;
-    left: 40px;
+    top: 18px;
+    left: 36px;
     height: 3px;
-    background: var(--qh-primary);
+    background: linear-gradient(90deg, var(--qh-primary), var(--qh-primary-dark));
     z-index: 1;
-    transition: width 0.5s ease;
+    transition: width 0.6s ease;
 }
 .qh-ot-steps[data-progress="0"]::after { width: 0%; }
-.qh-ot-steps[data-progress="1"]::after { width: calc((100% - 80px) * 0.25); }
-.qh-ot-steps[data-progress="2"]::after { width: calc((100% - 80px) * 0.5); }
-.qh-ot-steps[data-progress="3"]::after { width: calc((100% - 80px) * 0.75); }
-.qh-ot-steps[data-progress="4"]::after { width: calc(100% - 80px); }
+.qh-ot-steps[data-progress="1"]::after { width: calc((100% - 72px) * 0.33); }
+.qh-ot-steps[data-progress="2"]::after { width: calc((100% - 72px) * 0.66); }
+.qh-ot-steps[data-progress="3"]::after { width: calc(100% - 72px); }
 
 .qh-ot-step {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 10px;
+    gap: 8px;
     z-index: 2;
     flex: 1;
 }
-.qh-ot-step-circle {
-    width: 40px;
-    height: 40px;
+.qh-ot-step-dot {
+    width: 36px; height: 36px;
     border-radius: 50%;
     background: var(--qh-bg);
     border: 3px solid var(--qh-border);
@@ -129,29 +160,24 @@
     justify-content: center;
     transition: all 0.3s;
 }
-.qh-ot-step-circle svg {
-    width: 18px;
-    height: 18px;
+.qh-ot-step-dot i {
+    font-size: 15px;
     color: #9ca3af;
     transition: color 0.3s;
 }
-.qh-ot-step.active .qh-ot-step-circle {
+.qh-ot-step.active .qh-ot-step-dot {
     background: var(--qh-primary);
     border-color: var(--qh-primary);
     box-shadow: 0 0 0 4px rgba(169,204,240,0.3);
 }
-.qh-ot-step.active .qh-ot-step-circle svg {
-    color: white;
-}
-.qh-ot-step.done .qh-ot-step-circle {
+.qh-ot-step.active .qh-ot-step-dot i,
+.qh-ot-step.done .qh-ot-step-dot i { color: #fff; }
+.qh-ot-step.done .qh-ot-step-dot {
     background: var(--qh-primary);
     border-color: var(--qh-primary);
 }
-.qh-ot-step.done .qh-ot-step-circle svg {
-    color: white;
-}
 .qh-ot-step-label {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--qh-text-light);
     text-align: center;
@@ -162,198 +188,330 @@
     font-weight: 600;
 }
 
-/* Order Info Grid */
-.qh-ot-info {
-    padding: 24px;
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 24px;
+/* ===== Product items — 1:1 checkout-item pattern ===== */
+.qh-ot-items {
+    padding: 20px 24px 0;
     border-bottom: 1px solid var(--qh-border);
 }
-.qh-ot-info-block h4 {
+.qh-ot-items-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--qh-text-light);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 12px;
+}
+.qh-ot-item {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 12px 0;
+    border-top: 1px solid var(--qh-border);
+}
+.qh-ot-item:first-of-type {
+    border-top: none;
+}
+.qh-ot-item-img {
+    width: 72px; height: 72px;
+    min-width: 72px;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #f5f5f5;
+    flex-shrink: 0;
+}
+.qh-ot-item-img img {
+    width: 100%; height: 100%;
+    object-fit: cover;
+}
+.qh-ot-item-img .qh-ot-no-img {
+    width: 100%; height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #d1d5db;
+    font-size: 28px;
+}
+.qh-ot-item-info {
+    flex: 1;
+    min-width: 0;
+}
+.qh-ot-item-name {
     font-size: 14px;
     font-weight: 600;
     color: var(--qh-text);
-    margin-bottom: 10px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
+    margin-bottom: 4px;
+    line-height: 1.4;
 }
-.qh-ot-info-block h4 svg {
-    width: 18px;
-    height: 18px;
-    color: var(--qh-primary);
-}
-.qh-ot-info-block p {
-    font-size: 14px;
+.qh-ot-item-meta {
+    font-size: 13px;
     color: var(--qh-text-light);
-    line-height: 1.7;
+    line-height: 1.6;
 }
-
-/* Order Summary (bottom) */
-.qh-ot-summary {
-    padding: 24px;
+.qh-ot-item-price {
+    text-align: right;
+    white-space: nowrap;
 }
-.qh-ot-summary-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 10px 0;
-    font-size: 14px;
-    color: var(--qh-text-light);
-}
-.qh-ot-summary-row .qh-ot-value {
-    font-weight: 600;
-    color: var(--qh-text);
-}
-.qh-ot-summary-row.total {
-    border-top: 2px solid var(--qh-border);
-    margin-top: 8px;
-    padding-top: 16px;
-    font-size: 18px;
+.qh-ot-item-amount {
+    font-size: 15px;
     font-weight: 700;
     color: var(--qh-text);
 }
-.qh-ot-summary-row.total .qh-ot-value {
+
+/* ===== Footer summary ===== */
+.qh-ot-footer {
+    padding: 16px 24px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+.qh-ot-payment {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 13px;
+    font-weight: 600;
+    background: #f3f4f6;
+    color: var(--qh-text-light);
+}
+.qh-ot-payment i { font-size: 15px; }
+.qh-ot-payment.cod   { background: #fef3c7; color: #92400e; }
+.qh-ot-payment.vietqr{ background: #dbeafe; color: #1d4ed8; }
+.qh-ot-payment.vnpay { background: #ede9fe; color: #6d28d9; }
+.qh-ot-grand-total {
+    font-size: 18px;
+    font-weight: 700;
     color: var(--qh-primary);
-    font-size: 22px;
 }
 
-/* Empty / Not Found State */
+/* ===== Empty State ===== */
 .qh-ot-empty {
     background: var(--qh-card-bg, var(--qh-white));
     border-radius: 12px;
-    padding: 60px;
+    padding: 60px 24px;
     text-align: center;
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .qh-ot-empty-icon {
-    width: 120px;
-    height: 120px;
+    width: 100px; height: 100px;
+    margin: 0 auto 20px;
     color: #d1d5db;
-    margin-bottom: 24px;
 }
 .qh-ot-empty h3 {
+    font-size: 20px;
+    font-weight: 700;
     color: var(--qh-text);
-    margin-bottom: 12px;
-    font-size: 24px;
-    font-weight: 600;
+    margin-bottom: 8px;
 }
 .qh-ot-empty p {
+    font-size: 15px;
     color: var(--qh-text-light);
     margin-bottom: 24px;
-    font-size: 16px;
+}
+.qh-ot-empty-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 32px;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 600;
+    text-decoration: none;
+    background: linear-gradient(135deg, var(--qh-primary), var(--qh-primary-dark));
+    color: var(--qh-text);
+    box-shadow: 0 4px 12px rgba(169,204,240,0.4);
+    transition: all 0.2s;
+}
+.qh-ot-empty-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 16px rgba(169,204,240,0.5);
 }
 
-/* Responsive */
+/* ===== Cancel button ===== */
+.qh-ot-cancel-wrap {
+    padding: 0 24px 16px;
+    display: flex;
+    justify-content: flex-end;
+}
+.qh-ot-cancel-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-family: 'Signika', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    border: 1.5px solid #fca5a5;
+    background: #fff;
+    color: #dc2626;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.qh-ot-cancel-btn:hover {
+    background: #fef2f2;
+    border-color: #dc2626;
+}
+.qh-ot-cancel-btn i { font-size: 15px; }
+
+/* ===== Responsive ===== */
 @media (max-width: 768px) {
-    .qh-ot-info {
-        grid-template-columns: 1fr;
-    }
+    .qh-ot-toggle { padding: 16px; gap: 8px; }
+    .qh-ot-left-info { gap: 8px; }
+    .qh-ot-code { font-size: 15px; }
+    .qh-ot-progress { padding: 20px 16px; }
     .qh-ot-steps {
         flex-direction: column;
-        gap: 16px;
+        gap: 12px;
         align-items: flex-start;
-        padding-left: 20px;
+        padding-left: 18px;
+        max-width: 100%;
     }
     .qh-ot-steps::before,
     .qh-ot-steps::after {
-        top: 0;
-        bottom: 0;
-        left: 20px;
-        right: auto;
+        top: 0; bottom: 0;
+        left: 18px; right: auto;
         width: 3px !important;
         height: auto !important;
     }
-    .qh-ot-step {
-        flex-direction: row;
-        gap: 16px;
-    }
-    .qh-ot-header {
-        flex-direction: column;
-        align-items: flex-start;
-    }
+    .qh-ot-steps[data-progress="0"]::after { height: 0% !important; width: 3px !important; }
+    .qh-ot-steps[data-progress="1"]::after { height: 33% !important; width: 3px !important; }
+    .qh-ot-steps[data-progress="2"]::after { height: 66% !important; width: 3px !important; }
+    .qh-ot-steps[data-progress="3"]::after { height: 100% !important; width: 3px !important; }
+    .qh-ot-step { flex-direction: row; gap: 12px; }
+    .qh-ot-items { padding: 16px 16px 0; }
+    .qh-ot-item-img { width: 56px; height: 56px; min-width: 56px; }
+    .qh-ot-footer { padding: 12px 16px 16px; }
+}
+@media (max-width: 480px) {
+    .qh-ot-right-info { flex-wrap: wrap; }
 }
 </style>
 
-<div class="qh-order-tracking-page">
-    <h1 class="qh-page-title">TRA CỨU ĐƠN HÀNG CỦA BẠN</h1>
+<div class="qh-ot-page">
+    <h1 class="qh-page-title">TRA CỨU ĐƠN HÀNG</h1>
 
     {% if orders %}
-    <!-- Order List -->
-    <div style="display: flex; flex-direction: column; gap: 20px;">
     {% for order in orders %}
-    <div class="qh-ot-result">
-        <!-- Header -->
-        <div class="qh-ot-header">
-            <div>
-                <div class="qh-ot-order-id">Đơn hàng <span>#{{ order.id }}</span></div>
-                <div class="qh-ot-order-date">Ngày đặt: {{ order.created_at|date:"d/m/Y H:i" }}</div>
+    <div class="qh-ot-card{% if forloop.first %} open{% endif %}" data-order="{{ order.order_code }}">
+        <!-- Toggle header -->
+        <button class="qh-ot-toggle" onclick="toggleOrder(this)">
+            <div class="qh-ot-left-info">
+                <div class="qh-ot-code"><span>{{ order.order_code }}</span></div>
+                <div class="qh-ot-date">{{ order.created_at|date:"d/m/Y — H:i" }}</div>
             </div>
-            <span class="qh-ot-status {{ order.status }}">
-                {% if order.status == 'pending' %}
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Chờ xử lý
-                {% elif order.status == 'processing' %}
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    Đang xử lý
-                {% elif order.status == 'shipped' %}
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-                    Đang giao hàng
-                {% elif order.status == 'delivered' %}
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Đã giao hàng
-                {% elif order.status == 'cancelled' %}
-                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    Đã hủy
-                {% endif %}
-            </span>
-        </div>
-
-        <!-- Progress Steps (only if not cancelled) -->
-        {% if order.status != 'cancelled' %}
-        <div class="qh-ot-progress">
-            {% with step=order.status %}
-            <div class="qh-ot-steps" data-progress="{% if step == 'pending' %}0{% elif step == 'processing' %}1{% elif step == 'shipped' %}2{% elif step == 'delivered' %}4{% endif %}">
-                <div class="qh-ot-step {% if step == 'pending' %}active{% elif step == 'processing' or step == 'shipped' or step == 'delivered' %}done{% endif %}">
-                    <div class="qh-ot-step-circle">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                    </div>
-                    <span class="qh-ot-step-label">Đã đặt hàng</span>
-                </div>
-                <div class="qh-ot-step {% if step == 'processing' %}active{% elif step == 'shipped' or step == 'delivered' %}done{% endif %}">
-                    <div class="qh-ot-step-circle">
+            <div class="qh-ot-right-info">
+                <span class="qh-ot-status {{ order.status }}">
+                    {% if order.status == 'pending' %}
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Chờ xử lý
+                    {% elif order.status == 'processing' %}
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    </div>
-                    <span class="qh-ot-step-label">Đang xử lý</span>
-                </div>
-                <div class="qh-ot-step {% if step == 'shipped' %}active{% elif step == 'delivered' %}done{% endif %}">
-                    <div class="qh-ot-step-circle">
+                        Đang xử lý
+                    {% elif order.status == 'shipped' %}
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0"/></svg>
-                    </div>
-                    <span class="qh-ot-step-label">Đang giao</span>
-                </div>
-                <div class="qh-ot-step {% if step == 'delivered' %}active{% endif %}">
-                    <div class="qh-ot-step-circle">
+                        Đang giao
+                    {% elif order.status == 'delivered' %}
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                    </div>
-                    <span class="qh-ot-step-label">Đã giao hàng</span>
-                </div>
+                        Đã giao
+                    {% elif order.status == 'cancelled' %}
+                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        Đã hủy
+                    {% endif %}
+                </span>
+                <svg class="qh-ot-chevron" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                </svg>
             </div>
-            {% endwith %}
-        </div>
-        {% endif %}
+        </button>
 
-        <!-- Summary -->
-        <div class="qh-ot-summary">
-            <div class="qh-ot-summary-row total">
-                <span>Tổng tiền</span>
-                <span class="qh-ot-value">{{ order.total_amount|floatformat:0 }}đ</span>
+        <!-- Collapsible body -->
+        <div class="qh-ot-body">
+
+            <!-- Progress steps (not cancelled) -->
+            {% if order.status != 'cancelled' %}
+            <div class="qh-ot-progress">
+                {% with s=order.status %}
+                <div class="qh-ot-steps" data-progress="{% if s == 'pending' %}0{% elif s == 'processing' %}1{% elif s == 'shipped' %}2{% elif s == 'delivered' %}3{% endif %}">
+                    <div class="qh-ot-step {% if s == 'pending' %}active{% elif s == 'processing' or s == 'shipped' or s == 'delivered' %}done{% endif %}">
+                        <div class="qh-ot-step-dot"><i class="ri-file-list-3-line"></i></div>
+                        <span class="qh-ot-step-label">Đã đặt hàng</span>
+                    </div>
+                    <div class="qh-ot-step {% if s == 'processing' %}active{% elif s == 'shipped' or s == 'delivered' %}done{% endif %}">
+                        <div class="qh-ot-step-dot"><i class="ri-settings-3-line"></i></div>
+                        <span class="qh-ot-step-label">Đang xử lý</span>
+                    </div>
+                    <div class="qh-ot-step {% if s == 'shipped' %}active{% elif s == 'delivered' %}done{% endif %}">
+                        <div class="qh-ot-step-dot"><i class="ri-truck-line"></i></div>
+                        <span class="qh-ot-step-label">Đang giao</span>
+                    </div>
+                    <div class="qh-ot-step {% if s == 'delivered' %}active done{% endif %}">
+                        <div class="qh-ot-step-dot"><i class="ri-checkbox-circle-line"></i></div>
+                        <span class="qh-ot-step-label">Đã giao hàng</span>
+                    </div>
+                </div>
+                {% endwith %}
             </div>
+            {% endif %}
+
+            <!-- Product items -->
+            {% if order.items.all %}
+            <div class="qh-ot-items">
+                <div class="qh-ot-items-title">Sản phẩm ({{ order.items.count }})</div>
+                {% for item in order.items.all %}
+                <div class="qh-ot-item">
+                    <div class="qh-ot-item-img">
+                        {% if item.thumbnail %}
+                        <img src="{{ item.thumbnail }}" alt="{{ item.product_name }}" loading="lazy">
+                        {% else %}
+                        <div class="qh-ot-no-img"><i class="ri-image-line"></i></div>
+                        {% endif %}
+                    </div>
+                    <div class="qh-ot-item-info">
+                        <div class="qh-ot-item-name">{{ item.product_name }}</div>
+                        <div class="qh-ot-item-meta">
+                            {% if item.color_name %}{{ item.color_name }}{% endif %}{% if item.color_name and item.storage %} · {% endif %}{% if item.storage %}{{ item.storage }}{% endif %}{% if item.quantity > 1 %} · SL: {{ item.quantity }}{% endif %}
+                        </div>
+                    </div>
+                    <div class="qh-ot-item-price">
+                        <div class="qh-ot-item-amount">{{ item.price|format_price_with_unit }}</div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            <!-- Footer: payment + total -->
+            <div class="qh-ot-footer">
+                <span class="qh-ot-payment {{ order.payment_method }}">
+                    {% if order.payment_method == 'cod' %}
+                        <i class="ri-hand-coin-line"></i> COD
+                    {% elif order.payment_method == 'vietqr' %}
+                        <i class="ri-qr-code-line"></i> VietQR
+                    {% elif order.payment_method == 'vnpay' %}
+                        <i class="ri-bank-card-line"></i> VNPay
+                    {% else %}
+                        <i class="ri-secure-payment-line"></i> {{ order.get_payment_method_display }}
+                    {% endif %}
+                </span>
+                <div class="qh-ot-grand-total">{{ order.total_amount|format_price_with_unit }}</div>
+            </div>
+
+            <!-- Cancel button (only for pending/processing) -->
+            {% if order.status == 'pending' or order.status == 'processing' %}
+            <div class="qh-ot-cancel-wrap">
+                <button class="qh-ot-cancel-btn" onclick="cancelOrder('{{ order.order_code }}', this)">
+                    <i class="ri-close-circle-line"></i> Hủy đơn hàng
+                </button>
+            </div>
+            {% endif %}
+
         </div>
     </div>
     {% endfor %}
-    </div>
 
     {% else %}
     <!-- Empty State -->
@@ -361,12 +519,53 @@
         <svg class="qh-ot-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
         </svg>
-        <h3>Đơn hàng trống</h3>
-        <p>Hãy mua sản phẩm để kiểm tra tại đây nhé!</p>
-        <a href="{% url 'store:home' %}" class="qh-btn qh-btn-primary" style="padding: 12px 32px; font-size: 16px; font-weight: 600;">
-            Tiếp tục khám phá
+        <h3>Chưa có đơn hàng nào</h3>
+        <p>Hãy mua sắm để đơn hàng của bạn xuất hiện tại đây!</p>
+        <a href="{% url 'store:home' %}" class="qh-ot-empty-btn">
+            <i class="ri-shopping-bag-line"></i> Tiếp tục mua sắm
         </a>
     </div>
     {% endif %}
 </div>
+
+<script>
+function toggleOrder(btn) {
+    var card = btn.closest('.qh-ot-card');
+    card.classList.toggle('open');
+}
+function cancelOrder(code, btn) {
+    if (!confirm('Bạn có chắc muốn hủy đơn hàng ' + code + ' không?')) return;
+    btn.disabled = true;
+    btn.innerHTML = '<i class="ri-loader-4-line"></i> Đang hủy...';
+    fetch('/api/cancel-order/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]')?.value || getCookie('csrftoken')
+        },
+        body: JSON.stringify({order_code: code})
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+        if (d.success) {
+            if (window.QHToast) QHToast.show('Đã hủy đơn hàng ' + code, 'success');
+            setTimeout(function() { location.reload(); }, 800);
+        } else {
+            if (window.QHToast) QHToast.show(d.message || 'Không thể hủy đơn hàng', 'error');
+            btn.disabled = false;
+            btn.innerHTML = '<i class="ri-close-circle-line"></i> Hủy đơn hàng';
+        }
+    })
+    .catch(function() {
+        if (window.QHToast) QHToast.show('Lỗi kết nối', 'error');
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ri-close-circle-line"></i> Hủy đơn hàng';
+    });
+}
+function getCookie(name) {
+    var v = document.cookie.match('(^|;)\\s*' + name + '\\s*=\\s*([^;]+)');
+    return v ? v.pop() : '';
+}
+</script>
+{% csrf_token %}
 {% endblock %}
