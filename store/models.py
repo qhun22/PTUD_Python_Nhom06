@@ -315,8 +315,10 @@ def image_folder_upload_path(instance, filename):
 
 class ImageFolder(models.Model):
     """Thư mục ảnh riêng để quản lý ảnh sản phẩm theo thư mục"""
-    name = models.CharField(max_length=150, unique=True, verbose_name='Thư mục ảnh')
-    slug = models.SlugField(max_length=150, unique=True, verbose_name='Slug thư mục')
+    name = models.CharField(max_length=150, verbose_name='Thư mục ảnh')
+    slug = models.SlugField(max_length=150, verbose_name='Slug thư mục')
+    brand = models.ForeignKey(Brand, on_delete=models.CASCADE, null=True, blank=True, related_name='image_folders', verbose_name='Hãng')
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, null=True, blank=True, related_name='image_folders', verbose_name='Sản phẩm')
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:
@@ -324,6 +326,7 @@ class ImageFolder(models.Model):
         verbose_name = 'Thư mục ảnh'
         verbose_name_plural = 'Thư mục ảnh'
         ordering = ['-created_at']
+        unique_together = ['name', 'brand', 'product']
 
     def __str__(self):
         return self.name

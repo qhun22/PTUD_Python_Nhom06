@@ -462,6 +462,16 @@ function renderImageFolderTable(rows) {
 
     let html = '';
     rows.forEach((row, index) => {
+        const colorNameEscaped = (row.color_name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const skuEscaped = (row.sku || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
+        const rowDataJson = JSON.stringify({
+            folder_id: row.folder_id,
+            sku: row.sku,
+            color_name: row.color_name,
+            brand_id: row.brand_id,
+            folder_brand_id: row.folder_brand_id,
+            folder_product_id: row.folder_product_id
+        }).replace(/'/g, "\\'").replace(/"/g, '&quot;');
         html += `
             <tr style="border-bottom: 1px solid #f1f5f9;">
                 <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${index + 1}</td>
@@ -470,13 +480,71 @@ function renderImageFolderTable(rows) {
                 <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${row.sku}</td>
                 <td style="padding: 12px 16px;">
                     <div style="display: flex; gap: 6px;">
-                        <button type="button" onclick="openAddColorImageModal(${row.folder_id || 'null'}, '${row.sku}', '${row.color_name.replace(/'/g, "\\'")}')" style="background: #dbeafe; color: #1e40af; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Quản lý</button>
+                        <button type="button" onclick="openAddColorImageModalWithData('${rowDataJson}')" style="background: #dbeafe; color: #1e40af; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Quản lý</button>
+                        <button type="button" onclick="deleteColorImageRow(${row.folder_id || 'null'}, '${skuEscaped}', '${colorNameEscaped}')" style="background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Xóa</button>
                     </div>
                 </td>
             </tr>
         `;
     });
     tbody.innerHTML = html;
+}
+
+function openAddColorImageModalWithData(rowDataJson) {
+    try {
+        const data = JSON.parse(rowDataJson.replace(/&quot;/g, '"'));
+        openAddColorImageModal(data.folder_id, data.sku, data.color_name, data.brand_id, data.folder_brand_id, data.folder_product_id);
+    } catch (e) {
+        console.error('Error parsing row data:', e);
+        openAddColorImageModal(null, '', '');
+    }
+}
+
+function deleteColorImageRow(folderId, sku, colorName) {
+    if (!folderId || !sku || !colorName) {
+        window.QHToast && window.QHToast.show && window.QHToast.show('Thiếu thông tin!', 'error');
+        return;
+    }
+    
+    if (window.QHConfirm && window.QHConfirm.show) {
+        window.QHConfirm.show(
+            `Bạn có chắc muốn xóa tất cả ảnh của màu <strong>${colorName}</strong> (SKU: ${sku})?`,
+            () => {
+                performDeleteColorImageRow(folderId, sku, colorName);
+            }
+        );
+    } else if (confirm(`Bạn có chắc muốn xóa tất cả ảnh của màu "${colorName}" (SKU: ${sku})?`)) {
+        performDeleteColorImageRow(folderId, sku, colorName);
+    }
+}
+
+function performDeleteColorImageRow(folderId, sku, colorName) {
+    const formData = new FormData();
+    formData.append('folder_id', folderId);
+    formData.append('sku', sku);
+    formData.append('color_name', colorName);
+    
+    fetch('/product-images/color/row-delete/', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest',
+            'X-CSRFToken': window.csrfToken
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.QHToast && window.QHToast.show && window.QHToast.show(data.message, 'success');
+                loadImageFolderRows();
+            } else {
+                window.QHToast && window.QHToast.show && window.QHToast.show(data.message || 'Không thể xóa!', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error deleting color image row:', error);
+            window.QHToast && window.QHToast.show && window.QHToast.show('Có lỗi xảy ra!', 'error');
+        });
 }
 
 function searchImageFolders() {
@@ -511,16 +579,79 @@ function closeAddImageFolderModal() {
     if (modal) modal.style.display = 'none';
 }
 
+function loadFolderProductsByBrand() {
+    const brandSelect = document.getElementById('folderBrandSelect');
+    const productSelect = document.getElementById('folderProductSelect');
+    
+    if (!productSelect) return;
+    
+    const brandId = brandSelect ? brandSelect.value : '';
+    
+    if (!brandId) {
+        productSelect.innerHTML = '<option value="">-- Chọn hãng trước --</option>';
+        return;
+    }
+    
+    productSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
+    
+    fetch('/products/list/json/', {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const filtered = data.products.filter(p => String(p.brand_id) === String(brandId));
+                
+                if (filtered.length === 0) {
+                    productSelect.innerHTML = '<option value="">-- Không có sản phẩm --</option>';
+                    return;
+                }
+                
+                let html = '<option value="">-- Chọn sản phẩm --</option>';
+                filtered.forEach(p => {
+                    html += `<option value="${p.id}">${p.name}</option>`;
+                });
+                productSelect.innerHTML = html;
+            } else {
+                productSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading products:', error);
+            productSelect.innerHTML = '<option value="">-- Lỗi kết nối --</option>';
+        });
+}
+
 function saveImageFolder() {
+    const brandSelect = document.getElementById('folderBrandSelect');
+    const productSelect = document.getElementById('folderProductSelect');
     const input = document.getElementById('imageFolderNameInput');
+    
     if (!input) return;
+    
+    const brandId = brandSelect ? brandSelect.value : '';
+    const productId = productSelect ? productSelect.value : '';
     const name = input.value.trim();
+    
+    if (!brandId) {
+        window.QHToast && window.QHToast.show && window.QHToast.show('Vui lòng chọn hãng!', 'error');
+        return;
+    }
+    
+    if (!productId) {
+        window.QHToast && window.QHToast.show && window.QHToast.show('Vui lòng chọn sản phẩm!', 'error');
+        return;
+    }
+    
     if (!name) {
         window.QHToast && window.QHToast.show && window.QHToast.show('Vui lòng nhập tên thư mục!', 'error');
         return;
     }
 
     const formData = new FormData();
+    formData.append('brand_id', brandId);
+    formData.append('product_id', productId);
     formData.append('name', name);
 
     fetch('/product-images/folders/create/', {
@@ -563,42 +694,105 @@ function refreshImageFolderOptions() {
     if (currentValue) select.value = currentValue;
 }
 
-function openAddColorImageModal(folderId = null, sku = '', colorName = '') {
+function openAddColorImageModal(folderId = null, sku = '', colorName = '', brandId = null, folderBrandId = null, folderProductId = null) {
     const modal = document.getElementById('addColorImageModal');
     if (!modal) return;
 
     const folderSelect = document.getElementById('colorImageFolderSelect');
     const brandSelect = document.getElementById('colorImageBrandSelect');
+    const productSelect = document.getElementById('colorImageProductSelect');
     const skuSelect = document.getElementById('colorImageSkuSelect');
     const colorInput = document.getElementById('colorImageNameInput');
     const fileNameEl = document.getElementById('colorImageFileName');
     const previewGrid = document.getElementById('colorImagePreviewGrid');
 
-    refreshImageFolderOptions();
-
-    if (folderId && folderSelect) {
-        folderSelect.value = String(folderId);
-    } else if (folderSelect) {
-        folderSelect.value = '';
-    }
-
-    if (brandSelect) {
-        brandSelect.value = '';
-    }
-
-    populateColorImageSkuOptions();
-
-    if (skuSelect) {
-        skuSelect.value = sku || '';
-    }
-
-    if (colorInput) {
-        colorInput.value = colorName || '';
-    }
-
     if (fileNameEl) fileNameEl.textContent = '';
     if (previewGrid) previewGrid.innerHTML = '';
     imageFolderPreviewImages = [];
+
+    // Nếu có dữ liệu cũ (chỉnh sửa), pre-fill các dropdown
+    const effectiveBrandId = brandId || folderBrandId;
+    
+    if (effectiveBrandId && folderId && sku) {
+        // Chế độ chỉnh sửa - pre-fill dữ liệu
+        if (brandSelect) {
+            brandSelect.value = String(effectiveBrandId);
+        }
+        
+        if (colorInput) {
+            colorInput.value = colorName || '';
+        }
+        
+        // Load folders và products theo brand, sau đó select đúng giá trị
+        Promise.all([
+            fetch(`/product-images/folders/list/?brand_id=${effectiveBrandId}`, {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(r => r.json()),
+            fetch('/products/list/json/', {
+                method: 'GET',
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            }).then(r => r.json())
+        ]).then(([foldersData, productsData]) => {
+            // Populate folder dropdown
+            if (folderSelect && foldersData.success) {
+                const folders = foldersData.folders || [];
+                let html = '<option value="">-- Chọn thư mục --</option>';
+                folders.forEach(f => {
+                    const label = f.product_name ? `${f.name} (${f.product_name})` : f.name;
+                    const selected = String(f.id) === String(folderId) ? ' selected' : '';
+                    html += `<option value="${f.id}"${selected}>${label}</option>`;
+                });
+                folderSelect.innerHTML = html;
+            }
+            
+            // Populate product dropdown
+            if (productSelect && productsData.success) {
+                const filtered = productsData.products.filter(p => String(p.brand_id) === String(effectiveBrandId));
+                let html = '<option value="">-- Chọn sản phẩm --</option>';
+                filtered.forEach(p => {
+                    html += `<option value="${p.id}">${p.name}</option>`;
+                });
+                productSelect.innerHTML = html;
+            }
+            
+            // Populate SKU dropdown với SKU hiện tại
+            if (skuSelect) {
+                let html = '<option value="">-- Chọn SKU --</option>';
+                html += `<option value="${sku}" selected>${sku}</option>`;
+                skuSelect.innerHTML = html;
+            }
+        }).catch(err => {
+            console.error('Error loading edit data:', err);
+        });
+        
+        // Load ảnh hiện có
+        loadColorImageList(folderId, sku, colorName).then(images => {
+            imageFolderPreviewImages = (images || []).map(img => ({ id: img.id, url: img.url }));
+            renderColorImagePreview();
+        });
+    } else {
+        // Chế độ thêm mới - reset tất cả
+        if (brandSelect) {
+            brandSelect.value = '';
+        }
+
+        if (folderSelect) {
+            folderSelect.innerHTML = '<option value="">-- Chọn hãng trước --</option>';
+        }
+
+        if (productSelect) {
+            productSelect.innerHTML = '<option value="">-- Chọn hãng trước --</option>';
+        }
+
+        if (skuSelect) {
+            skuSelect.innerHTML = '<option value="">-- Chọn sản phẩm trước --</option>';
+        }
+
+        if (colorInput) {
+            colorInput.value = '';
+        }
+    }
 
     modal.style.display = 'flex';
     modal.onclick = function (e) {
@@ -606,13 +800,6 @@ function openAddColorImageModal(folderId = null, sku = '', colorName = '') {
             closeAddColorImageModal();
         }
     };
-
-    if (folderId && sku && colorName) {
-        loadColorImageList(folderId, sku, colorName).then(images => {
-            imageFolderPreviewImages = (images || []).map(img => ({ id: img.id, url: img.url }));
-            renderColorImagePreview();
-        });
-    }
 }
 
 function closeAddColorImageModal() {
@@ -659,10 +846,143 @@ function populateColorImageSkuOptions() {
     skuSelect.innerHTML = html;
 }
 
-// Khi chọn hãng trong modal màu ảnh -> lọc lại SKU
-const colorImageBrandSelectEl = document.getElementById('colorImageBrandSelect');
-if (colorImageBrandSelectEl) {
-    colorImageBrandSelectEl.addEventListener('change', populateColorImageSkuOptions);
+// Load sản phẩm và thư mục theo hãng trong modal Ảnh sản phẩm
+function loadColorImageProductsByBrand() {
+    const brandSelect = document.getElementById('colorImageBrandSelect');
+    const productSelect = document.getElementById('colorImageProductSelect');
+    const folderSelect = document.getElementById('colorImageFolderSelect');
+    const skuSelect = document.getElementById('colorImageSkuSelect');
+    
+    if (!productSelect) return;
+    
+    const brandId = brandSelect ? brandSelect.value : '';
+    
+    if (!brandId) {
+        productSelect.innerHTML = '<option value="">-- Chọn hãng trước --</option>';
+        if (folderSelect) folderSelect.innerHTML = '<option value="">-- Chọn hãng trước --</option>';
+        if (skuSelect) skuSelect.innerHTML = '<option value="">-- Chọn sản phẩm trước --</option>';
+        return;
+    }
+    
+    productSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
+    if (folderSelect) folderSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
+    
+    // Load products filtered by brand
+    fetch('/products/list/json/', {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                const filtered = data.products.filter(p => String(p.brand_id) === String(brandId));
+                
+                if (filtered.length === 0) {
+                    productSelect.innerHTML = '<option value="">-- Không có sản phẩm --</option>';
+                    return;
+                }
+                
+                let html = '<option value="">-- Chọn sản phẩm --</option>';
+                filtered.forEach(p => {
+                    html += `<option value="${p.id}">${p.name}</option>`;
+                });
+                productSelect.innerHTML = html;
+            } else {
+                productSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
+            }
+            
+            if (skuSelect) skuSelect.innerHTML = '<option value="">-- Chọn sản phẩm trước --</option>';
+        })
+        .catch(error => {
+            console.error('Error loading products:', error);
+            productSelect.innerHTML = '<option value="">-- Lỗi kết nối --</option>';
+        });
+    
+    // Load folders filtered by brand
+    if (folderSelect) {
+        fetch(`/product-images/folders/list/?brand_id=${brandId}`, {
+            method: 'GET',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    const folders = data.folders || [];
+                    
+                    if (folders.length === 0) {
+                        folderSelect.innerHTML = '<option value="">-- Chưa có thư mục --</option>';
+                        return;
+                    }
+                    
+                    let html = '<option value="">-- Chọn thư mục --</option>';
+                    folders.forEach(f => {
+                        const label = f.product_name ? `${f.name} (${f.product_name})` : f.name;
+                        html += `<option value="${f.id}">${label}</option>`;
+                    });
+                    folderSelect.innerHTML = html;
+                } else {
+                    folderSelect.innerHTML = '<option value="">-- Lỗi tải thư mục --</option>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading folders:', error);
+                folderSelect.innerHTML = '<option value="">-- Lỗi kết nối --</option>';
+            });
+    }
+}
+
+// Load SKU từ sản phẩm đã chọn trong modal Ảnh sản phẩm
+function loadColorImageSkusByProduct() {
+    const productSelect = document.getElementById('colorImageProductSelect');
+    const skuSelect = document.getElementById('colorImageSkuSelect');
+    
+    if (!skuSelect) return;
+    
+    const productId = productSelect ? productSelect.value : '';
+    
+    if (!productId) {
+        skuSelect.innerHTML = '<option value="">-- Chọn sản phẩm trước --</option>';
+        return;
+    }
+    
+    skuSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
+    
+    // Fetch SKUs for this product from ProductDetail
+    fetch(`/products/detail/get/?product_id=${productId}`, {
+        method: 'GET',
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Lấy SKU từ ProductDetail hoặc từ allSkus
+                let productSkus = [];
+                
+                // Check allSkus for this product
+                const skusFromList = (allSkus || []).filter(s => String(s.product_id) === String(productId));
+                
+                if (skusFromList.length > 0) {
+                    productSkus = skusFromList.map(s => s.sku);
+                }
+                
+                if (productSkus.length === 0) {
+                    skuSelect.innerHTML = '<option value="">-- Chưa có SKU nào --</option>';
+                    return;
+                }
+                
+                let html = '<option value="">-- Chọn SKU --</option>';
+                productSkus.forEach(sku => {
+                    html += `<option value="${sku}">${sku}</option>`;
+                });
+                skuSelect.innerHTML = html;
+            } else {
+                skuSelect.innerHTML = '<option value="">-- Lỗi tải SKU --</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading SKUs:', error);
+            skuSelect.innerHTML = '<option value="">-- Lỗi kết nối --</option>';
+        });
 }
 
 function handleColorImageFileChange(event) {
@@ -1044,7 +1364,7 @@ function closeAddSkuModal() {
     document.getElementById('addSkuModal').style.display = 'none';
 }
 
-function loadProductsByBrand() {
+function loadSkuProductsByBrand() {
     const brandId = document.getElementById('addSkuBrand').value;
     const productSelect = document.getElementById('addSkuProduct');
 
@@ -1053,20 +1373,39 @@ function loadProductsByBrand() {
         return;
     }
 
-    // Filter products by brand
-    const products = window.allProducts || [];
-    const filtered = products.filter(p => p.brand_id == brandId);
+    productSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
 
-    if (filtered.length === 0) {
-        productSelect.innerHTML = '<option value="">-- Không có sản phẩm --</option>';
-        return;
-    }
+    // Fetch products directly from API to ensure data is fresh
+    fetch('/products/list/json/', {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                window.allProducts = data.products;
+                const filtered = data.products.filter(p => String(p.brand_id) === String(brandId));
 
-    let html = '<option value="">-- Chọn sản phẩm --</option>';
-    filtered.forEach(p => {
-        html += `<option value="${p.id}">${p.name}</option>`;
-    });
-    productSelect.innerHTML = html;
+                if (filtered.length === 0) {
+                    productSelect.innerHTML = '<option value="">-- Không có sản phẩm --</option>';
+                    return;
+                }
+
+                let html = '<option value="">-- Chọn sản phẩm --</option>';
+                filtered.forEach(p => {
+                    html += `<option value="${p.id}">${p.name}</option>`;
+                });
+                productSelect.innerHTML = html;
+            } else {
+                productSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
+            }
+        })
+        .catch(error => {
+            console.error('Error loading products by brand:', error);
+            productSelect.innerHTML = '<option value="">-- Lỗi kết nối --</option>';
+        });
 }
 
 function saveSku() {

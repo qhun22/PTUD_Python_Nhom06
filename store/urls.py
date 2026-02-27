@@ -63,6 +63,7 @@ urlpatterns = [
     path('product-images/color/list/', views.folder_color_image_list, name='folder_color_image_list'),
     path('product-images/color/upload/', views.folder_color_image_upload, name='folder_color_image_upload'),
     path('product-images/color/delete/', views.folder_color_image_delete, name='folder_color_image_delete'),
+    path('product-images/color/row-delete/', views.folder_color_row_delete, name='folder_color_row_delete'),
     # Temp Image Upload
     path('upload-temp-image/', views.upload_temp_image, name='upload_temp_image'),
     # Banner Images Management
@@ -93,6 +94,9 @@ urlpatterns = [
     path('address/delete/', views.address_delete, name='address_delete'),
     path('address/set-default/', views.address_set_default, name='address_set_default'),
 
+    # Place Order (COD/VietQR)
+    path('order/place/', views.place_order, name='place_order'),
+    
     # QR Payment
     path('qr-payment/create/', views.qr_payment_create, name='qr_payment_create'),
     path('qr-payment/list/', views.qr_payment_list, name='qr_payment_list'),

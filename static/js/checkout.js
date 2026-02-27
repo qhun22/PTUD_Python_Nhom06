@@ -361,10 +361,62 @@ document.addEventListener('DOMContentLoaded', function () {
                 return;
             }
 
-            if (window.QHToast) {
-                QHToast.show('Chức năng đặt hàng đang được phát triển!', 'error');
-            }
+            // COD hoặc VietQR → đặt hàng trực tiếp
+            placeOrder(payType);
         });
+    }
+
+    function placeOrder(payType) {
+        var submitBtn = document.getElementById('checkoutSubmitBtn');
+        if (submitBtn) {
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Đang xử lý...';
+        }
+
+        var requestData = {
+            payment_method: payType,
+            items_param: window.QH_CHECKOUT_ITEMS_PARAM || ''
+        };
+
+        if (payType === 'vietqr' && currentTransferCode) {
+            requestData.transfer_code = currentTransferCode;
+        }
+
+        fetch(window.QH_PLACE_ORDER_URL || '/order/place/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': QH_CSRF_TOKEN
+            },
+            body: JSON.stringify(requestData)
+        })
+            .then(function (res) { return res.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    if (window.QHToast) {
+                        QHToast.show('Đặt hàng thành công!', 'success');
+                    }
+                    window.location.href = '/order/success/' + data.order_code + '/';
+                } else {
+                    if (window.QHToast) {
+                        QHToast.show(data.message || 'Lỗi đặt hàng', 'error');
+                    }
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'ĐẶT HÀNG';
+                    }
+                }
+            })
+            .catch(function (err) {
+                console.error('[Place Order Error]', err);
+                if (window.QHToast) {
+                    QHToast.show('Lỗi kết nối. Vui lòng thử lại.', 'error');
+                }
+                if (submitBtn) {
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'ĐẶT HÀNG';
+                }
+            });
     }
 
 });

@@ -798,14 +798,32 @@
         
         <!-- Modal: Thêm thư mục chứa ảnh -->
         <div id="addImageFolderModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-            <div style="background: white; border-radius: 12px; width: 420px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
+            <div style="background: white; border-radius: 12px; width: 500px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
                     <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0;">Thêm thư mục chứa ảnh</h3>
+                    <button type="button" onclick="closeAddImageFolderModal()" style="padding: 6px 12px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 13px; font-family: 'Signika', sans-serif;">Đóng</button>
                 </div>
                 <div style="padding: 20px 22px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c1c1c1 #f8fafc;">
-                    <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Nhập tên thư mục *</label>
-                    <input type="text" id="imageFolderNameInput" placeholder="Ví dụ: iphone-17" style="width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
-                    <p style="margin-top: 8px; font-size: 12px; color: #64748b; font-family: 'Signika', sans-serif;">Thư mục sẽ được tạo bên trong <strong>media/products/YYYY/MM/</strong>.</p>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn hãng *</label>
+                        <select id="folderBrandSelect" onchange="loadFolderProductsByBrand()" style="width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+                            <option value="">-- Chọn hãng --</option>
+                            {% for brand in brands %}
+                            <option value="{{ brand.id }}">{{ brand.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn sản phẩm *</label>
+                        <select id="folderProductSelect" style="width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+                            <option value="">-- Chọn hãng trước --</option>
+                        </select>
+                    </div>
+                    <div style="margin-bottom: 16px;">
+                        <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Nhập tên thư mục *</label>
+                        <input type="text" id="imageFolderNameInput" placeholder="Ví dụ: iphone-17" style="width: 100%; padding: 10px 14px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+                        <p style="margin-top: 8px; font-size: 12px; color: #64748b; font-family: 'Signika', sans-serif;">Thư mục sẽ được tạo bên trong <strong>media/products/YYYY/MM/</strong>.</p>
+                    </div>
                 </div>
                 <div style="padding: 14px 20px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0;">
                     <button type="button" onclick="closeAddImageFolderModal()" style="padding: 9px 18px; background: #f1f5f9; color: #334155; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-family: 'Signika', sans-serif;">Hủy</button>
@@ -824,14 +842,8 @@
                 <div style="padding: 18px 22px 4px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c1c1c1 #f8fafc;">
                     <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 16px;">
                         <div>
-                            <label style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn thư mục *</label>
-                            <select id="colorImageFolderSelect" style="width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
-                                <option value="">-- Chọn thư mục --</option>
-                            </select>
-                        </div>
-                        <div>
                             <label style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn Hãng *</label>
-                            <select id="colorImageBrandSelect" style="width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+                            <select id="colorImageBrandSelect" onchange="loadColorImageProductsByBrand()" style="width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
                                 <option value="">-- Chọn hãng --</option>
                                 {% for brand in brands %}
                                 <option value="{{ brand.id }}">{{ brand.name }}</option>
@@ -839,9 +851,21 @@
                             </select>
                         </div>
                         <div>
+                            <label style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn thư mục *</label>
+                            <select id="colorImageFolderSelect" style="width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+                                <option value="">-- Chọn thư mục --</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn Sản phẩm *</label>
+                            <select id="colorImageProductSelect" onchange="loadColorImageSkusByProduct()" style="width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+                                <option value="">-- Chọn hãng trước --</option>
+                            </select>
+                        </div>
+                        <div>
                             <label style="display: block; margin-bottom: 6px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn SKU *</label>
                             <select id="colorImageSkuSelect" style="width: 100%; padding: 9px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
-                                <option value="">-- Chọn SKU --</option>
+                                <option value="">-- Chọn sản phẩm trước --</option>
                             </select>
                         </div>
                         <div>
@@ -1499,7 +1523,7 @@
         <div style="padding: 20px 24px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c1c1c1 #f8fafc;">
             <div style="margin-bottom: 16px;">
                 <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn hãng *</label>
-                <select id="addSkuBrand" onchange="loadProductsByBrand()" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+                <select id="addSkuBrand" onchange="loadSkuProductsByBrand()" style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
                     <option value="">-- CHỌN HÃNG --</option>
                     {% for brand in brands %}
                     <option value="{{ brand.id }}">{{ brand.name }}</option>

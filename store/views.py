@@ -2110,99 +2110,6 @@ def product_add(request):
     return JsonResponse({'success': True, 'message': f'Đã thêm sản phẩm "{name}"!'})
 
 
-@login_required
-@require_http_methods(["POST"])
-@csrf_exempt
-def product_edit(request):
-    """Sửa sản phẩm"""
-    if not request.user.is_superuser:
-        return JsonResponse({'success': False, 'message': 'Không có quyền!'}, status=403)
-    
-    from store.models import Product, Brand
-    import os
-    
-    product_id = request.POST.get('product_id')
-    brand_id = request.POST.get('brand')
-    name = request.POST.get('name', '').strip()
-    
-    if not product_id or not brand_id or not name:
-        return JsonResponse({'success': False, 'message': 'Thiếu thông tin cần thiết!'}, status=400)
-    
-    try:
-        product = Product.objects.get(id=product_id)
-    except Product.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Sản phẩm không tồn tại!'}, status=404)
-    
-    try:
-        brand = Brand.objects.get(id=brand_id)
-    except Brand.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Hãng không tồn tại!'}, status=404)
-    
-    try:
-        price = int(price)
-        original_price = int(original_price) if original_price else None
-        stock = int(stock) if stock else 0
-    except ValueError:
-        return JsonResponse({'success': False, 'message': 'Giá và số lượng phải là số!'}, status=400)
-    
-    # Handle image upload - if new image uploaded, delete old and save new
-    new_image = request.FILES.get('image')
-    
-    if new_image:
-        # Delete old image
-        if product.image:
-            try:
-                if os.path.isfile(product.image.path):
-                    os.remove(product.image.path)
-                product.image.delete(save=True)
-            except Exception as e:
-                print(f"Error deleting old image: {e}")
-    
-    product.brand = brand
-    product.name = name
-    if new_image:
-        product.image = new_image
-    product.save()
-    
-    return JsonResponse({'success': True, 'message': f'Đã cập nhật sản phẩm "{name}"!'})
-
-
-@login_required
-@require_http_methods(["POST"])
-@csrf_exempt
-def product_delete(request):
-    """Xóa sản phẩm"""
-    if not request.user.is_superuser:
-        return JsonResponse({'success': False, 'message': 'Không có quyền!'}, status=403)
-    
-    from store.models import Product
-    import os
-    
-    product_id = request.POST.get('product_id')
-    
-    if not product_id:
-        return JsonResponse({'success': False, 'message': 'Thiếu thông tin!'}, status=400)
-    
-    try:
-        product = Product.objects.get(id=product_id)
-    except Product.DoesNotExist:
-        return JsonResponse({'success': False, 'message': 'Sản phẩm không tồn tại!'}, status=404)
-    
-    # Delete image file
-    if product.image:
-        try:
-            if os.path.isfile(product.image.path):
-                os.remove(product.image.path)
-            product.image.delete(save=True)
-        except Exception as e:
-            print(f"Error deleting image: {e}")
-    
-    product_name = product.name
-    product.delete()
-    
-    return JsonResponse({'success': True, 'message': f'Đã xóa sản phẩm "{product_name}"!'})
-
-
 # ==================== Product Detail Management ====================
 @login_required
 @require_http_methods(["POST"])
@@ -2532,9 +2439,10 @@ def image_folder_list(request):
     from store.models import ImageFolder, FolderColorImage
 
     search = request.GET.get('search', '').strip()
+    brand_id = request.GET.get('brand_id', '').strip()
 
     try:
-        images_qs = FolderColorImage.objects.select_related('folder', 'brand')
+        images_qs = FolderColorImage.objects.select_related('folder', 'folder__brand', 'folder__product', 'brand')
         if search:
             images_qs = images_qs.filter(folder__name__icontains=search)
 
@@ -2549,14 +2457,29 @@ def image_folder_list(request):
                     'folder_name': img.folder.name,
                     'color_name': img.color_name,
                     'sku': img.sku,
+                    'brand_id': img.brand.id if img.brand else None,
                     'brand_name': img.brand.name if img.brand else None,
+                    'folder_brand_id': img.folder.brand.id if img.folder.brand else None,
+                    'folder_product_id': img.folder.product.id if img.folder.product else None,
                 }
 
         rows = list(rows_map.values())
 
-        # Danh sách tất cả thư mục (cho dropdown), không phụ thuộc search
-        folders_qs = ImageFolder.objects.all().order_by('-created_at')
-        folders = [{'id': f.id, 'name': f.name} for f in folders_qs]
+        # Danh sách tất cả thư mục (cho dropdown)
+        folders_qs = ImageFolder.objects.select_related('brand', 'product').all().order_by('-created_at')
+        
+        # Lọc theo brand_id nếu có
+        if brand_id:
+            folders_qs = folders_qs.filter(brand_id=brand_id)
+        
+        folders = [{
+            'id': f.id, 
+            'name': f.name,
+            'brand_id': f.brand.id if f.brand else None,
+            'brand_name': f.brand.name if f.brand else None,
+            'product_id': f.product.id if f.product else None,
+            'product_name': f.product.name if f.product else None
+        } for f in folders_qs]
 
         return JsonResponse({'success': True, 'rows': rows, 'folders': folders})
     except Exception as e:
@@ -2571,16 +2494,37 @@ def image_folder_create(request):
     if not request.user.is_superuser:
         return JsonResponse({'success': False, 'message': 'Không có quyền!'}, status=403)
 
-    from store.models import ImageFolder
+    from store.models import ImageFolder, Brand, Product
 
     name = request.POST.get('name', '').strip()
+    brand_id = request.POST.get('brand_id', '').strip()
+    product_id = request.POST.get('product_id', '').strip()
+    
     if not name:
         return JsonResponse({'success': False, 'message': 'Vui lòng nhập tên thư mục!'}, status=400)
+    
+    if not brand_id:
+        return JsonResponse({'success': False, 'message': 'Vui lòng chọn hãng!'}, status=400)
+    
+    if not product_id:
+        return JsonResponse({'success': False, 'message': 'Vui lòng chọn sản phẩm!'}, status=400)
 
     try:
-        # Tự sinh slug từ name (trong model)
-        folder, created = ImageFolder.objects.get_or_create(name=name)
-        # Tạo thư mục vật lý: media/products/YYYY/MM/<slug>/
+        brand = Brand.objects.get(id=brand_id)
+    except Brand.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Hãng không tồn tại!'}, status=404)
+    
+    try:
+        product = Product.objects.get(id=product_id)
+    except Product.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Sản phẩm không tồn tại!'}, status=404)
+
+    try:
+        folder, created = ImageFolder.objects.get_or_create(
+            name=name,
+            brand=brand,
+            product=product
+        )
         now = timezone.now()
         year = now.year
         month = now.strftime('%m')
@@ -2596,7 +2540,15 @@ def image_folder_create(request):
         return JsonResponse({
             'success': True,
             'message': message,
-            'folder': {'id': folder.id, 'name': folder.name, 'slug': folder.slug}
+            'folder': {
+                'id': folder.id, 
+                'name': folder.name, 
+                'slug': folder.slug,
+                'brand_id': folder.brand.id if folder.brand else None,
+                'brand_name': folder.brand.name if folder.brand else None,
+                'product_id': folder.product.id if folder.product else None,
+                'product_name': folder.product.name if folder.product else None
+            }
         })
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
@@ -2725,11 +2677,53 @@ def folder_color_image_delete(request):
                 os.remove(img.image.path)
             img.image.delete(save=False)
     except Exception:
-        # Không chặn xóa record nếu xóa file lỗi
         pass
 
     img.delete()
     return JsonResponse({'success': True, 'message': 'Đã xóa ảnh màu!'})
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def folder_color_row_delete(request):
+    """Xóa tất cả ảnh màu theo folder + sku + color (xóa cả row)"""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Không có quyền!'}, status=403)
+
+    from store.models import FolderColorImage
+
+    folder_id = request.POST.get('folder_id')
+    sku = request.POST.get('sku', '').strip()
+    color_name = request.POST.get('color_name', '').strip()
+
+    if not folder_id or not sku or not color_name:
+        return JsonResponse({'success': False, 'message': 'Thiếu thông tin!'}, status=400)
+
+    try:
+        images = FolderColorImage.objects.filter(
+            folder_id=folder_id,
+            sku=sku,
+            color_name=color_name
+        )
+        
+        count = images.count()
+        if count == 0:
+            return JsonResponse({'success': False, 'message': 'Không tìm thấy ảnh nào!'}, status=404)
+        
+        for img in images:
+            try:
+                if img.image and hasattr(img.image, 'path'):
+                    if os.path.isfile(img.image.path):
+                        os.remove(img.image.path)
+                    img.image.delete(save=False)
+            except Exception:
+                pass
+            img.delete()
+        
+        return JsonResponse({'success': True, 'message': f'Đã xóa {count} ảnh màu!'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
 
 @login_required
@@ -2773,24 +2767,24 @@ def get_product_detail(request):
                 'stock_quantity': v.stock_quantity,
             })
     
-    # Dropdown "Chọn màu (SKU)": lấy SKU + màu từ Ảnh sản phẩm (FolderColorImage) theo hãng
-    # để luôn có dữ liệu dù ProductDetail.sku còn trống
+    # Dropdown "Chọn màu (SKU)": CHỈ lấy SKU của sản phẩm hiện tại từ ProductDetail.sku
+    # Không lấy từ FolderColorImage của toàn brand để tránh hiển thị SKU sản phẩm khác
+    skus_with_color = []
+    
+    # Lấy mapping SKU -> màu từ FolderColorImage (để lấy tên màu nếu có)
     sku_to_color = {}
     if product.brand_id:
-        # Mỗi SKU lấy 1 màu từ Ảnh sản phẩm (FolderColorImage)
         rows = FolderColorImage.objects.filter(brand_id=product.brand_id).order_by('sku', 'created_at')
         for row in rows:
             if row.sku and row.sku not in sku_to_color:
                 sku_to_color[row.sku] = (row.color_name or '').strip()
-    skus_with_color = [{'sku': sku, 'color_name': color} for sku, color in sku_to_color.items()]
-    # Nếu ProductDetail đã có SKU thì giữ thứ tự đó và đảm bảo có trong list
+    
+    # CHỈ lấy SKU đã được thêm cho sản phẩm này trong ProductDetail.sku
     if detail and (detail.sku or '').strip():
         sku_list_raw = [x.strip() for x in (detail.sku or '').split(',') if x.strip()]
-        existing_skus = {s['sku'] for s in skus_with_color}
-        for s in sku_list_raw:
-            if s not in existing_skus:
-                skus_with_color.append({'sku': s, 'color_name': sku_to_color.get(s, '')})
-                existing_skus.add(s)
+        for sku in sku_list_raw:
+            color_name = sku_to_color.get(sku, '')
+            skus_with_color.append({'sku': sku, 'color_name': color_name})
     
     # Lấy thông số kỹ thuật nếu có
     spec_data = None
@@ -3499,6 +3493,117 @@ def qr_payment_create(request):
     return JsonResponse({'success': True, 'id': qr.id, 'message': 'Đã tạo QR thành công'})
 
 
+@csrf_exempt
+@login_required
+@require_POST
+def place_order(request):
+    """
+    Đặt hàng COD hoặc VietQR (sau khi admin duyệt).
+    POST JSON: { payment_method: 'cod' | 'vietqr', items_param: '1,2,3', transfer_code: '...' (nếu vietqr) }
+    """
+    from store.models import Cart, Order, OrderItem, ProductDetail, FolderColorImage, PendingQRPayment
+    import json
+    import random as _rand
+    
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'message': 'Dữ liệu không hợp lệ'}, status=400)
+    
+    payment_method = data.get('payment_method', 'cod')
+    items_param = data.get('items_param', '')
+    transfer_code = data.get('transfer_code', '')
+    
+    if payment_method not in ['cod', 'vietqr']:
+        return JsonResponse({'success': False, 'message': 'Phương thức thanh toán không hợp lệ'}, status=400)
+    
+    # Nếu VietQR, kiểm tra đã được duyệt chưa
+    if payment_method == 'vietqr':
+        if not transfer_code:
+            return JsonResponse({'success': False, 'message': 'Thiếu mã chuyển khoản'}, status=400)
+        try:
+            qr = PendingQRPayment.objects.get(transfer_code=transfer_code, user=request.user, status='approved')
+        except PendingQRPayment.DoesNotExist:
+            return JsonResponse({'success': False, 'message': 'Chưa được admin xác nhận thanh toán'}, status=400)
+    
+    # Lấy cart items
+    if not items_param:
+        return JsonResponse({'success': False, 'message': 'Không có sản phẩm'}, status=400)
+    
+    try:
+        item_ids = [int(x) for x in items_param.split(',') if x.strip()]
+    except (ValueError, TypeError):
+        return JsonResponse({'success': False, 'message': 'Danh sách sản phẩm không hợp lệ'}, status=400)
+    
+    cart = Cart.get_or_create_for_user(request.user)
+    if not cart:
+        return JsonResponse({'success': False, 'message': 'Không tìm thấy giỏ hàng'}, status=400)
+    
+    cart_items = list(cart.items.filter(id__in=item_ids).select_related('product', 'product__brand'))
+    if not cart_items:
+        return JsonResponse({'success': False, 'message': 'Không tìm thấy sản phẩm trong giỏ'}, status=400)
+    
+    # Tính tổng tiền
+    total_amount = sum(item.price_at_add * item.quantity for item in cart_items)
+    
+    # Tạo mã đơn hàng
+    tracking_code = 'QHUN' + str(_rand.randint(10000, 99999))
+    
+    # Tạo Order
+    order = Order.objects.create(
+        user=request.user,
+        order_code=tracking_code,
+        total_amount=total_amount,
+        payment_method=payment_method,
+        status='pending' if payment_method == 'cod' else 'processing'
+    )
+    
+    # Tạo OrderItem (stock sẽ giảm khi admin set status = delivered)
+    for ci in cart_items:
+        thumb_url = ''
+        try:
+            if ci.product and ci.product.brand_id:
+                detail = ProductDetail.objects.get(product=ci.product)
+                variant = detail.variants.filter(
+                    is_active=True, color_name=ci.color_name
+                ).first()
+                if variant and variant.sku:
+                    img = FolderColorImage.objects.filter(
+                        brand_id=ci.product.brand_id,
+                        sku=variant.sku
+                    ).order_by('order').first()
+                    if img:
+                        thumb_url = img.image.url
+            if not thumb_url and ci.product and ci.product.image:
+                thumb_url = ci.product.image.url
+        except Exception:
+            pass
+        
+        OrderItem.objects.create(
+            order=order,
+            product=ci.product,
+            product_name=ci.product.name if ci.product else 'Sản phẩm',
+            color_name=ci.color_name,
+            storage=ci.storage,
+            quantity=ci.quantity,
+            price=ci.price_at_add,
+            thumbnail=thumb_url,
+        )
+    
+    # Xóa cart items
+    cart.items.filter(id__in=item_ids).delete()
+    
+    # Nếu VietQR, xóa pending QR
+    if payment_method == 'vietqr' and transfer_code:
+        PendingQRPayment.objects.filter(transfer_code=transfer_code, user=request.user).delete()
+    
+    return JsonResponse({
+        'success': True,
+        'message': 'Đặt hàng thành công!',
+        'order_code': tracking_code
+    })
+
+
 # ==================== ADMIN ORDER MANAGEMENT ====================
 
 @login_required
@@ -3636,12 +3741,13 @@ def admin_order_detail(request):
 def admin_order_update_status(request):
     """
     Admin: cập nhật trạng thái đơn hàng hoặc trạng thái hoàn tiền
+    Khi chuyển sang 'delivered' → giảm số lượng tồn kho
     """
     if not request.user.is_superuser:
         return JsonResponse({'success': False, 'message': 'Không có quyền'}, status=403)
     
     import json
-    from store.models import Order
+    from store.models import Order, ProductDetail
     
     try:
         data = json.loads(request.body)
@@ -3650,12 +3756,30 @@ def admin_order_update_status(request):
         refund_status = data.get('refund_status')
         
         order = Order.objects.get(id=order_id)
+        old_status = order.status
         
         # Cập nhật trạng thái đơn hàng
         if new_status:
             valid_statuses = ['pending', 'processing', 'shipped', 'delivered', 'cancelled']
             if new_status not in valid_statuses:
                 return JsonResponse({'success': False, 'message': 'Trạng thái không hợp lệ'})
+            
+            # Khi chuyển sang 'delivered' và trước đó chưa phải delivered → giảm stock
+            if new_status == 'delivered' and old_status != 'delivered':
+                for item in order.items.all():
+                    if item.product:
+                        try:
+                            detail = ProductDetail.objects.get(product=item.product)
+                            variant = detail.variants.filter(
+                                color_name=item.color_name,
+                                storage=item.storage
+                            ).first()
+                            if variant and variant.stock_quantity >= item.quantity:
+                                variant.stock_quantity -= item.quantity
+                                variant.save(update_fields=['stock_quantity'])
+                        except ProductDetail.DoesNotExist:
+                            pass
+            
             order.status = new_status
         
         # Cập nhật trạng thái hoàn tiền
