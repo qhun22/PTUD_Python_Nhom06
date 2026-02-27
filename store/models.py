@@ -1,3 +1,4 @@
+from decimal import Decimal
 from django.contrib.auth.models import AbstractUser, UserManager
 from django.db import models
 from django.utils.text import slugify
@@ -788,22 +789,28 @@ class ProductContent(models.Model):
 class Coupon(models.Model):
     """Mã giảm giá"""
     DISCOUNT_TYPE_CHOICES = [
-        ('percentage', 'Phần trăm (%)'),
-        ('fixed', 'Số tiền cố định (đ)'),
+        ('percentage', 'Giảm %'),
+        ('fixed', 'Giảm số tiền'),
+    ]
+    TARGET_TYPE_CHOICES = [
+        ('all', 'Mọi người'),
+        ('single', '1 người'),
     ]
     
-    code = models.CharField(max_length=50, unique=True, verbose_name='Mã giảm giá')
-    description = models.CharField(max_length=255, blank=True, verbose_name='Mô tả')
-    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES, default='percentage', verbose_name='Loại giảm giá')
+    name = models.CharField(max_length=255, default='', verbose_name='Tên chương trình')
+    code = models.CharField(max_length=50, unique=True, verbose_name='Tên mã giảm')
+    discount_type = models.CharField(max_length=20, choices=DISCOUNT_TYPE_CHOICES, default='percentage', verbose_name='Kiểu giảm giá')
     discount_value = models.DecimalField(max_digits=15, decimal_places=0, default=0, verbose_name='Giá trị giảm')
+    target_type = models.CharField(max_length=10, choices=TARGET_TYPE_CHOICES, default='all', verbose_name='Đối tượng')
+    target_email = models.EmailField(blank=True, default='', verbose_name='Email áp dụng')
+    max_products = models.PositiveIntegerField(default=0, verbose_name='Giới hạn sản phẩm', help_text='Số SP tối đa được áp dụng. 0 = không giới hạn')
     min_order_amount = models.DecimalField(max_digits=15, decimal_places=0, default=0, verbose_name='Đơn tối thiểu')
-    max_discount = models.DecimalField(max_digits=15, decimal_places=0, default=0, verbose_name='Giảm tối đa', help_text='Chỉ áp dụng cho loại phần trăm. 0 = không giới hạn')
-    usage_limit = models.PositiveIntegerField(default=0, verbose_name='Giới hạn sử dụng', help_text='0 = không giới hạn')
+    usage_limit = models.PositiveIntegerField(default=0, verbose_name='Giới hạn lượt dùng', help_text='0 = không giới hạn')
     used_count = models.PositiveIntegerField(default=0, verbose_name='Đã sử dụng')
-    is_active = models.BooleanField(default=True, verbose_name='Kích hoạt')
-    start_date = models.DateTimeField(verbose_name='Ngày bắt đầu')
-    end_date = models.DateTimeField(verbose_name='Ngày kết thúc')
+    expire_days = models.PositiveIntegerField(default=30, verbose_name='Hạn sử dụng (ngày)')
+    is_active = models.BooleanField(default=True, verbose_name='Còn sử dụng')
     created_at = models.DateTimeField(auto_now_add=True, verbose_name='Ngày tạo')
+    expire_at = models.DateTimeField(verbose_name='Ngày hết hạn', null=True, blank=True)
     
     class Meta:
         verbose_name = 'Mã giảm giá'
@@ -813,12 +820,23 @@ class Coupon(models.Model):
     def __str__(self):
         return self.code
     
-    def is_valid(self):
+    def save(self, *args, **kwargs):
+        if not self.expire_at:
+            from django.utils import timezone
+            import datetime
+            self.expire_at = timezone.now() + datetime.timedelta(days=self.expire_days)
+        super().save(*args, **kwargs)
+    
+    def is_expired(self):
         from django.utils import timezone
-        now = timezone.now()
+        if not self.expire_at:
+            return True
+        return timezone.now() > self.expire_at
+    
+    def is_valid(self):
         if not self.is_active:
             return False
-        if now < self.start_date or now > self.end_date:
+        if self.is_expired():
             return False
         if self.usage_limit > 0 and self.used_count >= self.usage_limit:
             return False
@@ -829,8 +847,6 @@ class Coupon(models.Model):
             return Decimal('0')
         if self.discount_type == 'percentage':
             discount = order_total * self.discount_value / Decimal('100')
-            if self.max_discount > 0:
-                discount = min(discount, self.max_discount)
         else:
             discount = self.discount_value
         return min(discount, order_total)

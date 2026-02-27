@@ -581,10 +581,13 @@ def refund_pending(request):
     for order in orders:
         items_data = []
         for item in order.items.all():
+            cn = item.color_name or ''
+            if ' - ' in cn:
+                cn = cn.split(' - ', 1)[1]
             items_data.append({
                 'product_name': item.product_name,
                 'quantity': item.quantity,
-                'color_name': item.color_name,
+                'color_name': cn,
                 'storage': item.storage,
                 'price': str(item.price)
             })
@@ -652,10 +655,13 @@ def refund_detail(request, order_code):
     
     items_data = []
     for item in order.items.all():
+        cn = item.color_name or ''
+        if ' - ' in cn:
+            cn = cn.split(' - ', 1)[1]
         items_data.append({
             'product_name': item.product_name,
             'quantity': item.quantity,
-            'color_name': item.color_name,
+            'color_name': cn,
             'storage': item.storage,
             'price': str(item.price)
         })
@@ -1284,6 +1290,19 @@ def profile(request):
                 messages.success(request, 'Đổi mật khẩu thành công!')
                 return redirect('store:profile')
         
+        # Voucher khả dụng cho user
+        from store.models import Coupon
+        all_coupons = Coupon.objects.filter(is_active=True)
+        available_coupons = []
+        for cp in all_coupons:
+            if cp.is_expired():
+                continue
+            if cp.usage_limit > 0 and cp.used_count >= cp.usage_limit:
+                continue
+            if cp.target_type == 'single' and cp.target_email.lower() != request.user.email.lower():
+                continue
+            available_coupons.append(cp)
+        
         context.update({
             'orders': orders,
             'total_orders': total_orders,
@@ -1292,6 +1311,7 @@ def profile(request):
             'password_history': password_history,
             'addresses': addresses,
             'refunded_orders': refunded_orders,
+            'available_coupons': available_coupons,
         })
     
     return render(request, 'store/profile.html', context)
@@ -3625,6 +3645,28 @@ def place_order(request):
     # Tính tổng tiền
     total_amount = sum(item.price_at_add * item.quantity for item in cart_items)
     
+    # Xử lý mã giảm giá (7-step)
+    coupon_code = data.get('coupon_code', '').strip().upper()
+    discount_amount = Decimal('0')
+    item_count = sum(ci.quantity for ci in cart_items)
+    if coupon_code:
+        from store.models import Coupon
+        try:
+            coupon = Coupon.objects.get(code=coupon_code)
+            if (coupon.is_valid()
+                and total_amount >= coupon.min_order_amount
+                and (coupon.max_products == 0 or item_count <= coupon.max_products)
+                and (coupon.target_type == 'all' or request.user.email.lower() == coupon.target_email.lower())):
+                discount_amount = coupon.calculate_discount(total_amount)
+                coupon.used_count += 1
+                coupon.save(update_fields=['used_count'])
+            else:
+                coupon_code = ''
+        except Coupon.DoesNotExist:
+            coupon_code = ''
+    
+    final_amount = total_amount - discount_amount
+    
     # Tạo mã đơn hàng
     tracking_code = 'QHUN' + str(_rand.randint(10000, 99999))
     
@@ -3632,7 +3674,9 @@ def place_order(request):
     order = Order.objects.create(
         user=request.user,
         order_code=tracking_code,
-        total_amount=total_amount,
+        total_amount=final_amount,
+        coupon_code=coupon_code,
+        discount_amount=discount_amount,
         payment_method=payment_method,
         status='pending' if payment_method == 'cod' else 'processing'
     )
@@ -3971,13 +4015,16 @@ def admin_order_list(request):
         else:
             for item in items:
                 stt += 1
+                c_name = item.color_name or '—'
+                if ' - ' in c_name:
+                    c_name = c_name.split(' - ', 1)[1]
                 result.append({
                     'stt': stt,
                     'id': order.id,
                     'order_code': order.order_code,
                     'product_name': item.product_name,
                     'quantity': item.quantity,
-                    'color_name': item.color_name or '—',
+                    'color_name': c_name,
                     'storage': item.storage or '—',
                     'price': str(item.price),
                     'total_amount': str(order.total_amount),
@@ -4030,10 +4077,13 @@ def admin_order_detail(request):
     # Items
     items = []
     for item in order.items.all():
+        color = item.color_name or ''
+        if ' - ' in color:
+            color = color.split(' - ', 1)[1]
         items.append({
             'product_name': item.product_name,
             'quantity': item.quantity,
-            'color_name': item.color_name,
+            'color_name': color,
             'storage': item.storage,
             'price': str(item.price),
             'thumbnail': item.thumbnail,
@@ -4051,8 +4101,8 @@ def admin_order_detail(request):
         'user_email': order.user.email if order.user else '—',
         'address': address_data,
         'items': items,
-        'voucher': None,  # TODO: voucher khi có
-        'discount_amount': '0',  # TODO: khi có voucher
+        'voucher': order.coupon_code if order.coupon_code else None,
+        'discount_amount': str(int(order.discount_amount)) if order.discount_amount else '0',
         'refund_account': order.refund_account or '',
         'refund_bank': order.refund_bank or '',
         'refund_status': order.refund_status or '',
@@ -4639,17 +4689,18 @@ def coupon_list(request):
             c = Coupon.objects.get(id=coupon_id)
             return JsonResponse({'success': True, 'coupon': {
                 'id': c.id,
+                'name': c.name,
                 'code': c.code,
-                'description': c.description,
                 'discount_type': c.discount_type,
                 'discount_value': str(c.discount_value),
+                'target_type': c.target_type,
+                'target_email': c.target_email,
+                'max_products': c.max_products,
                 'min_order_amount': str(c.min_order_amount),
-                'max_discount': str(c.max_discount),
                 'usage_limit': c.usage_limit,
                 'used_count': c.used_count,
+                'expire_days': c.expire_days,
                 'is_active': c.is_active,
-                'start_date_raw': c.start_date.strftime('%Y-%m-%dT%H:%M'),
-                'end_date_raw': c.end_date.strftime('%Y-%m-%dT%H:%M'),
             }})
         except Coupon.DoesNotExist:
             return JsonResponse({'success': False, 'message': 'Không tìm thấy'}, status=404)
@@ -4659,18 +4710,19 @@ def coupon_list(request):
     for c in coupons:
         result.append({
             'id': c.id,
+            'name': c.name,
             'code': c.code,
-            'description': c.description,
             'discount_type': c.discount_type,
             'discount_value': str(c.discount_value),
+            'target_type': c.target_type,
+            'target_email': c.target_email,
+            'max_products': c.max_products,
             'min_order_amount': str(c.min_order_amount),
-            'max_discount': str(c.max_discount),
             'usage_limit': c.usage_limit,
             'used_count': c.used_count,
             'is_active': c.is_active,
             'is_valid': c.is_valid(),
-            'start_date': c.start_date.strftime('%d/%m/%Y %H:%M'),
-            'end_date': c.end_date.strftime('%d/%m/%Y %H:%M'),
+            'expire_at': c.expire_at.strftime('%d/%m/%Y'),
         })
     return JsonResponse({'success': True, 'coupons': result})
 
@@ -4685,29 +4737,36 @@ def coupon_add(request):
     from store.models import Coupon
     
     code = request.POST.get('code', '').strip().upper()
+    name = request.POST.get('name', '').strip()
+    if not name:
+        return JsonResponse({'success': False, 'message': 'Tên chương trình không được để trống'})
     if not code:
-        return JsonResponse({'success': False, 'message': 'Mã giảm giá không được để trống'})
-    
+        return JsonResponse({'success': False, 'message': 'Tên mã giảm không được để trống'})
+    if ' ' in code:
+        return JsonResponse({'success': False, 'message': 'Mã giảm không được chứa khoảng trắng'})
     if Coupon.objects.filter(code=code).exists():
         return JsonResponse({'success': False, 'message': 'Mã giảm giá đã tồn tại'})
     
-    start_date = request.POST.get('start_date', '')
-    end_date = request.POST.get('end_date', '')
-    if not start_date or not end_date:
-        return JsonResponse({'success': False, 'message': 'Vui lòng chọn ngày bắt đầu và kết thúc'})
+    expire_days = int(request.POST.get('expire_days', '30'))
+    if expire_days < 1:
+        return JsonResponse({'success': False, 'message': 'Hạn sử dụng phải ít nhất 1 ngày'})
+    
+    expire_at = timezone.now() + datetime.timedelta(days=expire_days)
     
     try:
         Coupon.objects.create(
+            name=name,
             code=code,
-            description=request.POST.get('description', ''),
             discount_type=request.POST.get('discount_type', 'percentage'),
             discount_value=Decimal(request.POST.get('discount_value', '0')),
+            target_type=request.POST.get('target_type', 'all'),
+            target_email=request.POST.get('target_email', ''),
+            max_products=int(request.POST.get('max_products', '0')),
             min_order_amount=Decimal(request.POST.get('min_order_amount', '0')),
-            max_discount=Decimal(request.POST.get('max_discount', '0')),
             usage_limit=int(request.POST.get('usage_limit', '0')),
+            expire_days=expire_days,
             is_active=request.POST.get('is_active') == '1',
-            start_date=start_date,
-            end_date=end_date,
+            expire_at=expire_at,
         )
         return JsonResponse({'success': True, 'message': 'Đã thêm mã giảm giá'})
     except Exception as e:
@@ -4732,21 +4791,20 @@ def coupon_edit(request):
     except Coupon.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Không tìm thấy'})
     
-    start_date = request.POST.get('start_date', '')
-    end_date = request.POST.get('end_date', '')
-    if not start_date or not end_date:
-        return JsonResponse({'success': False, 'message': 'Vui lòng chọn ngày bắt đầu và kết thúc'})
-    
     try:
-        c.description = request.POST.get('description', '')
+        c.name = request.POST.get('name', c.name)
         c.discount_type = request.POST.get('discount_type', 'percentage')
         c.discount_value = Decimal(request.POST.get('discount_value', '0'))
+        c.target_type = request.POST.get('target_type', 'all')
+        c.target_email = request.POST.get('target_email', '')
+        c.max_products = int(request.POST.get('max_products', '0'))
         c.min_order_amount = Decimal(request.POST.get('min_order_amount', '0'))
-        c.max_discount = Decimal(request.POST.get('max_discount', '0'))
         c.usage_limit = int(request.POST.get('usage_limit', '0'))
+        new_expire_days = int(request.POST.get('expire_days', '0'))
+        if new_expire_days > 0 and new_expire_days != c.expire_days:
+            c.expire_days = new_expire_days
+            c.expire_at = c.created_at + datetime.timedelta(days=new_expire_days)
         c.is_active = request.POST.get('is_active') == '1'
-        c.start_date = start_date
-        c.end_date = end_date
         c.save()
         return JsonResponse({'success': True, 'message': 'Đã cập nhật mã giảm giá'})
     except Exception as e:
@@ -4777,7 +4835,16 @@ def coupon_delete(request):
 @login_required
 @require_POST
 def coupon_apply(request):
-    """Áp dụng mã giảm giá (dùng ở checkout)"""
+    """
+    Áp dụng mã giảm giá - 7-step validation:
+    1. Có tồn tại không?
+    2. Có active không?
+    3. Có hết hạn chưa?
+    4. Có đúng đối tượng không?
+    5. Đơn có đạt tối thiểu không?
+    6. Có vượt số lượng sản phẩm không?
+    7. Đã vượt số lượt chưa?
+    """
     from store.models import Coupon
     import json
     
@@ -4787,30 +4854,63 @@ def coupon_apply(request):
         return JsonResponse({'success': False, 'message': 'Dữ liệu không hợp lệ'})
     
     code = data.get('code', '').strip().upper()
-    order_total = Decimal(str(data.get('order_total', '0')))
+    try:
+        order_total = Decimal(str(data.get('order_total', 0)))
+    except Exception:
+        order_total = Decimal('0')
+    try:
+        item_count = int(data.get('item_count', 0))
+    except Exception:
+        item_count = 0
     
     if not code:
         return JsonResponse({'success': False, 'message': 'Vui lòng nhập mã giảm giá'})
     
+    # 1. Có tồn tại không?
     try:
         coupon = Coupon.objects.get(code=code)
     except Coupon.DoesNotExist:
         return JsonResponse({'success': False, 'message': 'Mã giảm giá không tồn tại'})
     
-    if not coupon.is_valid():
-        return JsonResponse({'success': False, 'message': 'Mã giảm giá đã hết hạn hoặc hết lượt sử dụng'})
+    # 2. Có active không?
+    if not coupon.is_active:
+        return JsonResponse({'success': False, 'message': 'Mã giảm giá đã bị vô hiệu hóa'})
     
+    # 3. Có hết hạn chưa?
+    if coupon.is_expired():
+        return JsonResponse({'success': False, 'message': 'Mã giảm giá đã hết hạn'})
+    
+    # 4. Có đúng đối tượng không?
+    if coupon.target_type == 'single':
+        if not request.user.is_authenticated:
+            return JsonResponse({'success': False, 'message': 'Vui lòng đăng nhập để sử dụng mã này'})
+        if request.user.email.lower() != coupon.target_email.lower():
+            return JsonResponse({'success': False, 'message': 'Mã giảm giá không áp dụng cho tài khoản của bạn'})
+    
+    # 5. Đơn có đạt tối thiểu không?
     if order_total < coupon.min_order_amount:
-        return JsonResponse({'success': False, 'message': f'Đơn hàng tối thiểu {int(coupon.min_order_amount):,}đ để áp dụng mã này'.replace(',', '.')})
+        min_fmt = f'{int(coupon.min_order_amount):,}'.replace(',', '.')
+        return JsonResponse({'success': False, 'message': f'Đơn hàng chưa đạt giá trị tối thiểu {min_fmt}đ'})
     
-    discount = coupon.calculate_discount(order_total)
+    # 6. Có vượt số lượng sản phẩm không?
+    if coupon.max_products > 0 and item_count > coupon.max_products:
+        return JsonResponse({'success': False, 'message': f'Voucher chỉ áp dụng cho tối đa {coupon.max_products} sản phẩm'})
+    
+    # 7. Đã vượt số lượt chưa?
+    if coupon.usage_limit > 0 and coupon.used_count >= coupon.usage_limit:
+        return JsonResponse({'success': False, 'message': 'Mã giảm giá đã hết lượt sử dụng'})
+    
+    try:
+        discount = coupon.calculate_discount(order_total)
+    except Exception:
+        return JsonResponse({'success': False, 'message': 'Lỗi tính toán giảm giá'})
     
     return JsonResponse({
         'success': True,
         'code': coupon.code,
-        'discount': str(discount),
+        'discount': str(int(discount)),
         'discount_display': f'{int(discount):,}đ'.replace(',', '.'),
-        'new_total': str(order_total - discount),
+        'new_total': str(int(order_total - discount)),
         'new_total_display': f'{int(order_total - discount):,}đ'.replace(',', '.'),
-        'description': coupon.description,
+        'name': coupon.name,
     })

@@ -135,4 +135,11 @@ urlpatterns = [
     path('api/admin/orders/', views.admin_order_list, name='admin_order_list'),
     path('api/admin/order-detail/', views.admin_order_detail, name='admin_order_detail'),
     path('api/admin/order-update-status/', views.admin_order_update_status, name='admin_order_update_status'),
+
+    # Coupon Management
+    path('api/coupons/', views.coupon_list, name='coupon_list'),
+    path('api/coupons/add/', views.coupon_add, name='coupon_add'),
+    path('api/coupons/edit/', views.coupon_edit, name='coupon_edit'),
+    path('api/coupons/delete/', views.coupon_delete, name='coupon_delete'),
+    path('api/coupons/apply/', views.coupon_apply, name='coupon_apply'),
 ]

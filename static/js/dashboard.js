@@ -3084,27 +3084,27 @@ function openAdminOrderDetail(id) {
             }
             html += '</div>';
 
-            // Items table
+            // Items
             html += '<div style="margin-bottom: 16px;">';
             html += '<h4 style="font-size: 14px; font-weight: 600; color: #334155; margin: 0 0 10px;">Sản phẩm</h4>';
-            html += '<table style="width:100%; border-collapse:collapse; font-size:13px;">';
-            html += '<thead><tr style="background:#f1f5f9; text-align:left;">';
-            html += '<th style="padding:8px 10px;">Tên SP</th>';
-            html += '<th style="padding:8px 10px; text-align:center;">SL</th>';
-            html += '<th style="padding:8px 10px;">Màu</th>';
-            html += '<th style="padding:8px 10px;">Bộ nhớ</th>';
-            html += '<th style="padding:8px 10px; text-align:right;">Giá</th>';
-            html += '</tr></thead><tbody>';
             o.items.forEach(function (item) {
-                html += '<tr style="border-bottom: 1px solid #f1f5f9;">';
-                html += '<td style="padding:8px 10px; color:#1e293b; font-weight:500;">' + _escHtml(item.product_name) + '</td>';
-                html += '<td style="padding:8px 10px; text-align:center; color:#64748b;">' + item.quantity + '</td>';
-                html += '<td style="padding:8px 10px; color:#64748b;">' + _escHtml(item.color_name || '—') + '</td>';
-                html += '<td style="padding:8px 10px; color:#64748b;">' + _escHtml(item.storage || '—') + '</td>';
-                html += '<td style="padding:8px 10px; text-align:right; color:#1e293b; font-weight:600;">' + _formatVND(item.price) + '</td>';
-                html += '</tr>';
+                html += '<div style="display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid #f1f5f9;">';
+                if (item.thumbnail) {
+                    html += '<img src="' + _escHtml(item.thumbnail) + '" alt="" style="width:50px; height:50px; border-radius:8px; object-fit:cover; flex-shrink:0; background:#f8fafc;">';
+                } else {
+                    html += '<div style="width:50px; height:50px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#94a3b8;"><svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
+                }
+                html += '<div style="flex:1; min-width:0;">';
+                html += '<div style="font-size:13px; font-weight:600; color:#1e293b; margin-bottom:2px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + _escHtml(item.product_name) + '</div>';
+                html += '<div style="font-size:12px; color:#64748b;">';
+                if (item.color_name && item.color_name !== '—') html += 'Màu: ' + _escHtml(item.color_name);
+                if (item.storage && item.storage !== '—') html += ' &nbsp;|&nbsp; ' + _escHtml(item.storage);
+                html += ' &nbsp;|&nbsp; SL: ' + item.quantity;
+                html += '</div></div>';
+                html += '<div style="flex-shrink:0; text-align:right; font-size:13px; font-weight:700; color:#1e293b;">' + _formatVND(item.price) + '</div>';
+                html += '</div>';
             });
-            html += '</tbody></table></div>';
+            html += '</div>';
 
             // Order info block
             html += '<div style="background: #f8fafc; border-radius: 8px; padding: 14px 18px;">';
@@ -3272,10 +3272,33 @@ function _getPaymentBadge(key, display) {
 
 // ==================== COUPON MANAGEMENT ====================
 
+function toggleDiscountInput() {
+    var type = document.getElementById('couponDiscountType').value;
+    document.getElementById('couponPercentWrap').style.display = (type === 'percentage') ? 'block' : 'none';
+    document.getElementById('couponFixedWrap').style.display = (type === 'fixed') ? 'block' : 'none';
+}
+
+function toggleTargetEmail() {
+    var val = document.querySelector('input[name="couponTarget"]:checked').value;
+    document.getElementById('couponEmailWrap').style.display = (val === 'single') ? 'block' : 'none';
+}
+
+function previewExpireDate() {
+    var days = parseInt(document.getElementById('couponExpireDays').value) || 0;
+    var preview = document.getElementById('couponExpirePreview');
+    if (days > 0) {
+        var d = new Date();
+        d.setDate(d.getDate() + days);
+        preview.textContent = 'Hết hạn: ' + d.toLocaleDateString('vi-VN');
+    } else {
+        preview.textContent = '';
+    }
+}
+
 function loadCouponList() {
     var tbody = document.getElementById('couponTableBody');
     if (!tbody) return;
-    tbody.innerHTML = '<tr><td colspan="10" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Đang tải...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Đang tải...</td></tr>';
     
     fetch(window.couponListUrl, {
         headers: { 'X-CSRFToken': window.csrfToken }
@@ -3283,32 +3306,35 @@ function loadCouponList() {
     .then(function(res) { return res.json(); })
     .then(function(data) {
         if (!data.success) {
-            tbody.innerHTML = '<tr><td colspan="10" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi: ' + (data.message || 'Không thể tải') + '</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi: ' + (data.message || 'Không thể tải') + '</td></tr>';
             return;
         }
         var coupons = data.coupons || [];
         if (coupons.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="10" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Chưa có mã giảm giá nào</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Chưa có mã giảm giá nào</td></tr>';
             return;
         }
         var html = '';
         coupons.forEach(function(c, idx) {
-            var typeLabel = c.discount_type === 'percentage' ? c.discount_value + '%' : Number(c.discount_value).toLocaleString('vi-VN') + ' đ';
+            var discountLabel = c.discount_type === 'percentage' ? c.discount_value + '%' : Number(c.discount_value).toLocaleString('vi-VN') + 'đ';
             var statusBg = c.is_valid ? '#d1fae5' : '#fee2e2';
             var statusColor = c.is_valid ? '#065f46' : '#991b1b';
-            var statusText = c.is_valid ? 'Còn hiệu lực' : (c.is_active ? 'Hết hạn/hết lượt' : 'Tắt');
+            var statusText = c.is_valid ? 'Còn sử dụng' : 'Đã hết hạn';
             var usageText = c.used_count + (c.usage_limit > 0 ? '/' + c.usage_limit : '/∞');
+            var targetText = c.target_type === 'all' ? 'Mọi người' : c.target_email;
+            var maxProdText = c.max_products > 0 ? c.max_products : '∞';
             
             html += '<tr style="border-bottom:1px solid #f1f5f9;">'
                 + '<td style="padding:12px 14px;text-align:center;font-size:14px;color:#64748b;">' + (idx + 1) + '</td>'
                 + '<td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1e293b;white-space:nowrap;">' + c.code + '</td>'
-                + '<td style="padding:12px 14px;font-size:13px;color:#64748b;max-width:160px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (c.description || '-') + '</td>'
-                + '<td style="padding:12px 14px;text-align:center;font-size:13px;color:#64748b;">' + (c.discount_type === 'percentage' ? '%' : 'đ') + '</td>'
-                + '<td style="padding:12px 14px;text-align:right;font-size:14px;font-weight:500;color:#1e293b;">' + typeLabel + '</td>'
-                + '<td style="padding:12px 14px;text-align:right;font-size:13px;color:#64748b;">' + (c.min_order_amount > 0 ? Number(c.min_order_amount).toLocaleString('vi-VN') + ' đ' : '-') + '</td>'
+                + '<td style="padding:12px 14px;font-size:13px;color:#64748b;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (c.name || '-') + '</td>'
+                + '<td style="padding:12px 14px;text-align:center;font-size:14px;font-weight:500;color:#1e293b;">' + discountLabel + '</td>'
+                + '<td style="padding:12px 14px;text-align:center;font-size:12px;color:#64748b;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + targetText + '</td>'
+                + '<td style="padding:12px 14px;text-align:right;font-size:13px;color:#64748b;">' + (c.min_order_amount > 0 ? Number(c.min_order_amount).toLocaleString('vi-VN') + 'đ' : '0đ') + '</td>'
+                + '<td style="padding:12px 14px;text-align:center;font-size:13px;color:#64748b;">' + maxProdText + '</td>'
                 + '<td style="padding:12px 14px;text-align:center;font-size:13px;color:#64748b;">' + usageText + '</td>'
                 + '<td style="padding:12px 14px;text-align:center;"><span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:' + statusBg + ';color:' + statusColor + ';">' + statusText + '</span></td>'
-                + '<td style="padding:12px 14px;font-size:12px;color:#64748b;white-space:nowrap;">' + c.start_date + '<br>' + c.end_date + '</td>'
+                + '<td style="padding:12px 14px;font-size:12px;color:#64748b;white-space:nowrap;">' + c.expire_at + '</td>'
                 + '<td style="padding:12px 14px;text-align:center;white-space:nowrap;">'
                 + '<button type="button" onclick="editCoupon(' + c.id + ')" style="padding:6px 12px;background:#dbeafe;color:#1e40af;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:\'Signika\',sans-serif;font-weight:500;margin-right:4px;">Sửa</button>'
                 + '<button type="button" onclick="deleteCoupon(' + c.id + ',\'' + c.code + '\')" style="padding:6px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:\'Signika\',sans-serif;font-weight:500;">Xóa</button>'
@@ -3317,25 +3343,30 @@ function loadCouponList() {
         });
         tbody.innerHTML = html;
     })
-    .catch(function(err) {
-        tbody.innerHTML = '<tr><td colspan="10" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi kết nối</td></tr>';
+    .catch(function() {
+        tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi kết nối</td></tr>';
     });
 }
 
 function openAddCouponModal() {
     document.getElementById('couponModalTitle').textContent = 'Thêm mã giảm giá';
     document.getElementById('couponEditId').value = '';
+    document.getElementById('couponName').value = '';
     document.getElementById('couponCode').value = '';
     document.getElementById('couponCode').disabled = false;
-    document.getElementById('couponDescription').value = '';
     document.getElementById('couponDiscountType').value = 'percentage';
-    document.getElementById('couponDiscountValue').value = '';
-    document.getElementById('couponMaxDiscount').value = '';
-    document.getElementById('couponMinOrder').value = '';
-    document.getElementById('couponUsageLimit').value = '';
-    document.getElementById('couponStartDate').value = '';
-    document.getElementById('couponEndDate').value = '';
-    document.getElementById('couponIsActive').checked = true;
+    toggleDiscountInput();
+    document.getElementById('couponPercentValue').value = '';
+    document.getElementById('couponFixedValue').value = '';
+    document.querySelector('input[name="couponTarget"][value="all"]').checked = true;
+    toggleTargetEmail();
+    document.getElementById('couponTargetEmail').value = '';
+    document.getElementById('couponMaxProducts').value = '0';
+    document.getElementById('couponMinOrder').value = '0';
+    document.getElementById('couponUsageLimit').value = '0';
+    document.getElementById('couponExpireDays').value = '';
+    document.getElementById('couponExpirePreview').textContent = '';
+    document.getElementById('couponStatus').value = '1';
     document.getElementById('couponModal').style.display = 'flex';
 }
 
@@ -3353,34 +3384,71 @@ function editCoupon(id) {
         var c = data.coupon;
         document.getElementById('couponModalTitle').textContent = 'Sửa mã giảm giá';
         document.getElementById('couponEditId').value = c.id;
+        document.getElementById('couponName').value = c.name || '';
         document.getElementById('couponCode').value = c.code;
         document.getElementById('couponCode').disabled = true;
-        document.getElementById('couponDescription').value = c.description || '';
         document.getElementById('couponDiscountType').value = c.discount_type;
-        document.getElementById('couponDiscountValue').value = c.discount_value;
-        document.getElementById('couponMaxDiscount').value = c.max_discount || '';
-        document.getElementById('couponMinOrder').value = c.min_order_amount || '';
-        document.getElementById('couponUsageLimit').value = c.usage_limit || '';
-        document.getElementById('couponStartDate').value = c.start_date_raw || '';
-        document.getElementById('couponEndDate').value = c.end_date_raw || '';
-        document.getElementById('couponIsActive').checked = c.is_active;
+        toggleDiscountInput();
+        if (c.discount_type === 'percentage') {
+            document.getElementById('couponPercentValue').value = c.discount_value;
+        } else {
+            document.getElementById('couponFixedValue').value = c.discount_value;
+        }
+        var targetRadio = document.querySelector('input[name="couponTarget"][value="' + c.target_type + '"]');
+        if (targetRadio) targetRadio.checked = true;
+        toggleTargetEmail();
+        document.getElementById('couponTargetEmail').value = c.target_email || '';
+        document.getElementById('couponMaxProducts').value = c.max_products || '0';
+        document.getElementById('couponMinOrder').value = c.min_order_amount || '0';
+        document.getElementById('couponUsageLimit').value = c.usage_limit || '0';
+        document.getElementById('couponExpireDays').value = c.expire_days || '';
+        previewExpireDate();
+        document.getElementById('couponStatus').value = c.is_active ? '1' : '0';
         document.getElementById('couponModal').style.display = 'flex';
     });
 }
 
 function saveCoupon() {
     var editId = document.getElementById('couponEditId').value;
+    var code = document.getElementById('couponCode').value.trim().toUpperCase();
+    var name = document.getElementById('couponName').value.trim();
+    
+    if (!name) return alert('Vui lòng nhập tên chương trình');
+    if (!code) return alert('Vui lòng nhập tên mã giảm');
+    if (/\s/.test(code)) return alert('Mã giảm không được chứa khoảng trắng');
+    
+    var discountType = document.getElementById('couponDiscountType').value;
+    var discountValue;
+    if (discountType === 'percentage') {
+        discountValue = parseInt(document.getElementById('couponPercentValue').value) || 0;
+        if (discountValue < 1 || discountValue > 100) return alert('% giảm phải từ 1 đến 100');
+    } else {
+        discountValue = parseInt(document.getElementById('couponFixedValue').value) || 0;
+        if (discountValue < 1) return alert('Số tiền giảm phải lớn hơn 0');
+    }
+    
+    var targetType = document.querySelector('input[name="couponTarget"]:checked').value;
+    var targetEmail = '';
+    if (targetType === 'single') {
+        targetEmail = document.getElementById('couponTargetEmail').value.trim();
+        if (!targetEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail)) return alert('Vui lòng nhập email hợp lệ');
+    }
+    
+    var expireDays = parseInt(document.getElementById('couponExpireDays').value) || 0;
+    if (!editId && expireDays < 1) return alert('Hạn sử dụng phải ít nhất 1 ngày');
+    
     var fd = new FormData();
-    fd.append('code', document.getElementById('couponCode').value.trim().toUpperCase());
-    fd.append('description', document.getElementById('couponDescription').value.trim());
-    fd.append('discount_type', document.getElementById('couponDiscountType').value);
-    fd.append('discount_value', document.getElementById('couponDiscountValue').value || '0');
-    fd.append('max_discount', document.getElementById('couponMaxDiscount').value || '0');
+    fd.append('name', name);
+    fd.append('code', code);
+    fd.append('discount_type', discountType);
+    fd.append('discount_value', discountValue);
+    fd.append('target_type', targetType);
+    fd.append('target_email', targetEmail);
+    fd.append('max_products', document.getElementById('couponMaxProducts').value || '0');
     fd.append('min_order_amount', document.getElementById('couponMinOrder').value || '0');
     fd.append('usage_limit', document.getElementById('couponUsageLimit').value || '0');
-    fd.append('start_date', document.getElementById('couponStartDate').value);
-    fd.append('end_date', document.getElementById('couponEndDate').value);
-    fd.append('is_active', document.getElementById('couponIsActive').checked ? '1' : '0');
+    fd.append('expire_days', expireDays);
+    fd.append('is_active', document.getElementById('couponStatus').value);
     
     var url = editId ? window.couponEditUrl : window.couponAddUrl;
     if (editId) fd.append('id', editId);

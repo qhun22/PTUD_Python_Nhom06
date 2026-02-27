@@ -68,7 +68,7 @@
                         <div class="qh-checkout-item-info">
                             <div class="qh-checkout-item-name">{{ item.product.name }}</div>
                             {% if item.color_name %}
-                            <div class="qh-checkout-item-variant">Màu: {{ item.color_name }}</div>
+                            <div class="qh-checkout-item-variant">Màu: {{ item.color_name|color_only }}</div>
                             {% endif %}
                             {% if item.storage %}
                             <div class="qh-checkout-item-variant">Dung lượng: {{ item.storage }}</div>
@@ -155,13 +155,22 @@
             <div class="qh-checkout-summary">
                 <h2 class="qh-checkout-summary-title">Tóm tắt đơn hàng</h2>
 
+                <!-- Coupon Input -->
+                <div style="margin-bottom: 16px;">
+                    <div style="display: flex; gap: 8px;">
+                        <input type="text" id="couponInput" placeholder="Nhập mã giảm giá" style="flex: 1; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Signika', sans-serif; text-transform: uppercase; box-sizing: border-box;">
+                        <button type="button" id="couponApplyBtn" onclick="applyCoupon()" style="padding: 10px 18px; background: #3b82f6; color: white; border: none; border-radius: 8px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'Signika', sans-serif; white-space: nowrap;">Áp dụng</button>
+                    </div>
+                    <div id="couponMessage" style="margin-top: 6px; font-size: 13px; display: none;"></div>
+                </div>
+
                 <div class="qh-checkout-summary-row">
                     <span>Voucher đang áp dụng</span>
-                    <span class="qh-checkout-summary-val">-</span>
+                    <span class="qh-checkout-summary-val" id="summaryVoucher">-</span>
                 </div>
                 <div class="qh-checkout-summary-row">
                     <span>Số tiền đã chiết khấu</span>
-                    <span class="qh-checkout-summary-val">0 đ</span>
+                    <span class="qh-checkout-summary-val" id="summaryDiscount" style="color: #dc2626;">0 đ</span>
                 </div>
                 <div class="qh-checkout-summary-row">
                     <span>Phương thức thanh toán</span>
@@ -173,7 +182,7 @@
                 </div>
                 <div class="qh-checkout-summary-row total">
                     <span>TỔNG TIỀN</span>
-                    <span class="qh-checkout-summary-val">{{ total|format_price_with_unit }}</span>
+                    <span class="qh-checkout-summary-val" id="summaryTotal">{{ total|format_price_with_unit }}</span>
                 </div>
 
                 <button class="qh-checkout-submit-btn" id="checkoutSubmitBtn">ĐẶT HÀNG</button>
@@ -215,6 +224,10 @@
     var QH_PLACE_ORDER_URL = '{% url "store:place_order" %}';
     var QH_VIETQR_CREATE_ORDER_URL = '{% url "store:vietqr_create_order" %}';
     var QH_CHECKOUT_ITEMS_PARAM = '{{ items_param }}';
+    var QH_COUPON_APPLY_URL = '{% url "store:coupon_apply" %}';
+    var QH_APPLIED_COUPON = '';
+    var QH_DISCOUNT_AMOUNT = 0;
+    var QH_ITEM_COUNT = {{ cart_items|length }};
 </script>
 <script src="{% static 'js/checkout.js' %}"></script>
 {% endblock %}

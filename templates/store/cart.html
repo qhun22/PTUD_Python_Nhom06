@@ -411,37 +411,6 @@
     color: var(--qh-text);
     margin-bottom: 20px;
 }
-.qh-cart-voucher-input {
-    display: flex;
-    gap: 8px;
-    margin-bottom: 24px;
-}
-.qh-cart-voucher-input input {
-    flex: 1;
-    padding: 12px 16px;
-    border: 1px solid var(--qh-border);
-    border-radius: 8px;
-    font-size: 14px;
-    outline: none;
-    font-family: 'Signika', sans-serif;
-}
-.qh-cart-voucher-input input:focus {
-    border-color: var(--qh-primary);
-}
-.qh-cart-voucher-input button {
-    padding: 12px 20px;
-    background: var(--qh-primary);
-    color: white;
-    border: none;
-    border-radius: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    cursor: pointer;
-    font-family: 'Signika', sans-serif;
-}
-.qh-cart-voucher-input button:hover {
-    opacity: 0.9;
-}
 .qh-cart-summary-row {
     display: flex;
     justify-content: space-between;
@@ -569,7 +538,7 @@
                     {% if item.color_name %}
                     <div class="qh-cart-color-dropdown" data-item-id="{{ item.id }}">
                         <div class="qh-cart-color-selected" onclick="toggleColorDropdown(this)">
-                            <span>Màu: {{ item.color_name }}</span>
+                            <span>Màu: {{ item.color_name|color_only }}</span>
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
@@ -584,9 +553,9 @@
                                     data-thumbnail="{{ opt.thumbnail }}"
                                     onclick="changeColor(this, {{ item.id }}, '{{ opt.color_name }}')">
                                 {% if opt.thumbnail %}
-                                <img src="{{ opt.thumbnail }}" alt="{{ opt.color_name }}">
+                                <img src="{{ opt.thumbnail }}" alt="{{ opt.color_name|color_only }}">
                                 {% endif %}
-                                <span>{{ opt.color_name }}</span>
+                                <span>{{ opt.color_name|color_only }}</span>
                             </button>
                             {% endfor %}
                         </div>
@@ -654,29 +623,15 @@
 
         <!-- Right: Cart Summary -->
         <div class="qh-cart-summary">
-            <h2 class="qh-cart-summary-title">Thông tin đơn hàng</h2>
+            <h2 class="qh-cart-summary-title">Thông tin đang chọn</h2>
 
-            <!-- Voucher Input -->
-            <div class="qh-cart-voucher-input">
-                <input type="text" placeholder="Nhập mã ưu đãi">
-                <button type="button">Áp dụng</button>
+            <!-- Danh sách tên sản phẩm đã chọn -->
+            <div id="summaryProductList" style="margin-bottom: 16px; font-size: 14px; color: #64748b;">
+                <p style="color: #94a3b8; font-style: italic;">Chưa chọn sản phẩm nào</p>
             </div>
 
-            <!-- Order Info -->
-            <div class="qh-cart-summary-row">
-                <span>Tổng tiền</span>
-                <span class="qh-cart-value" id="summarySubtotal">0 đ</span>
-            </div>
-            <div class="qh-cart-summary-row">
-                <span>Voucher đang áp dụng</span>
-                <span class="qh-cart-value">-</span>
-            </div>
-            <div class="qh-cart-summary-row">
-                <span>Số tiền đã chiết khấu</span>
-                <span class="qh-cart-value">0 đ</span>
-            </div>
-            <div class="qh-cart-summary-row total">
-                <span>Cần thanh toán</span>
+            <div class="qh-cart-summary-row total" style="margin-top: 0;">
+                <span>Tạm tính</span>
                 <span class="qh-cart-value" id="summaryTotal">0 đ</span>
             </div>
 
@@ -746,24 +701,40 @@ function updateSelectedCount() {
     document.getElementById('selectedCount').textContent = checked.length;
     document.getElementById('selectAll').checked = (checked.length === total && total > 0);
     
-    // Tính tổng tiền của các sản phẩm đã chọn
     var selectedTotal = 0;
-    checked.forEach(function(cb) {
+    var productListHtml = '';
+    
+    checked.forEach(function(cb, idx) {
         var itemId = cb.getAttribute('data-item-id');
         var priceEl = document.getElementById('itemPrice_' + itemId);
         var qtyInput = document.getElementById('qtyInput_' + itemId);
+        var nameEl = document.querySelector('.qh-cart-item[data-item-id="' + itemId + '"] .qh-cart-item-name');
+        
         if (priceEl && qtyInput) {
-            var priceText = priceEl.textContent.replace(/[.\s]/g, '');
+            var priceText = priceEl.textContent.replace(/[.\sđ]/g, '');
             var price = parseInt(priceText) || 0;
             var quantity = parseInt(qtyInput.value) || 1;
             selectedTotal += price * quantity;
         }
+        
+        var prodName = nameEl ? nameEl.textContent.trim() : 'Sản phẩm';
+        var qty = qtyInput ? qtyInput.value : '1';
+        productListHtml += '<div style="padding: 8px 0; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center;">'
+            + '<span style="flex:1; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:13px; color:#334155;">' + prodName + '</span>'
+            + '<span style="flex-shrink:0; font-size:12px; color:#94a3b8; margin-left:8px;">x' + qty + '</span>'
+            + '</div>';
     });
     
-    // Cập nhật hiển thị tổng tiền
-    var formattedTotal = formatPrice(selectedTotal) + ' đ';
-    document.getElementById('summarySubtotal').textContent = formattedTotal;
-    document.getElementById('summaryTotal').textContent = formattedTotal;
+    var listEl = document.getElementById('summaryProductList');
+    if (listEl) {
+        if (checked.length === 0) {
+            listEl.innerHTML = '<p style="color:#94a3b8; font-style:italic;">Chưa chọn sản phẩm nào</p>';
+        } else {
+            listEl.innerHTML = productListHtml;
+        }
+    }
+    
+    document.getElementById('summaryTotal').textContent = formatPrice(selectedTotal) + ' đ';
 }
 
 /* ==================== Delete Selected ==================== */
@@ -852,7 +823,9 @@ function changeColor(btn, itemId, colorName) {
             var dropdown = document.querySelector('.qh-cart-color-dropdown[data-item-id="' + itemId + '"]');
             if (dropdown) {
                 var label = dropdown.querySelector('.qh-cart-color-selected span');
-                if (label) label.textContent = 'Màu: ' + data.new_color;
+                var displayColor = data.new_color;
+                    if (displayColor && displayColor.indexOf(' - ') !== -1) displayColor = displayColor.split(' - ').slice(1).join(' - ');
+                    if (label) label.textContent = 'Màu: ' + displayColor;
             }
 
             // Update product image with the color thumbnail
@@ -1050,10 +1023,8 @@ function removeFromCart(itemId) {
 
 /* ==================== Summary Updates ==================== */
 function updateSummaryPrices(totalPrice) {
-    var subtotalEl = document.getElementById('summarySubtotal');
     var totalEl = document.getElementById('summaryTotal');
-    var formatted = formatPrice(totalPrice) + 'đ';
-    if (subtotalEl) subtotalEl.textContent = formatted;
+    var formatted = formatPrice(totalPrice) + ' đ';
     if (totalEl) totalEl.textContent = formatted;
 }
 

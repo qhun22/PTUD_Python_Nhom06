@@ -393,7 +393,7 @@
                         <td class="stt"></td>
                         <td class="name">{{ item.product_name }}</td>
                         <td class="qty">{{ item.quantity }}</td>
-                        <td class="color">{{ item.color_name|default:"—" }}</td>
+                        <td class="color">{{ item.color_name|default:"—"|color_only }}</td>
                         <td class="storage">{{ item.storage|default:"—" }}</td>
                         <td class="price">{{ item.price|format_price_with_unit }}</td>
                         <td class="date">{{ order.created_at|date:"d/m/Y H:i" }}</td>
@@ -533,14 +533,17 @@ OT_ORDERS['{{ order.order_code }}'] = {
     payment_display: '{{ order.get_payment_method_display }}',
     created_at: '{{ order.created_at|date:"d/m/Y H:i" }}',
     total_amount: '{{ order.total_amount }}',
+    coupon_code: '{{ order.coupon_code|default:""|escapejs }}',
+    discount_amount: '{{ order.discount_amount|default:"0" }}',
     items: [
         {% for item in order.items.all %}
         {
             product_name: '{{ item.product_name|escapejs }}',
             quantity: {{ item.quantity }},
-            color_name: '{{ item.color_name|default:"—"|escapejs }}',
+            color_name: '{{ item.color_name|default:"—"|color_only|escapejs }}',
             storage: '{{ item.storage|default:"—"|escapejs }}',
-            price: '{{ item.price }}'
+            price: '{{ item.price }}',
+            thumbnail: '{{ item.thumbnail|default:""|escapejs }}'
         }{% if not forloop.last %},{% endif %}
         {% endfor %}
     ]
@@ -601,22 +604,31 @@ function openOtDetail(code) {
 
     var html = '';
 
-    // Items table
+    // Items
     html += '<div style="margin-bottom: 16px;">';
     html += '<h4 style="font-size:14px;font-weight:600;color:#334155;margin:0 0 10px;">Sản phẩm</h4>';
-    html += '<table class="qh-ot-detail-items-table"><thead><tr>';
-    html += '<th>Tên SP</th><th style="text-align:center;">SL</th><th>Màu</th><th>Bộ nhớ</th><th style="text-align:right;">Giá</th>';
-    html += '</tr></thead><tbody>';
     o.items.forEach(function(item) {
-        html += '<tr>';
-        html += '<td style="color:#1e293b;font-weight:500;">' + escOtHtml(item.product_name) + '</td>';
-        html += '<td style="text-align:center;color:#64748b;">' + item.quantity + '</td>';
-        html += '<td style="color:#64748b;">' + escOtHtml(item.color_name) + '</td>';
-        html += '<td style="color:#64748b;">' + escOtHtml(item.storage) + '</td>';
-        html += '<td style="text-align:right;color:#1e293b;font-weight:600;">' + fmtOtVND(item.price) + '</td>';
-        html += '</tr>';
+        html += '<div style="display:flex; gap:12px; align-items:center; padding:10px 0; border-bottom:1px solid #f1f5f9;">';
+        // Thumbnail
+        if (item.thumbnail) {
+            html += '<img src="' + escOtHtml(item.thumbnail) + '" alt="" style="width:56px; height:56px; border-radius:8px; object-fit:cover; flex-shrink:0; background:#f8fafc;">';
+        } else {
+            html += '<div style="width:56px; height:56px; border-radius:8px; background:#f1f5f9; display:flex; align-items:center; justify-content:center; flex-shrink:0; color:#94a3b8;">';
+            html += '<svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg></div>';
+        }
+        // Info
+        html += '<div style="flex:1; min-width:0;">';
+        html += '<div style="font-size:14px; font-weight:600; color:#1e293b; margin-bottom:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">' + escOtHtml(item.product_name) + '</div>';
+        html += '<div style="font-size:12px; color:#64748b;">';
+        if (item.color_name && item.color_name !== '—') html += 'Màu: ' + escOtHtml(item.color_name);
+        if (item.storage && item.storage !== '—') html += ' &nbsp;|&nbsp; ' + escOtHtml(item.storage);
+        html += ' &nbsp;|&nbsp; SL: ' + item.quantity;
+        html += '</div></div>';
+        // Price
+        html += '<div style="flex-shrink:0; text-align:right; font-size:14px; font-weight:700; color:#1e293b;">' + fmtOtVND(item.price) + '</div>';
+        html += '</div>';
     });
-    html += '</tbody></table></div>';
+    html += '</div>';
 
     // Order info
     html += '<div class="qh-ot-detail-block">';
@@ -624,7 +636,14 @@ function openOtDetail(code) {
     html += otInfoRow('Mã đơn hàng', '<span style="color:#3b82f6;font-weight:600;font-family:monospace;">' + escOtHtml(o.order_code) + '</span>');
     html += otInfoRow('Hình thức TT', otPayBadge(o.payment_method, o.payment_display));
     html += otInfoRow('Ngày đặt', escOtHtml(o.created_at));
-    // Hiển thị trạng thái theo logic mới
+
+    // Voucher
+    if (o.coupon_code) {
+        html += otInfoRow('Voucher đã dùng', '<span style="background:#dbeafe; color:#1e40af; padding:2px 8px; border-radius:4px; font-weight:600; font-size:12px; letter-spacing:0.5px;">' + escOtHtml(o.coupon_code) + '</span>');
+        html += otInfoRow('Chiết khấu', '<span style="color:#dc2626; font-weight:600;">-' + fmtOtVND(o.discount_amount) + '</span>');
+    }
+
+    // Status
     var statusHtml = '';
     if (o.status === 'cancelled' && o.refund_status === 'pending') {
         statusHtml = '<span class="qh-ot-badge refunding">Chờ hoàn tiền</span>';

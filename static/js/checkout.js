@@ -184,7 +184,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
         var requestData = {
             payment_method: payType,
-            items_param: window.QH_CHECKOUT_ITEMS_PARAM || ''
+            items_param: window.QH_CHECKOUT_ITEMS_PARAM || '',
+            coupon_code: window.QH_APPLIED_COUPON || ''
         };
 
         fetch(window.QH_PLACE_ORDER_URL || '/order/place/', {
@@ -225,3 +226,67 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
 });
+
+function applyCoupon() {
+    var input = document.getElementById('couponInput');
+    var msg = document.getElementById('couponMessage');
+    var code = (input.value || '').trim().toUpperCase();
+    
+    if (!code) {
+        if (window.QHToast) QHToast.show('Vui lòng nhập mã giảm giá', 'error');
+        return;
+    }
+    
+    var btn = document.getElementById('couponApplyBtn');
+    btn.disabled = true;
+    btn.textContent = 'Đang kiểm tra...';
+    
+    fetch(window.QH_COUPON_APPLY_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': window.QH_CSRF_TOKEN
+        },
+        body: JSON.stringify({
+            code: code,
+            order_total: window.QH_CHECKOUT_TOTAL,
+            item_count: window.QH_ITEM_COUNT || 0
+        })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            msg.style.display = 'block';
+            msg.style.color = '#16a34a';
+            msg.textContent = 'Áp dụng thành công!';
+            if (window.QHToast) QHToast.show('Đã áp dụng mã giảm giá thành công!', 'success');
+            
+            window.QH_APPLIED_COUPON = data.code;
+            window.QH_DISCOUNT_AMOUNT = parseInt(data.discount);
+            
+            var voucherEl = document.getElementById('summaryVoucher');
+            var discountEl = document.getElementById('summaryDiscount');
+            var totalEl = document.getElementById('summaryTotal');
+            
+            if (voucherEl) voucherEl.textContent = data.code;
+            if (discountEl) discountEl.textContent = '-' + data.discount_display;
+            if (totalEl) totalEl.textContent = data.new_total_display;
+            
+            input.disabled = true;
+            btn.textContent = 'Đã áp dụng';
+            btn.style.background = '#10b981';
+        } else {
+            if (window.QHToast) QHToast.show(data.message || 'Mã không hợp lệ', 'error');
+            msg.style.display = 'block';
+            msg.style.color = '#dc2626';
+            msg.textContent = data.message || 'Mã không hợp lệ';
+            btn.disabled = false;
+            btn.textContent = 'Áp dụng';
+        }
+    })
+    .catch(function() {
+        if (window.QHToast) QHToast.show('Lỗi kết nối, vui lòng thử lại', 'error');
+        btn.disabled = false;
+        btn.textContent = 'Áp dụng';
+    });
+}

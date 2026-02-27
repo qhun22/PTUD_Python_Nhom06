@@ -892,6 +892,37 @@
 
         <!-- Mã giảm giá -->
         <div class="qh-pf-tab-panel" id="tab-coupon">
+            {% if available_coupons %}
+            <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 16px;">
+                {% for cp in available_coupons %}
+                <div style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; display: flex; border: 1px solid #e2e8f0;">
+                    <!-- Left accent -->
+                    <div style="width: 90px; background: linear-gradient(135deg, {% if cp.discount_type == 'percentage' %}#3b82f6, #2563eb{% else %}#10b981, #059669{% endif %}); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; flex-shrink: 0; position: relative;">
+                        <div style="font-size: 28px; font-weight: 800; line-height: 1;">{% if cp.discount_type == 'percentage' %}{{ cp.discount_value|floatformat:0 }}%{% else %}{{ cp.discount_value|floatformat:0 }}đ{% endif %}</div>
+                        <div style="font-size: 11px; font-weight: 500; opacity: 0.85; margin-top: 2px;">GIẢM</div>
+                        <!-- Serrated edge -->
+                        <div style="position: absolute; right: -6px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background: white; border-radius: 50%;"></div>
+                    </div>
+                    <!-- Right content -->
+                    <div style="flex: 1; padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; min-width: 0;">
+                        <div style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ cp.name }}</div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                            <span style="background: #f1f5f9; padding: 3px 10px; border-radius: 6px; font-size: 13px; font-weight: 700; color: #334155; letter-spacing: 1px; font-family: 'Signika', monospace;">{{ cp.code }}</span>
+                            <button type="button" onclick="copyVoucher(this, '{{ cp.code }}')" style="background: none; border: 1px solid #cbd5e1; border-radius: 6px; padding: 3px 8px; cursor: pointer; font-size: 12px; color: #64748b; font-family: 'Signika', sans-serif; display: flex; align-items: center; gap: 4px;">
+                                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z"/></svg>
+                                Sao chép
+                            </button>
+                        </div>
+                        <div style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 12px; color: #64748b;">
+                            {% if cp.min_order_amount > 0 %}<span style="background: #fef3c7; color: #92400e; padding: 2px 8px; border-radius: 4px;">Đơn tối thiểu {{ cp.min_order_amount|floatformat:0 }}đ</span>{% endif %}
+                            {% if cp.max_products > 0 %}<span style="background: #e0e7ff; color: #3730a3; padding: 2px 8px; border-radius: 4px;">Tối đa {{ cp.max_products }} SP</span>{% endif %}
+                            <span style="background: #f1f5f9; color: #64748b; padding: 2px 8px; border-radius: 4px;">HSD: {{ cp.expire_at|date:"d/m/Y" }}</span>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
             <div class="qh-pf-empty">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M15 5v2m0 4v2m0 4v2M5 5a2 2 0 00-2 2v3a2 2 0 110 4v3a2 2 0 002 2h14a2 2 0 002-2v-3a2 2 0 110-4V7a2 2 0 00-2-2H5z"/>
@@ -899,6 +930,7 @@
                 <h3>Chưa có mã giảm giá</h3>
                 <p>Hãy theo dõi để nhận mã giảm giá hấp dẫn nhé!</p>
             </div>
+            {% endif %}
         </div>
 
         <!-- Lịch sử mua hàng -->
@@ -1054,6 +1086,20 @@
 
 <!-- Tab Switching Script -->
 <script>
+function copyVoucher(btn, code) {
+    navigator.clipboard.writeText(code).then(function() {
+        var orig = btn.innerHTML;
+        btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Đã sao chép';
+        btn.style.borderColor = '#10b981';
+        btn.style.color = '#10b981';
+        if (window.QHToast) QHToast.show('Đã sao chép mã ' + code, 'success');
+        setTimeout(function() {
+            btn.innerHTML = orig;
+            btn.style.borderColor = '#cbd5e1';
+            btn.style.color = '#64748b';
+        }, 2000);
+    });
+}
 document.addEventListener('DOMContentLoaded', function() {
     const tabs = document.querySelectorAll('.qh-pf-tab[data-tab]');
     const panels = document.querySelectorAll('.qh-pf-tab-panel');

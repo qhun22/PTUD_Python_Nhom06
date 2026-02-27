@@ -75,7 +75,7 @@
                     <button class="pd-color-btn{% if forloop.first %} selected{% endif %}" data-color="{{ c.color_name }}" data-sku="{{ c.sku }}" onclick="selectColor(this)">
                         <div class="pd-color-thumb" id="colorThumb_{{ forloop.counter0 }}"></div>
                         <div class="pd-color-info">
-                            <div class="pd-color-name">{{ c.color_name }}</div>
+                            <div class="pd-color-name">{{ c.color_name|color_only }}</div>
                         </div>
                     </button>
                     {% endfor %}
