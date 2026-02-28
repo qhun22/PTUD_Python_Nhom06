@@ -322,7 +322,7 @@ def home(request):
     Hiển thị danh sách sản phẩm với phân trang (tối đa 15 sản phẩm/trang)
     Sản phẩm có hàng hiển thị trước, hết hàng hiển thị sau
     """
-    from store.models import Product, SiteVisit, OrderItem, Order
+    from store.models import Product, SiteVisit, OrderItem, Order, Banner
     
     # Tracking lượt truy cập trang chủ
     # Lấy IP của người dùng
@@ -401,16 +401,90 @@ def home(request):
         'wishlist_product_ids': wishlist_product_ids,
         'best_sellers': best_sellers,
     }
+    
+    # Lấy đúng banner id=76294 cho GỢI Ý CHO BẠN
+    suggest_banner = Banner.objects.filter(banner_id='76294').first()
+    if suggest_banner:
+        context['suggest_banner'] = suggest_banner
+    # Lấy 5 sản phẩm gợi ý (ngẫu nhiên, còn hàng)
+    import random
+    all_active_products = list(Product.objects.filter(
+        is_active=True, 
+        stock__gt=0
+    ).select_related('brand', 'detail'))
+    if all_active_products:
+        random.shuffle(all_active_products)
+        context['suggest_products'] = all_active_products[:5]
+    else:
+        context['suggest_products'] = []
+    
     return render(request, 'store/home.html', context)
 
 
 def product_search(request):
     """
-    Tìm kiếm sản phẩm
+    Tìm kiếm và lọc sản phẩm
+    - Tìm theo tên sản phẩm và tên hãng
+    - Lọc theo hãng cụ thể
     """
-    query = request.GET.get('q', '')
+    from store.models import Product, Brand, Wishlist
+    from django.db.models import Case, When, IntegerField, Q
+    
+    query = request.GET.get('q', '').strip()
+    brand_slug = request.GET.get('brand', '')
+    
+    # Lấy danh sách sản phẩm đang hoạt động
+    products = Product.objects.filter(is_active=True).select_related('brand', 'detail')
+    
+    # Lọc theo từ khóa tìm kiếm (tên sản phẩm hoặc tên hãng)
+    if query:
+        products = products.filter(
+            Q(name__icontains=query) | 
+            Q(brand__name__icontains=query)
+        )
+    
+    # Lọc theo hãng nếu có
+    if brand_slug:
+        products = products.filter(brand__slug=brand_slug)
+    
+    # Sắp xếp: có hàng trước, hết hàng sau
+    products = products.annotate(
+        stock_order=Case(
+            When(stock__gt=0, then=0),
+            default=1,
+            output_field=IntegerField(),
+        )
+    ).order_by('stock_order', '-created_at')
+    
+    # Phân trang - 15 sản phẩm mỗi trang
+    paginator = Paginator(products, 15)
+    page = request.GET.get('page', 1)
+    
+    try:
+        products_page = paginator.page(page)
+    except PageNotAnInteger:
+        products_page = paginator.page(1)
+    except EmptyPage:
+        products_page = paginator.page(paginator.num_pages)
+    
+    # Lấy danh sách sản phẩm yêu thích của user
+    wishlist_product_ids = []
+    if request.user.is_authenticated:
+        wishlist = Wishlist.get_or_create_for_user(request.user)
+        if wishlist:
+            wishlist_product_ids = list(wishlist.products.values_list('id', flat=True))
+    
+    # Lấy thông tin hãng nếu đang lọc theo hãng
+    current_brand = None
+    if brand_slug:
+        current_brand = Brand.objects.filter(slug=brand_slug).first()
+    
     context = {
         'query': query,
+        'brand': brand_slug,
+        'current_brand': current_brand,
+        'products': products_page,
+        'wishlist_product_ids': wishlist_product_ids,
     }
     return render(request, 'store/search.html', context)
 
