@@ -145,10 +145,10 @@ body {
 .qh-search-btn {
     height: 48px;
     padding: 0 16px;
-    border: 2px solid var(--qh-primary);
+    border: 2px solid #b3c4d6;
     border-left: none;
     border-radius: 0 var(--qh-radius-lg) var(--qh-radius-lg) 0;
-    background: var(--qh-primary);
+    background: #a1c3d6;
     color: white;
     cursor: pointer;
     display: flex;

@@ -168,17 +168,21 @@
                         <a href="{% url 'store:home' %}" class="qh-footer-logo">
                             <img src="{% static 'logos/sean.gif' %}" alt="QHUN22 Mobile" class="qh-footer-logo-img">
                         </a>
-                        <p class="qh-footer-desc">Hệ thống bán điện thoại uy tín, cam kết chất lượng và dịch vụ tốt nhất Việt Nam.</p>
+                        <p class="qh-footer-desc">thay giao ngo huu huy</p>
                         <div class="qh-footer-socials">
                             <a href="#" class="qh-footer-social" aria-label="Facebook">
                                 <svg viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
                             </a>
-                            <a href="#" class="qh-footer-social" aria-label="Zalo">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.568 14.163c-.18.293-.47.46-.79.46h-.64c-.18 0-.35-.074-.476-.204l-1.49-1.546v1.39c0 .2-.16.36-.36.36h-.54c-.2 0-.36-.16-.36-.36V9.09c0-.2.16-.36.36-.36h.54c.2 0 .36.16.36.36v1.274l1.55-1.478c.13-.124.3-.196.48-.196h.72c.5 0 .74.61.38.96l-1.87 1.78 1.95 2.02c.28.29.15.713-.213.713zm-4.988.46h-.54c-.2 0-.36-.16-.36-.36V9.09c0-.2.16-.36.36-.36h.54c.2 0 .36.16.36.36v5.173c0 .2-.16.36-.36.36zm-1.86 0H7.48c-.2 0-.36-.16-.36-.36v-.34c0-.12.06-.23.16-.3l2.6-3.12H7.6c-.2 0-.36-.16-.36-.36v-.44c0-.2.16-.36.36-.36h3.12c.2 0 .36.16.36.36v.34c0 .12-.06.23-.16.3l-2.6 3.12h2.28c.2 0 .36.16.36.36v.44c0 .2-.16.36-.36.36zm-4.16 0h-.54c-.2 0-.36-.16-.36-.36V9.09c0-.2.16-.36.36-.36h.54c.2 0 .36.16.36.36v5.173c0 .2-.16.36-.36.36z"/></svg>
-                            </a>
-                            <a href="#" class="qh-footer-social" aria-label="YouTube">
-                                <svg viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 00-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 00.502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 002.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 002.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
-                            </a>
+                            <a href="#" class="qh-footer-social" aria-label="TikTok">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M12 2h3a5 5 0 004 4v3a8 8 0 01-4-1v6.5A4.5 4.5 0 1110.5 10v3a1.5 1.5 0 101.5 1.5V2z"/>
+                                </svg>
+                              </a>
+                              <a href="tel:0327221005" class="qh-footer-social" aria-label="Phone">
+                                <svg viewBox="0 0 24 24" fill="currentColor">
+                                  <path d="M6.6 10.8a15.05 15.05 0 006.6 6.6l2.2-2.2a1 1 0 011-.24 11.72 11.72 0 003.7.6 1 1 0 011 1V21a1 1 0 01-1 1A19 19 0 012 3a1 1 0 011-1h3.5a1 1 0 011 1 11.72 11.72 0 00.6 3.7 1 1 0 01-.24 1z"/>
+                                </svg>
+                              </a>
                         </div>
                     </div>
 
@@ -271,7 +275,8 @@
         gap: 10px;
         flex: 1;
         overflow-x: auto;
-        padding: 2px 0;
+        overflow-y: visible;
+        padding: 12px 8px;
     }
     .qh-compare-bar-item {
         display: flex;
@@ -284,6 +289,7 @@
         max-width: 240px;
         position: relative;
         border: 1px solid var(--qh-border);
+        overflow: visible;
     }
     .qh-compare-bar-item img {
         width: 42px;
@@ -310,10 +316,10 @@
     }
     .qh-compare-bar-item-remove {
         position: absolute;
-        top: -7px;
-        right: -7px;
-        width: 20px;
-        height: 20px;
+        top: -10px;
+        right: -10px;
+        width: 22px;
+        height: 22px;
         border-radius: 50%;
         background: #dc2626;
         color: white;
@@ -322,10 +328,11 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 11px;
+        font-size: 12px;
         line-height: 1;
         padding: 0;
         transition: all 0.2s;
+        z-index: 10;
     }
     .qh-compare-bar-item-remove:hover {
         transform: scale(1.15);
@@ -490,7 +497,7 @@
         <div class="qh-chat-header">
             <div class="qh-chat-avatar"><i class="ri-robot-2-line"></i></div>
             <div class="qh-chat-header-info">
-                <h6>QHUN22 AI</h6>
+                <h6>CHATBOT</h6>
                 <small>Trợ lý mua sắm thông minh</small>
             </div>
             <button id="qh-chat-close" class="qh-chat-header-close" title="Đóng">

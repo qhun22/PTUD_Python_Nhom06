@@ -406,6 +406,11 @@ document.addEventListener('DOMContentLoaded', function () {
 // ==================== SKU Management ====================
 let allSkus = [];
 
+// ==================== SKU PAGINATION ====================
+var _skuData = [];
+var _skuPage = 1;
+var _skuPerPage = 8;
+
 function loadSkuList() {
     fetch('/products/sku/list/', {
         method: 'GET',
@@ -426,7 +431,12 @@ function loadSkuList() {
 // ==================== Product Images (Thư mục ảnh) ====================
 let allImageFolderRows = [];
 let allImageFolders = [];
-let imageFolderPreviewImages = []; // ảnh đã upload cho màu hiện tại trong modal
+let imageFolderPreviewImages = [];
+
+// ==================== IMAGE FOLDER PAGINATION ====================
+var _imageFolderData = [];
+var _imageFolderPage = 1;
+var _imageFolderPerPage = 8;
 
 function initProductImagesSection() {
     loadImageFolderRows();
@@ -1545,6 +1555,11 @@ function initBannerImagesSection() {
     loadBannerRows();
 }
 
+// ==================== BANNER PAGINATION ====================
+var _bannerData = [];
+var _bannerPage = 1;
+var _bannerPerPage = 6;
+
 function loadBannerRows() {
     fetch('/banner-images/list/', {
         method: 'GET',
@@ -1556,7 +1571,8 @@ function loadBannerRows() {
         .then(data => {
             if (data.success) {
                 allBannerRows = data.banners || [];
-                renderBannerGrid(allBannerRows);
+                _bannerData = allBannerRows;
+                renderBannerGrid();
             }
         })
         .catch(error => {
@@ -1564,11 +1580,18 @@ function loadBannerRows() {
         });
 }
 
-function renderBannerGrid(banners) {
+function renderBannerGrid() {
+    const banners = _bannerData;
     const grid = document.getElementById('bannerGrid');
     if (!grid) return;
 
-    if (!banners || banners.length === 0) {
+    // Pagination
+    var totalPages = Math.ceil(banners.length / _bannerPerPage);
+    if (_bannerPage > totalPages) _bannerPage = totalPages || 1;
+    var startIdx = (_bannerPage - 1) * _bannerPerPage;
+    var paged = banners.slice(startIdx, startIdx + _bannerPerPage);
+
+    if (!paged || paged.length === 0) {
         grid.innerHTML = `
             <div style="grid-column: 1 / -1; padding: 60px 20px; text-align: center; color: #64748b; font-size: 15px; font-family: 'Signika', sans-serif;">
                 Chưa có banner nào.
@@ -1578,7 +1601,7 @@ function renderBannerGrid(banners) {
     }
 
     // Sort banners by ID
-    const sortedBanners = [...banners].sort((a, b) => (a.banner_id || 0) - (b.banner_id || 0));
+    const sortedBanners = [...paged].sort((a, b) => (a.banner_id || 0) - (b.banner_id || 0));
 
     let html = '';
     sortedBanners.forEach((banner) => {
@@ -1610,6 +1633,10 @@ function renderBannerGrid(banners) {
             this.querySelector('.banner-hover-overlay').style.opacity = '0';
         });
     });
+    
+    // Render pagination
+    var totalPages = Math.ceil(banners.length / _bannerPerPage);
+    _renderPagination('banners', totalPages, _bannerPage);
 }
 
 function searchBanners() {
@@ -1619,16 +1646,22 @@ function searchBanners() {
 
     if (searchTerm) {
         const filtered = allBannerRows.filter(b => String(b.banner_id).includes(searchTerm));
-        renderBannerGrid(filtered);
+        _bannerData = filtered;
+        _bannerPage = 1;
+        renderBannerGrid();
     } else {
-        renderBannerGrid(allBannerRows);
+        _bannerData = allBannerRows;
+        _bannerPage = 1;
+        renderBannerGrid();
     }
 }
 
 function resetBannerSearch() {
     const searchInput = document.getElementById('bannerSearchInput');
     if (searchInput) searchInput.value = '';
-    renderBannerGrid(allBannerRows);
+    _bannerData = allBannerRows;
+    _bannerPage = 1;
+    renderBannerGrid();
 }
 
 function openAddBannerModal() {
@@ -2044,6 +2077,11 @@ function initProductContentSection() {
     loadProductContentRows();
 }
 
+// ==================== PRODUCT CONTENT PAGINATION ====================
+var _productContentData = [];
+var _productContentPage = 1;
+var _productContentPerPage = 8;
+
 function loadProductContentRows() {
     fetch('/product-content/list/', {
         method: 'GET',
@@ -2054,14 +2092,16 @@ function loadProductContentRows() {
         .then(response => response.json())
         .then(data => {
             allProductContentRows = data.contents || [];
-            renderProductContentTable(allProductContentRows);
+            _productContentData = allProductContentRows;
+            renderProductContentTable();
         })
         .catch(error => {
             console.error('Error loading product content:', error);
         });
 }
 
-function renderProductContentTable(contents) {
+function renderProductContentTable() {
+    const contents = _productContentData;
     const container = document.getElementById('productContentTableContainer');
     const grid = document.getElementById('productContentGrid');
     if (container) container.style.display = 'block';
@@ -2070,7 +2110,13 @@ function renderProductContentTable(contents) {
     const tbody = document.getElementById('productContentTableBody');
     if (!tbody) return;
 
-    if (!contents || contents.length === 0) {
+    // Pagination
+    var totalPages = Math.ceil(contents.length / _productContentPerPage);
+    if (_productContentPage > totalPages) _productContentPage = totalPages || 1;
+    var startIdx = (_productContentPage - 1) * _productContentPerPage;
+    var paged = contents.slice(startIdx, startIdx + _productContentPerPage);
+
+    if (!paged || paged.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="5" style="padding: 40px; text-align: center; color: #64748b; font-size: 14px; font-family: 'Signika', sans-serif;">
@@ -2082,7 +2128,7 @@ function renderProductContentTable(contents) {
     }
 
     // Sort contents by brand and product name
-    const sortedContents = [...contents].sort((a, b) => {
+    const sortedContents = [...paged].sort((a, b) => {
         const brandCompare = (a.brand_name || '').localeCompare(b.brand_name || '');
         if (brandCompare !== 0) return brandCompare;
         return (a.product_name || '').localeCompare(b.product_name || '');
@@ -2090,6 +2136,7 @@ function renderProductContentTable(contents) {
 
     let html = '';
     sortedContents.forEach((content, index) => {
+        var globalIdx = startIdx + index + 1;
         // Format ngày từ created_at
         let dateStr = '-';
         if (content.created_at) {
@@ -2099,7 +2146,7 @@ function renderProductContentTable(contents) {
 
         html += `
             <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${index + 1}</td>
+                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${globalIdx}</td>
                 <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">${content.brand_name || '-'}</td>
                 <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${content.product_name || '-'}</td>
                 <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif; color: #64748b;">${dateStr}</td>
@@ -2114,6 +2161,10 @@ function renderProductContentTable(contents) {
         `;
     });
     tbody.innerHTML = html;
+    
+    // Render pagination
+    var totalPages = Math.ceil(contents.length / _productContentPerPage);
+    _renderPagination('productContent', totalPages, _productContentPage);
 }
 
 function searchProductContent() {
@@ -2969,6 +3020,8 @@ function cancelQrFromDetail() {
 var _adminOrderDetailCurrentId = null;
 var _adminOrdersData = [];  // Cache all orders data
 var _adminOrdersFilter = 'all';  // Current active filter
+var _adminOrdersPage = 1;  // Current page
+var _adminOrdersPerPage = 8;  // Items per page
 
 function loadAdminOrders() {
     var tbody = document.getElementById('adminOrderTableBody');
@@ -3013,11 +3066,25 @@ function _renderAdminOrdersTable() {
         return;
     }
 
+    // Pagination
+    var totalItems = filtered.length;
+    var totalPages = Math.ceil(totalItems / _adminOrdersPerPage);
+    if (_adminOrdersPage > totalPages) _adminOrdersPage = totalPages || 1;
+    var startIdx = (_adminOrdersPage - 1) * _adminOrdersPerPage;
+    var endIdx = startIdx + _adminOrdersPerPage;
+    var paged = filtered.slice(startIdx, endIdx);
+
+    if (paged.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="10" style="padding: 40px 16px; text-align: center; color: #94a3b8; font-size: 14px;">Không có đơn hàng nào</td></tr>';
+        return;
+    }
+
     var html = '';
-    filtered.forEach(function (o, idx) {
+    paged.forEach(function (o, idx) {
         var statusBadge = _getStatusBadge(o.status, o.status_display, o.refund_status);
+        var globalIdx = startIdx + idx + 1;
         html += '<tr style="border-bottom: 1px solid #f1f5f9;">'
-            + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + (idx + 1) + '</td>'
+            + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + globalIdx + '</td>'
             + '<td style="padding: 12px 14px; font-size: 14px; color: #1e293b; font-weight: 500;">' + _escHtml(o.product_name) + '</td>'
             + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + o.quantity + '</td>'
             + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + _escHtml(o.color_name) + '</td>'
@@ -3035,6 +3102,7 @@ function _renderAdminOrdersTable() {
 
 function filterAdminOrders(status) {
     _adminOrdersFilter = status;
+    _adminOrdersPage = 1; // Reset to first page
     _renderAdminOrdersTable();
     // Update active button
     var btns = document.querySelectorAll('.admin-order-filter-btn');
@@ -3217,6 +3285,91 @@ function updateRefundStatus(id, refundStatus) {
         });
 }
 
+// ==================== PAGINATION HELPER ====================
+function _renderPagination(section, totalPages, currentPage) {
+    // Find pagination container - create if not exists
+    var containerId = section + 'Pagination';
+    var container = document.getElementById(containerId);
+    if (!container) {
+        // Try to find table and add pagination after it
+        var table = document.getElementById(section + 'TableBody');
+        if (table && table.parentNode) {
+            var paginationDiv = document.createElement('div');
+            paginationDiv.id = containerId;
+            paginationDiv.style.cssText = 'display: flex; justify-content: center; align-items: center; gap: 8px; margin-top: 20px; padding: 16px;';
+            table.parentNode.parentNode.appendChild(paginationDiv);
+            container = paginationDiv;
+        }
+    }
+    if (!container || totalPages <= 1) {
+        if (container) container.innerHTML = '';
+        return;
+    }
+    
+    var html = '';
+    // Prev button
+    if (currentPage > 1) {
+        html += '<button type="button" onclick="_goToPage(\'' + section + '\', ' + (currentPage - 1) + ')" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px;">‹ Trước</button>';
+    }
+    
+    // Page numbers
+    var startPage = Math.max(1, currentPage - 2);
+    var endPage = Math.min(totalPages, currentPage + 2);
+    if (startPage > 1) {
+        html += '<button type="button" onclick="_goToPage(\'' + section + '\', 1)" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px;">1</button>';
+        if (startPage > 2) html += '<span style="color: #94a3b8;">...</span>';
+    }
+    for (var i = startPage; i <= endPage; i++) {
+        if (i === currentPage) {
+            html += '<button type="button" style="padding: 6px 12px; border: 1px solid #3b82f6; background: #3b82f6; color: white; border-radius: 6px; font-size: 13px;">' + i + '</button>';
+        } else {
+            html += '<button type="button" onclick="_goToPage(\'' + section + '\', ' + i + ')" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px;">' + i + '</button>';
+        }
+    }
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) html += '<span style="color: #94a3b8;">...</span>';
+        html += '<button type="button" onclick="_goToPage(\'' + section + '\', ' + totalPages + ')" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px;">' + totalPages + '</button>';
+    }
+    
+    // Next button
+    if (currentPage < totalPages) {
+        html += '<button type="button" onclick="_goToPage(\'' + section + '\', ' + (currentPage + 1) + ')" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px;">Sau ›</button>';
+    }
+    
+    html += '<span style="color: #64748b; font-size: 13px; margin-left: 8px;">Trang ' + currentPage + '/' + totalPages + '</span>';
+    
+    container.innerHTML = html;
+}
+
+function _goToPage(section, page) {
+    switch(section) {
+        case 'adminOrders':
+            _adminOrdersPage = page;
+            _renderAdminOrdersTable();
+            break;
+        case 'coupons':
+            _couponPage = page;
+            renderCouponList();
+            break;
+        case 'productContent':
+            _productContentPage = page;
+            renderProductContentTable();
+            break;
+        case 'banners':
+            _bannerPage = page;
+            renderBannerGrid();
+            break;
+        case 'sku':
+            _skuPage = page;
+            renderSkuTable();
+            break;
+        case 'imageFolder':
+            _imageFolderPage = page;
+            renderImageFolderGrid();
+            break;
+    }
+}
+
 // ---- HELPERS ----
 
 function _escHtml(str) {
@@ -3295,6 +3448,11 @@ function previewExpireDate() {
     }
 }
 
+// ==================== COUPONS PAGINATION ====================
+var _couponData = [];
+var _couponPage = 1;
+var _couponPerPage = 8;
+
 function loadCouponList() {
     var tbody = document.getElementById('couponTableBody');
     if (!tbody) return;
@@ -3310,12 +3468,22 @@ function loadCouponList() {
             return;
         }
         var coupons = data.coupons || [];
-        if (coupons.length === 0) {
+        _couponData = coupons;
+        
+        // Pagination
+        var totalPages = Math.ceil(coupons.length / _couponPerPage);
+        if (_couponPage > totalPages) _couponPage = totalPages || 1;
+        var startIdx = (_couponPage - 1) * _couponPerPage;
+        var paged = coupons.slice(startIdx, startIdx + _couponPerPage);
+        
+        if (paged.length === 0) {
             tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Chưa có mã giảm giá nào</td></tr>';
             return;
         }
         var html = '';
-        coupons.forEach(function(c, idx) {
+        var startIdx = (_couponPage - 1) * _couponPerPage;
+        paged.forEach(function(c, idx) {
+            var globalIdx = startIdx + idx + 1;
             var discountLabel = c.discount_type === 'percentage' ? c.discount_value + '%' : Number(c.discount_value).toLocaleString('vi-VN') + 'đ';
             var statusBg = c.is_valid ? '#d1fae5' : '#fee2e2';
             var statusColor = c.is_valid ? '#065f46' : '#991b1b';
@@ -3325,7 +3493,7 @@ function loadCouponList() {
             var maxProdText = c.max_products > 0 ? c.max_products : '∞';
             
             html += '<tr style="border-bottom:1px solid #f1f5f9;">'
-                + '<td style="padding:12px 14px;text-align:center;font-size:14px;color:#64748b;">' + (idx + 1) + '</td>'
+                + '<td style="padding:12px 14px;text-align:center;font-size:14px;color:#64748b;">' + globalIdx + '</td>'
                 + '<td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1e293b;white-space:nowrap;">' + c.code + '</td>'
                 + '<td style="padding:12px 14px;font-size:13px;color:#64748b;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (c.name || '-') + '</td>'
                 + '<td style="padding:12px 14px;text-align:center;font-size:14px;font-weight:500;color:#1e293b;">' + discountLabel + '</td>'
@@ -3342,6 +3510,10 @@ function loadCouponList() {
                 + '</tr>';
         });
         tbody.innerHTML = html;
+        
+        // Render pagination
+        var totalPages = Math.ceil(_couponData.length / _couponPerPage);
+        _renderPagination('coupons', totalPages, _couponPage);
     })
     .catch(function() {
         tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi kết nối</td></tr>';

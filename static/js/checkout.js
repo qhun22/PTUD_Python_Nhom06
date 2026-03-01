@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ==================== Config ==================== */
     var totalAmount = window.QH_CHECKOUT_TOTAL || 0;
+    var discountAmount = 0; // Track discount amount
 
     /* ==================== Elements ==================== */
     var payOpts = document.querySelectorAll('.qh-checkout-pay-opt:not(.disabled)');
@@ -263,6 +264,8 @@ function applyCoupon() {
             
             window.QH_APPLIED_COUPON = data.code;
             window.QH_DISCOUNT_AMOUNT = parseInt(data.discount);
+            discountAmount = parseInt(data.discount); // Update discount tracker
+            totalAmount = totalAmount - discountAmount; // Update total with discount
             
             var voucherEl = document.getElementById('summaryVoucher');
             var discountEl = document.getElementById('summaryDiscount');

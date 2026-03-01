@@ -961,6 +961,31 @@
                     </div>
                 </div>
                 {% endfor %}
+                
+                <!-- Pagination -->
+                {% if orders.has_other_pages %}
+                <div class="qh-pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 24px;">
+                    {% if orders.has_previous %}
+                    <a href="?page={{ orders.previous_page_number }}" class="qh-pagination-btn" style="padding: 8px 14px; border: 1px solid var(--qh-border); border-radius: 6px; text-decoration: none; color: var(--qh-text); background: var(--qh-white);">
+                        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                    </a>
+                    {% endif %}
+                    
+                    {% for num in orders.paginator.page_range %}
+                        {% if orders.number == num %}
+                        <span style="padding: 8px 14px; background: var(--qh-primary); color: white; border-radius: 6px; font-weight: 600;">{{ num }}</span>
+                        {% elif num > orders.number|add:'-2' and num < orders.number|add:'2' %}
+                        <a href="?page={{ num }}" style="padding: 8px 14px; border: 1px solid var(--qh-border); border-radius: 6px; text-decoration: none; color: var(--qh-text); background: var(--qh-white);">{{ num }}</a>
+                        {% endif %}
+                    {% endfor %}
+                    
+                    {% if orders.has_next %}
+                    <a href="?page={{ orders.next_page_number }}" class="qh-pagination-btn" style="padding: 8px 14px; border: 1px solid var(--qh-border); border-radius: 6px; text-decoration: none; color: var(--qh-text); background: var(--qh-white);">
+                        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                    </a>
+                    {% endif %}
+                </div>
+                {% endif %}
             {% else %}
                 <div class="qh-pf-empty">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -975,14 +1000,99 @@
 
         <!-- Student - Teacher -->
         <div class="qh-pf-tab-panel" id="tab-student">
-            <div class="qh-pf-empty">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 14l9-5-9-5-9 5 9 5z"/>
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 14l6.16-3.422a12.083 12.083 0 01.665 6.479A11.952 11.952 0 0012 20.055a11.952 11.952 0 00-6.824-2.998 12.078 12.078 0 01.665-6.479L12 14z"/>
-                </svg>
-                <h3>Chương trình Student - Teacher</h3>
-                <p>Xác minh bạn là học sinh/sinh viên hoặc giáo viên để nhận ưu đãi đặc biệt!</p>
-                <button class="qh-btn qh-btn-primary">Xác minh ngay</button>
+            <div style="max-width: 500px; margin: 0 auto;">
+                {% if user.is_student_verified or user.is_teacher_verified %}
+                {# Hiển thị thông tin xác thực và voucher #}
+                <div style="text-align: center; margin-bottom: 24px;">
+                    <h3 style="font-size: 22px; font-weight: 600; color: var(--qh-text); margin-bottom: 8px;">Xác thực Student/Teacher</h3>
+                    {% if is_edu_verified %}
+                    <p style="color: #059669; margin: 0;">✅ Bạn đã xác thực thành công!</p>
+                    {% else %}
+                    <p style="color: var(--qh-text-light); margin: 0;">Sử dụng email <strong>.edu.vn</strong> để xác minh và nhận ưu đãi đặc biệt!</p>
+                    {% endif %}
+                </div>
+                
+                {# Hiển thị thông tin xác thực #}
+                {% if is_edu_verified %}
+                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg style="width: 20px; height: 20px; color: #059669;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        <span style="color: #059669; font-weight: 600;">
+                            {% if user.is_student_verified %}Student: {{ user.verified_student_email }}{% endif %}
+                            {% if user.is_teacher_verified %}{% if user.is_student_verified %} | {% endif %}Teacher: {{ user.verified_teacher_email }}{% endif %}
+                        </span>
+                    </div>
+                </div>
+                {% endif %}
+                {% endif %}
+                
+                {# Hiển thị voucher #}
+                {% if edu_voucher and edu_voucher_status == 'available' %}
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; text-align: center;">
+                        <div style="width: 48px; height: 48px; background: #d1fae5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
+                            <svg style="width: 24px; height: 24px; color: #059669;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <strong style="color: #059669; font-size: 16px; display: block; margin-bottom: 8px;">Voucher chưa sử dụng</strong>
+                        <p style="margin: 0; color: #166534; font-size: 13px;">Sử dụng ngay để giảm 50%!</p>
+                    </div>
+                    
+                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 20px; text-align: center; color: white;">
+                        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">🎉 Ưu đãi đặc biệt dành cho bạn!</div>
+                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">GIẢM 50%</div>
+                        <div style="font-size: 12px; opacity: 0.9; margin-bottom: 10px;">Cho 1 đơn hàng duy nhất</div>
+                        <div style="background: rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; display: inline-block;">
+                            <div style="font-size: 11px; opacity: 0.8; margin-bottom: 2px;">Mã voucher của bạn:</div>
+                            <div style="font-size: 20px; font-weight: 700; letter-spacing: 1px;">{{ edu_voucher.code }}</div>
+                        </div>
+                        <div style="font-size: 11px; opacity: 0.7; margin-top: 8px;">Hết hạn: {{ edu_voucher.expire_at|date:"d/m/Y" }}</div>
+                    </div>
+                </div>
+                {% elif edu_voucher_status == 'used' %}
+                <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg style="width: 20px; height: 20px; color: #d97706;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span style="color: #92400e; font-weight: 600;">Voucher đã được sử dụng</span>
+                    </div>
+                    <p style="margin: 8px 0 0 0; color: #b45309; font-size: 13px;">Cảm ơn bạn đã sử dụng voucher!</p>
+                </div>
+                {% elif edu_voucher_status == 'expired' %}
+                <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; text-align: center;">
+                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                        <svg style="width: 20px; height: 20px; color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span style="color: #dc2626; font-weight: 600;">Voucher đã hết hạn</span>
+                    </div>
+                </div>
+                {% else %}
+                {# Chưa xác thực - hiển thị form #}
+                
+                <div style="background: var(--qh-card-bg); border: 1px solid var(--qh-border); border-radius: 12px; padding: 24px;">
+                    <div style="margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: var(--qh-text); margin-bottom: 8px; text-align: left;">Email .edu.vn</label>
+                        <input type="email" id="edu-email" placeholder="ví dụ: sinhvien@ictu.edu.vn" 
+                            style="width: 100%; padding: 12px 16px; border: 1px solid var(--qh-border); border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"
+                            pattern=".*\.edu\.vn$" title="Vui lòng nhập email .edu.vn">
+                    </div>
+                    
+                    <div id="edu-code-section" style="display: none; margin-bottom: 20px;">
+                        <label style="display: block; font-size: 14px; font-weight: 600; color: var(--qh-text); margin-bottom: 8px; text-align: left;">Mã xác thực</label>
+                        <input type="text" id="edu-code" placeholder="Nhập mã 6 số" maxlength="6"
+                            style="width: 100%; padding: 12px 16px; border: 1px solid var(--qh-border); border-radius: 8px; font-size: 18px; letter-spacing: 6px; text-align: center; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
+                    </div>
+                    
+                    <p id="edu-message" style="margin-bottom: 16px; font-size: 14px; min-height: 20px;"></p>
+                    
+                    <button type="button" id="edu-send-btn" onclick="sendEduVerificationCode()" 
+                        class="qh-btn qh-btn-primary" style="width: 100%; padding: 12px; font-size: 15px;">
+                        Gửi mã xác thực
+                    </button>
+                    
+                    <button type="button" id="edu-verify-btn" onclick="verifyEduCode()" 
+                        class="qh-btn qh-btn-primary" style="width: 100%; padding: 12px; font-size: 15px; display: none;">
+                        Xác thực ngay
+                    </button>
+                </div>
+                {% endif %}
             </div>
         </div>
 
@@ -1100,6 +1210,91 @@ function copyVoucher(btn, code) {
         }, 2000);
     });
 }
+
+// Student/Teacher Verification Functions (Single .edu.vn field)
+var currentEduEmail = '';
+
+function sendEduVerificationCode() {
+    var emailInput = document.getElementById('edu-email');
+    var messageEl = document.getElementById('edu-message');
+    var email = emailInput.value.trim().toLowerCase();
+    
+    if (!email) {
+        messageEl.innerHTML = '<span style="color: #dc2626;">Vui lòng nhập email</span>';
+        return;
+    }
+    
+    if (!email.endsWith('.edu.vn')) {
+        messageEl.innerHTML = '<span style="color: #dc2626;">Vui lòng sử dụng email .edu.vn (ví dụ: sinhvien@ictu.edu.vn)</span>';
+        return;
+    }
+    
+    currentEduEmail = email;
+    messageEl.innerHTML = '<span style="color: #059669;">Đang gửi mã xác thực...</span>';
+    
+    var formData = new FormData();
+    formData.append('email', email);
+    formData.append('type', 'student');
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    fetch('{% url "store:send_verification_code" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            messageEl.innerHTML = '<span style="color: #059669;">' + data.message + '</span>';
+            document.getElementById('edu-code-section').style.display = 'block';
+            document.getElementById('edu-send-btn').style.display = 'none';
+            document.getElementById('edu-verify-btn').style.display = 'block';
+            emailInput.disabled = true;
+        } else {
+            messageEl.innerHTML = '<span style="color: #dc2626;">' + data.message + '</span>';
+        }
+    })
+    .catch(function(error) {
+        messageEl.innerHTML = '<span style="color: #dc2626;">Lỗi kết nối. Vui lòng thử lại.</span>';
+    });
+}
+
+function verifyEduCode() {
+    var codeInput = document.getElementById('edu-code');
+    var messageEl = document.getElementById('edu-message');
+    var code = codeInput.value.trim();
+    
+    if (!code || code.length !== 6) {
+        messageEl.innerHTML = '<span style="color: #dc2626;">Vui lòng nhập mã 6 số</span>';
+        return;
+    }
+    
+    messageEl.innerHTML = '<span style="color: #059669;">Đang xác thực...</span>';
+    
+    var formData = new FormData();
+    formData.append('email', currentEduEmail);
+    formData.append('code', code);
+    formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+    
+    fetch('{% url "store:verify_code" %}', {
+        method: 'POST',
+        body: formData
+    })
+    .then(function(response) { return response.json(); })
+    .then(function(data) {
+        if (data.success) {
+            messageEl.innerHTML = '<span style="color: #059669;">' + data.message + '</span>';
+            setTimeout(function() {
+                location.reload();
+            }, 1500);
+        } else {
+            messageEl.innerHTML = '<span style="color: #dc2626;">' + data.message + '</span>';
+        }
+    })
+    .catch(function(error) {
+        messageEl.innerHTML = '<span style="color: #dc2626;">Lỗi kết nối. Vui lòng thử lại.</span>';
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const tabs = document.querySelectorAll('.qh-pf-tab[data-tab]');
     const panels = document.querySelectorAll('.qh-pf-tab-panel');
@@ -1111,14 +1306,18 @@ document.addEventListener('DOMContentLoaded', function() {
         var targetPanel = document.getElementById('tab-' + tabName);
         if (targetTab) targetTab.classList.add('active');
         if (targetPanel) targetPanel.classList.add('active');
+        // Lưu tab hiện tại vào sessionStorage
+        sessionStorage.setItem('qh_active_tab', tabName);
     }
 
-    // Check URL param ?tab=xxx
+    // Khôi phục tab từ URL hoặc sessionStorage
     var urlParams = new URLSearchParams(window.location.search);
     var tabParam = urlParams.get('tab');
-    if (tabParam) {
-        activateTab(tabParam);
-    }
+    var savedTab = sessionStorage.getItem('qh_active_tab');
+    
+    // Ưu tiên: URL param > savedTab > mặc định (address)
+    var activeTab = tabParam || savedTab || 'address';
+    activateTab(activeTab);
 
     tabs.forEach(function(tab) {
         tab.addEventListener('click', function(e) {

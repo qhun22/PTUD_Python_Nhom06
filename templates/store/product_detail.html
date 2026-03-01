@@ -105,10 +105,10 @@
                 <div class="pd-promo-banner-img">
                     <img src="{{ promo_banner.image.url }}" alt="Ưu đãi học sinh sinh viên">
                 </div>
-                <a href="#" class="pd-promo-banner-btn">
+                <button type="button" class="pd-promo-banner-btn" onclick="handleStudentVerify()">
                     Xác thực ngay
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
-                </a>
+                </button>
             </div>
             {% endif %}
         </div>
@@ -478,4 +478,25 @@ function onYouTubeIframeAPIReady() {
 })();
 </script>
 {% endif %}
+
+<!-- Student Verify Handler -->
+<script>
+function handleStudentVerify() {
+    var isLoggedIn = {{ is_authenticated|lower }};
+    
+    if (isLoggedIn) {
+        window.location.href = "{% url 'store:profile' %}?tab=student";
+    } else {
+        if (window.QHConfirm) {
+            QHConfirm.show('Bạn cần đăng nhập để xác thực sinh viên. Bạn có muốn đăng nhập không?', function() {
+                window.location.href = "{% url 'store:login' %}?next={{ request.path }}";
+            });
+        } else {
+            if (confirm('Bạn cần đăng nhập để xác thực sinh viên. Bạn có muốn đăng nhập không?')) {
+                window.location.href = "{% url 'store:login' %}?next={{ request.path }}";
+            }
+        }
+    }
+}
+</script>
 {% endblock %}

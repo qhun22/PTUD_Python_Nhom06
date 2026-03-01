@@ -257,6 +257,8 @@ def product_detail_view(request, product_id):
         'can_review': can_review,
         'must_login': must_login,
         'related_products': related_products,
+        'user': request.user,  # Add user to context
+        'is_authenticated': request.user.is_authenticated,  # Add is_authenticated to context
     }
     
     return render(request, 'store/product_detail.html', context)
@@ -603,8 +605,10 @@ def order_tracking(request):
     """
     Tra cứu đơn hàng - hiển thị tất cả đơn hàng của user đang đăng nhập
     (bao gồm cả đơn đã tất toán)
+    Có phân trang - 10 đơn/trang
     """
     from store.models import Order
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     
     context = {}
     if request.user.is_authenticated:
@@ -612,7 +616,19 @@ def order_tracking(request):
         orders = Order.objects.filter(
             user=request.user
         ).prefetch_related('items').order_by('-created_at')
-        context['orders'] = orders
+        
+        # Phân trang - 10 đơn mỗi trang
+        paginator = Paginator(orders, 10)
+        page = request.GET.get('page', 1)
+        
+        try:
+            orders_page = paginator.page(page)
+        except PageNotAnInteger:
+            orders_page = paginator.page(1)
+        except EmptyPage:
+            orders_page = paginator.page(paginator.num_pages)
+        
+        context['orders'] = orders_page
     
     return render(request, 'store/order_tracking.html', context)
 
@@ -1338,10 +1354,22 @@ def profile(request):
     from store.models import PasswordHistory
     from store.models import Address
     from django.db.models import Sum
+    from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
     
     context = {}
     if request.user.is_authenticated:
         orders = Order.objects.filter(user=request.user).order_by('-created_at')
+        
+        # Phân trang: 4 đơn hàng mỗi trang
+        paginator = Paginator(orders, 4)
+        page = request.GET.get('page', 1)
+        try:
+            orders_page = paginator.page(page)
+        except PageNotAnInteger:
+            orders_page = paginator.page(1)
+        except EmptyPage:
+            orders_page = paginator.page(paginator.num_pages)
+        
         # Chỉ đếm đơn đã giao thành công (không tính hủy, chờ xử lý, đang giao)
         total_orders = orders.filter(status='delivered').count()
         total_spent_raw = orders.filter(status='delivered').aggregate(total=Sum('total_amount'))['total'] or 0
@@ -1400,8 +1428,53 @@ def profile(request):
                 continue
             available_coupons.append(cp)
         
+        # Tìm voucher giảm 50% từ xác thực Student/Teacher
+        edu_voucher = None
+        is_edu_verified = request.user.is_student_verified or request.user.is_teacher_verified
+        edu_voucher_status = 'none'  # none, available, used, expired
+        user_email = request.user.email.lower()
+        verified_email = getattr(request.user, 'verified_student_email', '') or getattr(request.user, 'verified_teacher_email', '')
+        if verified_email:
+            edu_voucher = Coupon.objects.filter(
+                name__icontains='Student/Teacher',
+                target_email__iexact=verified_email,
+                is_active=True
+            ).first()
+            # Nếu chưa có voucher nhưng user đã xác thực, tự động tạo voucher
+            if not edu_voucher and (request.user.is_student_verified or request.user.is_teacher_verified):
+                import random
+                import string
+                voucher_code = 'EDU50' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+                edu_voucher = Coupon.objects.create(
+                    name=f'Ưu đãi Student/Teacher - {verified_email}',
+                    code=voucher_code,
+                    discount_type='percentage',
+                    discount_value=50,
+                    target_type='single',
+                    target_email=verified_email,
+                    max_products=0,
+                    min_order_amount=0,
+                    usage_limit=1,
+                    expire_days=30,
+                    is_active=True
+                )
+        
+        # Kiểm tra trạng thái voucher
+        if edu_voucher:
+            if edu_voucher.used_count >= edu_voucher.usage_limit:
+                edu_voucher_status = 'used'
+            elif edu_voucher.is_expired():
+                edu_voucher_status = 'expired'
+            else:
+                edu_voucher_status = 'available'
+            # Nếu đã dùng hoặc hết hạn, vẫn hiển thị trong context
+        elif is_edu_verified:
+            edu_voucher_status = 'used'
+        
         context.update({
-            'orders': orders,
+            'is_edu_verified': is_edu_verified,
+            'edu_voucher_status': edu_voucher_status,
+            'orders': orders_page,
             'total_orders': total_orders,
             'total_spent': total_spent,
             'total_spent_raw': total_spent_raw,
@@ -1409,6 +1482,7 @@ def profile(request):
             'addresses': addresses,
             'refunded_orders': refunded_orders,
             'available_coupons': available_coupons,
+            'edu_voucher': edu_voucher,
         })
     
     return render(request, 'store/profile.html', context)
@@ -1890,39 +1964,89 @@ def dashboard_view(request):
     except EmptyPage:
         products_paginated = product_paginator.page(product_paginator.num_pages)
     
-    # Doanh thu hôm nay
-    today = timezone.now().date()
-    revenue_today = Order.objects.filter(
-        created_at__date=today,
-        status__in=['processing', 'shipped', 'delivered']
-    ).aggregate(total=Sum('total_amount'))['total'] or 0
-    
+    # Doanh thu hôm nay - tính theo giờ địa phương
     # Doanh thu tháng này
-    from datetime import datetime
-    now = timezone.now()
-    start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
-    revenue_this_month = Order.objects.filter(
-        created_at__gte=start_of_month,
-        status__in=['processing', 'shipped', 'delivered']
-    ).aggregate(total=Sum('total_amount'))['total'] or 0
-    
-    # Dữ liệu biểu đồ doanh thu năm 2026 (12 tháng)
+    from datetime import datetime, timedelta
     from django.db.models.functions import ExtractMonth
-    current_year = 2026
+    from django.utils import timezone as django_timezone
     
-    # Lấy doanh thu từng tháng trong năm 2026
-    monthly_revenue = {}
-    for month in range(1, 13):
-        monthly_revenue[month] = 0
+    now = django_timezone.now()
+    # Chuyển sang giờ Việt Nam trước khi lấy ngày/tháng/năm
+    now_local = django_timezone.localtime(now)
+    today_local = now_local.date()
+    current_year = now_local.year
+    current_month = now_local.month
     
-    # Query orders in 2026 with delivered status
-    orders_2026 = Order.objects.filter(
+    # DEBUG: In rõ ràng tháng/năm hiện tại
+    print(f"=== DEBUG: Today (local): {today_local}, Year: {current_year}, Month: {current_month} ===")
+    
+    import logging
+    logger = logging.getLogger(__name__)
+    logger.info(f"[DEBUG] now={now}, today_local={today_local}, current_year={current_year}, current_month={current_month}")
+    
+    # Lấy tất cả đơn hàng hôm nay theo giờ VN
+    orders_today = Order.objects.filter(
         created_at__year=current_year,
         status__in=['processing', 'shipped', 'delivered']
     )
     
-    for order in orders_2026:
-        month = order.created_at.month
+    revenue_today = 0
+    for order in orders_today:
+        local_created_at = django_timezone.localtime(order.created_at)
+        logger.info(f"[DEBUG] order {order.id}: created_at={order.created_at}, local={local_created_at}, local.date={local_created_at.date()}")
+        if local_created_at.date() == today_local:
+            revenue_today += float(order.total_amount)
+    
+    # Lấy tất cả đơn hàng trong tháng này theo giờ địa phương
+    # Chuyển đổi từng đơn hàng sang giờ VN để kiểm tra tháng
+    # Lấy tất cả đơn hàng gần đây (5 năm gần nhất) để đảm bảo không bỏ sót
+    orders_this_month = Order.objects.filter(
+        created_at__year__gte=current_year - 1,
+        status__in=['processing', 'shipped', 'delivered']
+    ).order_by('-created_at')
+    
+    revenue_this_month = 0
+    march_revenue = 0
+    feb_revenue = 0
+    for order in orders_this_month:
+        local_created_at = django_timezone.localtime(order.created_at)
+        order_month = local_created_at.month
+        order_year = local_created_at.year
+        
+        # Debug mỗi đơn hàng
+        if order_month == 3:
+            march_revenue += float(order.total_amount)
+            print(f"  March order: {order.id}, amount={order.total_amount}, created={local_created_at}")
+        elif order_month == 2:
+            feb_revenue += float(order.total_amount)
+        
+        if order_month == current_month and order_year == current_year:
+            revenue_this_month += float(order.total_amount)
+    
+    print(f"=== DEBUG RESULT: revenue_this_month={revenue_this_month}, march={march_revenue}, feb={feb_revenue} ===")
+    
+    # TEST: Nếu tháng 3 mà không có đơn nào thì hiển thị giá trị test
+    if march_revenue == 0 and feb_revenue > 0:
+        print("=== WARNING: No March orders found but Feb orders exist ===")
+    
+    # Dữ liệu biểu đồ doanh thu năm nay
+    # Lấy doanh thu từng tháng trong năm nay
+    monthly_revenue = {}
+    for month in range(1, 13):
+        monthly_revenue[month] = 0
+    
+    # Query orders in current year with delivered status
+    orders_current_year = Order.objects.filter(
+        created_at__year=current_year,
+        status__in=['processing', 'shipped', 'delivered']
+    )
+    
+    # Lưu ý: cần chuyển về giờ địa phương trước khi lấy tháng để tránh lỗi múi giờ
+    # Ví dụ: 00:30 ngày 01/03 ở VN = 17:30 ngày 28/02 UTC
+    for order in orders_current_year:
+        # Chuyển đổi từ UTC sang múi giờ địa phương trước khi lấy tháng
+        local_created_at = django_timezone.localtime(order.created_at)
+        month = local_created_at.month
         monthly_revenue[month] += float(order.total_amount)
     
     # Tính toán chiều cao biểu đồ
@@ -3766,10 +3890,24 @@ def place_order(request):
         from store.models import Coupon
         try:
             coupon = Coupon.objects.get(code=coupon_code)
+            
+            # Kiểm tra quyền sử dụng coupon (bao gồm verified student/teacher email)
+            coupon_target_valid = False
+            if coupon.target_type == 'all':
+                coupon_target_valid = True
+            else:
+                user_email = request.user.email.lower()
+                target_email = coupon.target_email.lower()
+                verified_student = getattr(request.user, 'verified_student_email', '').lower()
+                verified_teacher = getattr(request.user, 'verified_teacher_email', '').lower()
+                coupon_target_valid = (user_email == target_email or 
+                                      verified_student == target_email or 
+                                      verified_teacher == target_email)
+            
             if (coupon.is_valid()
                 and total_amount >= coupon.min_order_amount
                 and (coupon.max_products == 0 or item_count <= coupon.max_products)
-                and (coupon.target_type == 'all' or request.user.email.lower() == coupon.target_email.lower())):
+                and coupon_target_valid):
                 discount_amount = coupon.calculate_discount(total_amount)
                 coupon.used_count += 1
                 coupon.save(update_fields=['used_count'])
@@ -5109,7 +5247,20 @@ def coupon_apply(request):
     if coupon.target_type == 'single':
         if not request.user.is_authenticated:
             return JsonResponse({'success': False, 'message': 'Vui lòng đăng nhập để sử dụng mã này'})
-        if request.user.email.lower() != coupon.target_email.lower():
+        
+        # Kiểm tra email đăng nhập hoặc email đã xác thực Student/Teacher
+        user_email = request.user.email.lower()
+        target_email = coupon.target_email.lower()
+        
+        # Cho phép sử dụng nếu email đăng nhập khớp HOẶC email đã xác thực Student/Teacher khớp
+        verified_student = getattr(request.user, 'verified_student_email', '').lower()
+        verified_teacher = getattr(request.user, 'verified_teacher_email', '').lower()
+        
+        is_valid = (user_email == target_email or 
+                    verified_student == target_email or 
+                    verified_teacher == target_email)
+        
+        if not is_valid:
             return JsonResponse({'success': False, 'message': 'Mã giảm giá không áp dụng cho tài khoản của bạn'})
     
     # 5. Đơn có đạt tối thiểu không?
@@ -5178,3 +5329,192 @@ def chatbot_api(request):
             "message": "Xin lỗi, hệ thống đang gặp sự cố. Vui lòng thử lại sau! 🙏",
             "suggestions": ["Tư vấn chọn máy", "Gặp nhân viên"],
         }, status=200)
+
+
+# ── Student/Teacher Email Verification ──────────────────────────────────────────────────
+@login_required
+def send_verification_code(request):
+    """Gửi mã xác thực đến email .edu"""
+    from store.models import EmailVerification
+    from django.utils import timezone
+    import random
+    import string
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Phương thức không hợp lệ'})
+    
+    email = request.POST.get('email', '').strip().lower()
+    verification_type = request.POST.get('type', 'student')  # student or teacher
+    
+    if not email:
+        return JsonResponse({'success': False, 'message': 'Vui lòng nhập email'})
+    
+    # Kiểm tra email có phải .edu.vn không
+    if not email.endswith('.edu.vn'):
+        return JsonResponse({'success': False, 'message': 'Vui lòng sử dụng email .edu.vn'})
+    
+    # Kiểm tra xem đã xác thực chưa
+    user = request.user
+    if verification_type == 'student':
+        if user.is_student_verified:
+            return JsonResponse({'success': False, 'message': 'Bạn đã xác thực Student rồi'})
+    else:
+        if user.is_teacher_verified:
+            return JsonResponse({'success': False, 'message': 'Bạn đã xác thực Teacher rồi'})
+    
+    # Tạo mã xác thực 6 số
+    code = ''.join(random.choices(string.digits, k=6))
+    
+    # Xóa các mã cũ chưa hết hạn
+    EmailVerification.objects.filter(
+        user=user,
+        email=email,
+        is_verified=False,
+        expires_at__gt=timezone.now()
+    ).delete()
+    
+    # Lưu mã mới
+    verification = EmailVerification.objects.create(
+        user=user,
+        email=email,
+        code=code,
+        verification_type=verification_type
+    )
+    
+    # Gửi email qua SendGrid API
+    try:
+        import os
+        import requests
+        
+        api_key = os.getenv('SENDGRID_API_KEY', '')
+        from_email = os.getenv('SENDGRID_FROM_EMAIL', 'noreply@qhun22.com')
+        
+        data = {
+            "personalizations": [{
+                "to": [{"email": email}],
+                "subject": "Xac thuc Student/Teacher - QHUN22"
+            }],
+            "from": {"email": from_email},
+            "content": [{
+                "type": "text/html",
+                "value": f"""
+                <h1>Xin chao {user.get_full_name()},</h1>
+                <p>Ma xac thuc cua ban la: <strong style="font-size: 24px; color: #667eea;">{code}</strong></p>
+                <p>Ma co hieu luc trong 10 phut.</p>
+                <p>Vui long khong chia se ma nay voi bat ky ai.</p>
+                <p>Tran trong,<br>QHUN22 Mobile</p>
+                """
+            }]
+        }
+        
+        response = requests.post(
+            "https://api.sendgrid.com/v3/mail/send",
+            json=data,
+            headers={
+                "Authorization": f"Bearer {api_key}",
+                "Content-Type": "application/json"
+            },
+            timeout=10
+        )
+        
+        if response.status_code in [200, 201, 202]:
+            return JsonResponse({
+                'success': True, 
+                'message': f'Ma xac thuc da gui den {email}',
+                'email': email
+            })
+        else:
+            return JsonResponse({'success': False, 'message': f'Loi gui email: {response.status_code}'})
+            
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).exception("Error sending verification email")
+        from django.conf import settings
+        if settings.DEBUG:
+            return JsonResponse({'success': False, 'message': f'Loi gui email: {str(e)}'})
+        return JsonResponse({'success': False, 'message': 'Loi gui email. Vui long thu lai sau.'})
+
+
+@login_required
+def verify_code(request):
+    """Xác thực mã"""
+    from store.models import EmailVerification, Coupon
+    from django.utils import timezone
+    import random
+    import string
+    
+    if request.method != 'POST':
+        return JsonResponse({'success': False, 'message': 'Phương thức không hợp lệ'})
+    
+    email = request.POST.get('email', '').strip().lower()
+    code = request.POST.get('code', '').strip()
+    
+    if not email or not code:
+        return JsonResponse({'success': False, 'message': 'Vui lòng nhập đầy đủ thông tin'})
+    
+    user = request.user
+    
+    # Tìm mã xác thực
+    try:
+        verification = EmailVerification.objects.get(
+            user=user,
+            email=email,
+            code=code,
+            is_verified=False
+        )
+    except EmailVerification.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Mã xác thực không đúng'})
+    
+    # Kiểm tra hết hạn
+    if not verification.is_valid():
+        return JsonResponse({'success': False, 'message': 'Mã đã hết hạn. Vui lòng gửi lại mã mới.'})
+    
+    # Xác thực thành công
+    verification.is_verified = True
+    verification.save()
+    
+    # Cập nhật user
+    if verification.verification_type == 'student':
+        user.is_student_verified = True
+        user.verified_student_email = email
+        user.student_verified_at = timezone.now()
+    else:
+        user.is_teacher_verified = True
+        user.verified_teacher_email = email
+        user.teacher_verified_at = timezone.now()
+    user.save()
+    
+    # Tạo voucher giảm 50% cho người dùng đã xác thực (1 lần sử dụng, 1 đơn hàng duy nhất)
+    # Tạo mã voucher ngẫu nhiên
+    voucher_code = 'EDU50' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=6))
+    
+    # Kiểm tra xem đã tạo voucher cho email này chưa
+    existing_coupon = Coupon.objects.filter(
+        target_email=email,
+        name__icontains='Student/Teacher'
+    ).first()
+    
+    if not existing_coupon:
+        coupon = Coupon.objects.create(
+            name=f'Ưu đãi Student/Teacher - {email}',
+            code=voucher_code,
+            discount_type='percentage',
+            discount_value=50,
+            target_type='single',
+            target_email=email,
+            max_products=0,  # Áp dụng cho tất cả sản phẩm
+            min_order_amount=0,  # Không giới hạn đơn tối thiểu
+            usage_limit=1,  # Chỉ sử dụng 1 lần
+            expire_days=30,  # Hết hạn sau 30 ngày
+            is_active=True
+        )
+        voucher_message = f' Mã voucher giảm 50%: {voucher_code}'
+    else:
+        voucher_message = f' Mã voucher: {existing_coupon.code}'
+    
+    return JsonResponse({
+        'success': True, 
+        'message': f'Xác thực thành công! Cảm ơn bạn đã xác thực.{voucher_message}',
+        'type': verification.verification_type,
+        'voucher_code': voucher_code if not existing_coupon else existing_coupon.code
+    })

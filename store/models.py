@@ -58,6 +58,14 @@ class CustomUser(AbstractUser):
     # Trường để đánh dấu nguồn đăng ký
     is_oauth_user = models.BooleanField(default=False, verbose_name='Người dùng OAuth')
     
+    # Trường xác thực Student - Teacher
+    is_student_verified = models.BooleanField(default=False, verbose_name='Đã xác thực Student')
+    verified_student_email = models.EmailField(blank=True, default='', verbose_name='Email Student đã xác thực')
+    student_verified_at = models.DateTimeField(null=True, blank=True, verbose_name='Ngày xác thực Student')
+    is_teacher_verified = models.BooleanField(default=False, verbose_name='Đã xác thực Teacher')
+    verified_teacher_email = models.EmailField(blank=True, default='', verbose_name='Email Teacher đã xác thực')
+    teacher_verified_at = models.DateTimeField(null=True, blank=True, verbose_name='Ngày xác thực Teacher')
+    
     objects = CustomUserManager()
     
     USERNAME_FIELD = 'email'  # Dùng email để đăng nhập
@@ -850,3 +858,36 @@ class Coupon(models.Model):
         else:
             discount = self.discount_value
         return min(discount, order_total)
+
+
+class EmailVerification(models.Model):
+    """Model lưu mã xác thực email .edu"""
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='email_verifications')
+    email = models.EmailField(verbose_name='Email xác thực')
+    code = models.CharField(max_length=6, verbose_name='Mã xác thực')
+    is_verified = models.BooleanField(default=False, verbose_name='Đã xác thực')
+    verification_type = models.CharField(max_length=20, choices=[
+        ('student', 'Student'),
+        ('teacher', 'Teacher'),
+    ], verbose_name='Loại xác thực')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Thời gian tạo')
+    expires_at = models.DateTimeField(verbose_name='Thời gian hết hạn')
+    
+    class Meta:
+        verbose_name = 'Xác thực email'
+        verbose_name_plural = 'Xác thực email'
+        ordering = ['-created_at']
+    
+    def __str__(self):
+        return f"{self.email} - {self.verification_type}"
+    
+    def save(self, *args, **kwargs):
+        if not self.expires_at:
+            from django.utils import timezone
+            import datetime
+            self.expires_at = timezone.now() + datetime.timedelta(minutes=10)
+        super().save(*args, **kwargs)
+    
+    def is_valid(self):
+        from django.utils import timezone
+        return not self.is_verified and timezone.now() < self.expires_at

@@ -413,7 +413,7 @@
     right: 0;
     bottom: 0;
     background: rgba(0, 0, 0, 0.45);
-    z-index: 9999;
+    z-index: 10001;
     display: none;
     align-items: center;
     justify-content: center;
@@ -846,6 +846,9 @@
     font-family: 'Signika', sans-serif;
     flex-shrink: 0;
     transition: color 0.2s;
+    background: none;
+    border: none;
+    cursor: pointer;
 }
 
 .pd-promo-banner-btn:hover {

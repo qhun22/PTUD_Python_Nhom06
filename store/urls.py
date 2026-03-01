@@ -149,4 +149,8 @@ urlpatterns = [
     path('api/coupons/edit/', views.coupon_edit, name='coupon_edit'),
     path('api/coupons/delete/', views.coupon_delete, name='coupon_delete'),
     path('api/coupons/apply/', views.coupon_apply, name='coupon_apply'),
+    
+    # Student/Teacher Verification
+    path('api/send-verification-code/', views.send_verification_code, name='send_verification_code'),
+    path('api/verify-code/', views.verify_code, name='verify_code'),
 ]

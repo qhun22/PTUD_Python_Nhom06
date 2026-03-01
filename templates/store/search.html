@@ -374,16 +374,17 @@
     {% endif %}
 </div>
 
+<!-- Wishlist Toggle JavaScript -->
 <script>
-function toggleWishlist(btn, productId) {
-    {% if not user.is_authenticated %}
-    if (confirm('Bạn cần đăng nhập để thêm sản phẩm vào yêu thích. Đăng nhập ngay?')) {
-        window.location.href = '{% url "store:login" %}';
+function updateWishlistBadge(count) {
+    const badge = document.getElementById('qh-wishlist-count');
+    if (badge) {
+        badge.textContent = count;
     }
-    return;
-    {% endif %}
-    
-    fetch('/wishlist/toggle/', {
+}
+
+function toggleWishlist(button, productId) {
+    fetch('{% url "store:wishlist_toggle" %}', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded',
@@ -394,22 +395,34 @@ function toggleWishlist(btn, productId) {
     .then(response => response.json())
     .then(data => {
         if (data.success) {
-            if (data.action === 'added') {
-                btn.classList.add('liked');
+            // Toggle class liked
+            if (data.is_liked) {
+                button.classList.add('liked');
             } else {
-                btn.classList.remove('liked');
+                button.classList.remove('liked');
             }
-            const countEl = document.getElementById('qh-wishlist-count');
-            if (countEl && data.wishlist_count !== undefined) {
-                countEl.textContent = data.wishlist_count;
+            // Cập nhật số lượng wishlist trên header
+            updateWishlistBadge(data.total_wishlist);
+            // Hiển thị toast thông báo
+            if (data.is_liked) {
+                QHToast.show('Đã thêm vào danh sách yêu thích', 'success');
+            } else {
+                QHToast.show('Đã xóa khỏi danh sách yêu thích', 'success');
             }
         } else {
-            alert(data.message || 'Có lỗi xảy ra');
+            // Chưa đăng nhập
+            if (data.message && data.message.includes('đăng nhập')) {
+                if (confirm(data.message)) {
+                    window.location.href = '{% url "store:login" %}';
+                }
+            } else {
+                QHToast.show(data.message || 'Có lỗi xảy ra', 'error');
+            }
         }
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Có lỗi xảy ra');
+        QHToast.show('Có lỗi xảy ra', 'error');
     });
 }
 </script>

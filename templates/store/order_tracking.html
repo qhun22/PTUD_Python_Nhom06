@@ -8,8 +8,8 @@
 /* ==================== ORDER TRACKING PAGE (Table Design) ==================== */
 .qh-ot-page { }
 .qh-ot-page .qh-page-title {
-    font-size: 22px;
-    font-weight: 700;
+    font-size: 28px;
+    font-weight: 600;
     color: var(--qh-text);
     margin-bottom: 24px;
 }
@@ -320,39 +320,22 @@
     box-shadow: 0 2px 8px rgba(0,0,0,0.06);
 }
 .qh-ot-empty-icon {
-    width: 100px; height: 100px;
-    margin: 0 auto 20px;
+    width: 120px; height: 120px;
+    margin: 0 auto 24px;
     color: #d1d5db;
 }
 .qh-ot-empty h3 {
-    font-size: 20px;
-    font-weight: 700;
+    font-size: 24px;
+    font-weight: 600;
     color: var(--qh-text);
     margin-bottom: 8px;
 }
 .qh-ot-empty p {
-    font-size: 15px;
+    font-size: 16px;
     color: var(--qh-text-light);
     margin-bottom: 24px;
 }
-.qh-ot-empty-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    padding: 12px 32px;
-    border-radius: 8px;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    background: linear-gradient(135deg, var(--qh-primary), var(--qh-primary-dark));
-    color: var(--qh-text);
-    box-shadow: 0 4px 12px rgba(169,204,240,0.4);
-    transition: all 0.2s;
-}
-.qh-ot-empty-btn:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(169,204,240,0.5);
-}
+
 
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
@@ -364,7 +347,7 @@
 </style>
 
 <div class="qh-ot-page">
-    <h1 class="qh-page-title">TRA CỨU ĐƠN HÀNG</h1>
+    <h1 class="qh-page-title">ĐƠN HÀNG CỦA BẠN</h1>
 
     {% if orders %}
 
@@ -445,6 +428,35 @@
         </table>
     </div>
 
+    <!-- Pagination -->
+    {% if orders.has_other_pages %}
+    <div class="qh-pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 40px; flex-wrap: wrap;">
+        {% if orders.has_previous %}
+        <a href="?page={{ orders.previous_page_number }}" class="qh-btn qh-btn-secondary" style="padding: 8px 16px; text-decoration: none;">
+            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+            </svg>
+        </a>
+        {% endif %}
+        
+        {% for num in orders.paginator.page_range %}
+            {% if orders.number == num %}
+            <span class="qh-btn qh-btn-primary" style="padding: 8px 16px; cursor: default;">{{ num }}</span>
+            {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
+            <a href="?page={{ num }}" class="qh-btn qh-btn-secondary" style="padding: 8px 16px; text-decoration: none;">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if orders.has_next %}
+        <a href="?page={{ orders.next_page_number }}" class="qh-btn qh-btn-secondary" style="padding: 8px 16px; text-decoration: none;">
+            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+            </svg>
+        </a>
+        {% endif %}
+    </div>
+    {% endif %}
+
     {% comment %} <!-- Status Filter Buttons -->
     <div class="qh-ot-filter-bar">
         <button type="button" class="qh-ot-filter-btn active" data-filter="all" onclick="filterOtOrders('all')">Tất cả</button>
@@ -511,10 +523,10 @@
         <svg class="qh-ot-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
         </svg>
-        <h3>Chưa có đơn hàng nào</h3>
+        <h3>ĐƠN HÀNG TRỐNG</h3>
         <p>Hãy mua sắm để đơn hàng của bạn xuất hiện tại đây!</p>
-        <a href="{% url 'store:home' %}" class="qh-ot-empty-btn">
-            <i class="ri-shopping-bag-line"></i> Tiếp tục mua sắm
+        <a href="{% url 'store:home' %}" class="qh-btn qh-btn-primary" style="padding: 12px 32px; font-size: 16px; font-weight: 600;">
+            Tiếp tục khám phá
         </a>
     </div>
     {% endif %}
@@ -553,9 +565,12 @@ OT_ORDERS['{{ order.order_code }}'] = {
 /* ===== Number STT rows ===== */
 (function() {
     var rows = document.querySelectorAll('#otTableBody tr[data-status]');
+    var currentPage = {{ orders.number|default:1 }};
+    var itemsPerPage = 10;
+    var startStt = (currentPage - 1) * itemsPerPage;
     for (var i = 0; i < rows.length; i++) {
         var sttCell = rows[i].querySelector('.stt');
-        if (sttCell) sttCell.textContent = i + 1;
+        if (sttCell) sttCell.textContent = startStt + i + 1;
     }
 })();
 
