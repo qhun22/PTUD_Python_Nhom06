@@ -6,16 +6,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}QHUN22 Mobile{% endblock %}</title>
 
-    <!-- Favicon -->
+    <!-- Biểu tượng favicon -->
     <link rel="icon" type="image/jpeg" href="{% static 'logos/seanfavi.jpg' %}">
 
-    <!-- Static Files - CSS -->
+    <!-- Các file CSS tĩnh -->
     <link rel="stylesheet" href="{% static 'css/style.css' %}">
     <link rel="stylesheet" href="{% static 'css/banner.css' %}">
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/chatbot.css' %}">
 
-    <!-- Google Fonts - Signika -->
+    <!-- Font Google - Signika -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Signika:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -32,7 +32,7 @@
 </head>
 <body>
 
-    <!-- Toast Messages -->
+    <!-- Tin nhắn thông báo -->
     {% if messages %}
     <script>
     document.addEventListener('DOMContentLoaded', function() {
@@ -51,16 +51,16 @@
     </script>
     {% endif %}
 
-    <!-- Header -->
+    <!-- Đầu trang (Header) -->
     <header class="qh-header">
         <div class="qh-header-container">
             <div class="qh-header-inner">
-                <!-- Logo -->
+                <!-- Logo cửa hàng -->
                 <a href="{% url 'store:home' %}" class="qh-logo">
                     <img src="{% static 'logos/sean.gif' %}" alt="QHUN22 Mobile" class="qh-logo-img">
                 </a>
 
-                <!-- Search Bar -->
+                <!-- Thanh tìm kiếm -->
                 <div class="qh-search">
                     <form action="{% url 'store:product_search' %}" method="GET" class="qh-search-form">
                         <input type="text"
@@ -77,9 +77,9 @@
                     </form>
                 </div>
 
-                <!-- Header Actions -->
+                <!-- Các nút hành động trong header -->
                 <div class="qh-header-actions">
-                    <!-- Danh Sách Yêu thích -->
+                    <!-- Danh sách yêu thích -->
                     <a href="{% url 'store:wishlist' %}" class="qh-header-icon">
                         <div class="qh-icon-circle">
                             <svg class="qh-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -93,7 +93,7 @@
                         </div>
                     </a>
 
-                    <!-- Thanh toán / Giỏ hàng -->
+                    <!-- Giỏ hàng / Thanh toán -->
                     <a href="{% url 'store:cart_detail' %}" class="qh-header-icon">
                         <div class="qh-icon-circle">
                             <svg class="qh-icon-svg" fill="none" stroke="currentColor" viewBox="0 0 24 24">

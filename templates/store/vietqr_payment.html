@@ -5,342 +5,7 @@
 {% block title %}Thanh toán VietQR - QHUN22 Mobile{% endblock %}
 
 {% block extra_css %}
-<style>
-/* ==================== VIETQR PAYMENT PAGE ====================
-   Đồng bộ: var(--qh-card-bg), border-radius 12px,
-   box-shadow 0 2px 8px, font, spacing giống cart/checkout/order_tracking
-   ============================================================ */
-
-/* Wrapper card — giống .qh-os-wrapper / .qh-checkout-section */
-.qh-vqr-wrapper {
-    background: var(--qh-card-bg, var(--qh-white));
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    overflow: hidden;
-}
-
-/* ---- Header ---- */
-.qh-vqr-header {
-    padding: 20px 24px;
-    border-bottom: 1.5px solid var(--qh-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-}
-.qh-vqr-header-left {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-}
-.qh-vqr-header-left i {
-    font-size: 22px;
-    color: var(--qh-primary);
-}
-.qh-vqr-header-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--qh-text);
-}
-.qh-vqr-header-sub {
-    font-size: 12px;
-    color: var(--qh-text-light);
-    margin-top: 1px;
-}
-
-/* Timer badge */
-.qh-vqr-timer-badge {
-    background: var(--qh-white);
-    border: 1.5px solid var(--qh-border);
-    border-radius: 8px;
-    padding: 8px 16px;
-    text-align: center;
-}
-.qh-vqr-timer-label {
-    font-size: 11px;
-    font-weight: 500;
-    color: var(--qh-text-light);
-    margin-bottom: 1px;
-}
-.qh-vqr-timer-value {
-    font-size: 22px;
-    font-weight: 800;
-    color: #ef4444;
-    font-variant-numeric: tabular-nums;
-    letter-spacing: 1px;
-}
-.qh-vqr-timer-value.warning {
-    animation: qhVqrBlink 1s ease infinite;
-}
-@keyframes qhVqrBlink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-}
-
-/* ---- QR Body — giống .qh-checkout-qr-body ---- */
-.qh-vqr-body {
-    padding: 24px;
-    display: flex;
-    gap: 24px;
-    align-items: flex-start;
-}
-
-/* QR image */
-.qh-vqr-qr-wrap {
-    width: 200px;
-    min-width: 200px;
-    flex-shrink: 0;
-}
-.qh-vqr-qr-img {
-    width: 100%;
-    border-radius: 8px;
-    overflow: hidden;
-    border: 1px solid var(--qh-border);
-    background: #fff;
-}
-.qh-vqr-qr-img img {
-    width: 100%;
-    height: auto;
-    display: block;
-}
-.qh-vqr-qr-hint {
-    text-align: center;
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--qh-text-light);
-    font-weight: 500;
-}
-
-/* Info rows — giống .qh-checkout-qr-row */
-.qh-vqr-info {
-    flex: 1;
-    min-width: 0;
-}
-.qh-vqr-info-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--qh-text);
-    margin-bottom: 14px;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-.qh-vqr-info-title i {
-    font-size: 18px;
-    color: var(--qh-primary);
-}
-.qh-vqr-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 8px 0;
-    border-bottom: 1px dashed var(--qh-border);
-    font-size: 14px;
-}
-.qh-vqr-row:last-child { border-bottom: none; }
-.qh-vqr-row .lbl {
-    color: var(--qh-text-light);
-    font-weight: 500;
-}
-.qh-vqr-row .val {
-    color: var(--qh-text);
-    font-weight: 600;
-    text-align: right;
-}
-.qh-vqr-row .val.amount {
-    color: var(--qh-primary);
-    font-size: 16px;
-    font-weight: 700;
-}
-.qh-vqr-row .val.code {
-    color: #ef4444;
-    font-weight: 700;
-    letter-spacing: 1px;
-}
-
-/* ---- Footer bar — giống .qh-checkout-qr-footer ---- */
-.qh-vqr-footer {
-    padding: 14px 24px;
-    border-top: 1.5px solid var(--qh-border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    gap: 16px;
-    background: rgba(169, 204, 240, 0.06);
-}
-
-/* Notice — giống .qh-checkout-qr-notice */
-.qh-vqr-notice {
-    display: flex;
-    align-items: flex-start;
-    gap: 8px;
-    background: #fef3c7;
-    border: 1px solid #fbbf24;
-    color: #92400e;
-    padding: 10px 14px;
-    border-radius: 8px;
-    font-size: 13px;
-    line-height: 1.5;
-    font-weight: 500;
-    flex: 1;
-}
-.qh-vqr-notice i {
-    font-size: 18px;
-    color: #f59e0b;
-    flex-shrink: 0;
-    margin-top: 1px;
-}
-
-/* Status polling indicator */
-.qh-vqr-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    font-weight: 600;
-    color: var(--qh-text-light);
-    white-space: nowrap;
-}
-.qh-vqr-status i {
-    font-size: 18px;
-    color: var(--qh-primary);
-}
-.qh-vqr-status .dot-pulse {
-    display: inline-flex;
-    gap: 3px;
-}
-.qh-vqr-status .dot-pulse span {
-    width: 5px;
-    height: 5px;
-    border-radius: 50%;
-    background: var(--qh-primary);
-    animation: qhDotPulse 1.4s infinite ease-in-out both;
-}
-.qh-vqr-status .dot-pulse span:nth-child(2) { animation-delay: 0.2s; }
-.qh-vqr-status .dot-pulse span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes qhDotPulse {
-    0%, 80%, 100% { transform: scale(0.4); opacity: 0.4; }
-    40% { transform: scale(1); opacity: 1; }
-}
-
-/* ==================== EXPIRED STATE ==================== */
-.qh-vqr-expired {
-    display: none;
-}
-.qh-vqr-expired-hero {
-    text-align: center;
-    padding: 40px 24px 32px;
-}
-.qh-vqr-expired-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 20px;
-    background: linear-gradient(135deg, #ef4444, #dc2626);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: qhVqrPop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 6px 20px rgba(239, 68, 68, 0.25);
-}
-@keyframes qhVqrPop {
-    0% { transform: scale(0); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-.qh-vqr-expired-icon i {
-    font-size: 38px;
-    color: #fff;
-}
-.qh-vqr-expired-hero h2 {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--qh-text);
-    margin: 0 0 8px;
-}
-.qh-vqr-expired-hero p {
-    font-size: 14px;
-    color: var(--qh-text-light);
-    line-height: 1.6;
-    margin: 0;
-}
-
-/* Expired actions — giống .qh-os-actions */
-.qh-vqr-expired-actions {
-    padding: 0 32px 32px;
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    max-width: 400px;
-    margin: 0 auto;
-}
-
-/* Buttons — giống .qh-os-btn */
-.qh-vqr-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 14px 20px;
-    border-radius: 8px;
-    font-family: 'Signika', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    border: 1.5px solid var(--qh-border);
-    background: var(--qh-white);
-    color: var(--qh-text);
-    transition: all 0.2s;
-}
-.qh-vqr-btn:hover {
-    border-color: var(--qh-primary);
-    background: rgba(169, 204, 240, 0.08);
-}
-.qh-vqr-btn:active {
-    transform: scale(0.98);
-}
-.qh-vqr-btn i { font-size: 17px; }
-.qh-vqr-btn.primary {
-    background: linear-gradient(135deg, var(--qh-primary), var(--qh-primary-dark));
-    border-color: var(--qh-primary-dark);
-    box-shadow: 0 4px 12px rgba(169, 204, 240, 0.4);
-}
-.qh-vqr-btn.primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(169, 204, 240, 0.5);
-}
-
-/* ==================== Responsive ==================== */
-@media (max-width: 768px) {
-    .qh-vqr-body {
-        flex-direction: column;
-        align-items: center;
-        padding: 20px;
-        gap: 20px;
-    }
-    .qh-vqr-qr-wrap {
-        width: 180px;
-        min-width: 180px;
-    }
-    .qh-vqr-info { width: 100%; }
-    .qh-vqr-footer {
-        flex-direction: column;
-        gap: 12px;
-        padding: 14px 20px;
-    }
-    .qh-vqr-header {
-        flex-direction: column;
-        gap: 12px;
-        padding: 16px 20px;
-    }
-    .qh-vqr-header-left {
-        justify-content: center;
-    }
-    .qh-vqr-expired-actions {
-        padding: 0 20px 28px;
-    }
-}
-</style>
+<link rel="stylesheet" href="{% static 'css/vietqr_payment.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -383,7 +48,7 @@
                     </div>
                     <div class="qh-vqr-row">
                         <span class="lbl">Ngân hàng</span>
-                        <span class="val">Techcombank</span>
+                        <span class="val">TECHCOMBANK</span>
                     </div>
                     <div class="qh-vqr-row">
                         <span class="lbl">Chủ tài khoản</span>
@@ -398,7 +63,7 @@
                         <span class="val amount">{{ order.total_amount|format_price_with_unit }}</span>
                     </div>
                     <div class="qh-vqr-row">
-                        <span class="lbl">Nội dung CK</span>
+                        <span class="lbl">Nội dung: </span>
                         <span class="val code">{{ transfer_code }}</span>
                     </div>
                 </div>
@@ -408,7 +73,7 @@
             <div class="qh-vqr-footer">
                 <div class="qh-vqr-notice">
                     <i class="ri-error-warning-line"></i>
-                    <div>Vui lòng chuyển khoản <strong>đúng số tiền</strong> và <strong>đúng nội dung</strong>. Sau khi chuyển, admin sẽ xác nhận.</div>
+                    <div>Vui lòng chuyển khoản <strong>đúng số tiền</strong> và <strong>đúng nội dung</strong>. Sau khi chuyển, hệ thống sẽ xác nhận.</div>
                 </div>
                 <div class="qh-vqr-status" id="vqrStatusBox">
                     <i class="ri-refresh-line"></i>
@@ -419,7 +84,8 @@
                 </div>
             </div>
 
-        </div><!-- /vqrPending -->
+        </div>
+        <!-- /vqrPending -->
 
         <!-- ==================== EXPIRED STATE ==================== -->
         <div class="qh-vqr-expired" id="vqrExpired">
@@ -438,16 +104,20 @@
                     <i class="ri-home-line"></i> Về trang chủ
                 </a>
             </div>
-        </div><!-- /vqrExpired -->
+        </div>
+        <!-- /vqrExpired -->
 
-    </div><!-- /vqrCard -->
+    </div>
+    <!-- /vqrCard -->
 
 </div>
 {% endblock %}
 
 {% block extra_js %}
+<!-- VietQR Payment JavaScript -->
 <script>
 (function() {
+    // ==================== CONFIGURATION ====================
     var BANK_ID = 'TCB';
     var ACCOUNT_NO = '22100588888888';
     var ACCOUNT_NAME = 'TRUONG QUANG HUY';
@@ -460,15 +130,22 @@
     var CSRF_TOKEN = '{{ csrf_token }}';
     var TOTAL_AMOUNT = {{ order.total_amount }};
 
+    // ==================== DOM ELEMENTS ====================
     var timerEl = document.getElementById('vqrTimer');
     var pendingEl = document.getElementById('vqrPending');
     var expiredEl = document.getElementById('vqrExpired');
     var qrImgEl = document.getElementById('vqrQrImage');
 
+    // ==================== STATE ====================
     var timerInterval = null;
     var pollInterval = null;
     var remaining = TIMEOUT_SECONDS;
 
+    // ==================== QR URL BUILDER ====================
+    /**
+     * Build VietQR URL with payment details
+     * @returns {string} QR image URL
+     */
     function buildQrUrl() {
         return 'https://img.vietqr.io/image/' + BANK_ID + '-' + ACCOUNT_NO + '-vietqr_net_2.jpg'
             + '?amount=' + TOTAL_AMOUNT
@@ -476,12 +153,21 @@
             + '&accountName=' + encodeURIComponent(ACCOUNT_NAME);
     }
 
+    // ==================== TIMER FUNCTIONS ====================
+    /**
+     * Format seconds to MM:SS
+     * @param {number} sec - Seconds to format
+     * @returns {string} Formatted time string
+     */
     function formatTimer(sec) {
         var m = Math.floor(sec / 60);
         var s = sec % 60;
         return (m < 10 ? '0' : '') + m + ':' + (s < 10 ? '0' : '') + s;
     }
 
+    /**
+     * Start countdown timer
+     */
     function startTimer() {
         timerEl.textContent = formatTimer(remaining);
 
@@ -500,6 +186,10 @@
         }, 1000);
     }
 
+    // ==================== POLLING FUNCTIONS ====================
+    /**
+     * Start polling for payment status
+     */
     function startPolling() {
         pollInterval = setInterval(function() {
             fetch(STATUS_URL + '?code=' + encodeURIComponent(TRANSFER_CODE) + '&order_code=' + encodeURIComponent(ORDER_CODE))
@@ -516,11 +206,25 @@
         }, 3000);
     }
 
+    // ==================== HELPER FUNCTIONS ====================
+    /**
+     * Stop all intervals
+     */
     function stopAll() {
-        if (timerInterval) { clearInterval(timerInterval); timerInterval = null; }
-        if (pollInterval) { clearInterval(pollInterval); pollInterval = null; }
+        if (timerInterval) {
+            clearInterval(timerInterval);
+            timerInterval = null;
+        }
+        if (pollInterval) {
+            clearInterval(pollInterval);
+            pollInterval = null;
+        }
     }
 
+    // ==================== EVENT HANDLERS ====================
+    /**
+     * Handle successful payment
+     */
     function onSuccess() {
         stopAll();
         if (window.QHToast) {
@@ -529,9 +233,13 @@
         window.location.href = SUCCESS_URL;
     }
 
+    /**
+     * Handle expired payment
+     */
     function onExpired() {
         stopAll();
 
+        // Call expire API
         fetch(EXPIRE_URL, {
             method: 'POST',
             headers: {
@@ -544,6 +252,7 @@
             })
         }).catch(function() {});
 
+        // Show expired state
         pendingEl.style.display = 'none';
         expiredEl.style.display = 'block';
 
@@ -552,10 +261,20 @@
         }
     }
 
-    if (qrImgEl) {
-        qrImgEl.src = buildQrUrl();
+    /**
+     * Load QR code image
+     */
+    function loadQR() {
+        if (qrImgEl) {
+            qrImgEl.src = buildQrUrl();
+        }
     }
 
+    // ==================== INITIALIZATION ====================
+    // Load QR code
+    loadQR();
+
+    // Start timer and polling if not expired
     if (remaining > 0) {
         startTimer();
         startPolling();

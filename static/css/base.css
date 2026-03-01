@@ -17,6 +17,12 @@
     transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
 
+.qh-compare-bar.active {
+    transform: translateY(0);
+    opacity: 1;
+    pointer-events: auto;
+}
+
 .qh-compare-bar-inner {
     max-width: 1400px;
     margin: 0 auto;
@@ -209,6 +215,12 @@
     opacity: 0;
     pointer-events: none;
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+.qh-compare-fab.active {
+    transform: scale(1);
+    opacity: 1;
+    pointer-events: auto;
 }
 
 .qh-compare-fab:hover {

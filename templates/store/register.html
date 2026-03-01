@@ -4,170 +4,30 @@
 {% block title %}ĐĂNG KÝ - QHUN22 Mobile{% endblock %}
 
 {% block extra_css %}
-<style>
-    /* Google Button Styles */
-    .qh-google-btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        width: 100%;
-        height: 48px;
-        background: var(--qh-white);
-        border: 2px solid var(--qh-border);
-        border-radius: var(--qh-radius);
-        font-family: 'Signika', sans-serif;
-        font-size: 15px;
-        font-weight: 500;
-        color: var(--qh-text);
-        cursor: pointer;
-        transition: all 0.3s ease;
-        text-decoration: none;
-    }
-    
-    .qh-google-btn:hover {
-        border-color: var(--qh-primary);
-        background: var(--qh-bg);
-        transform: translateY(-2px);
-        box-shadow: 0 4px 12px rgba(169, 204, 240, 0.3);
-    }
-    
-    .qh-google-icon {
-        width: 20px;
-        height: 20px;
-    }
-    
-    /* Divider */
-    .qh-divider {
-        display: flex;
-        align-items: center;
-        margin: 24px 0;
-    }
-    
-    .qh-divider::before,
-    .qh-divider::after {
-        content: '';
-        flex: 1;
-        height: 1px;
-        background: var(--qh-border);
-    }
-    
-    .qh-divider span {
-        padding: 0 16px;
-        color: var(--qh-text-light);
-        font-size: 13px;
-    }
-    
-    /* Form Styles */
-    .qh-auth-box {
-        background: var(--qh-white);
-        border-radius: var(--qh-radius-lg);
-        padding: 32px;
-        width: 100%;
-        max-width: 480px;
-        margin: 0 auto;
-        box-shadow: 0 4px 20px var(--qh-shadow);
-    }
-    
-    .qh-auth-box-title {
-        font-size: 30px;
-        font-weight: 600;
-        text-align: center;
-        margin-bottom: 24px;
-        color: var(--qh-text);
-    }
-    
-    .qh-auth-link {
-        text-align: center;
-        margin-top: 20px;
-        color: var(--qh-text-light);
-    }
-    
-    .qh-auth-link a {
-        color: var(--qh-primary-dark);
-        font-weight: 500;
-        text-decoration: none;
-    }
-    
-    .qh-auth-link a:hover {
-        text-decoration: underline;
-    }
-    
-    /* OTP Button - Sử dụng font hệ thống */
-    .qh-otp-group {
-        display: flex;
-        gap: 8px;
-    }
-    
-    .qh-otp-group .qh-input {
-        flex: 1;
-    }
-    
-    .qh-otp-btn {
-        white-space: nowrap;
-        padding: 12px 20px;
-        background: var(--qh-primary);
-        color: var(--qh-white);
-        border: none;
-        border-radius: var(--qh-radius);
-        cursor: pointer;
-        font-family: 'Signika', sans-serif;
-        font-size: 14px;
-        font-weight: 500;
-        transition: all 0.3s ease;
-    }
-    
-    .qh-otp-btn:hover:not(:disabled) {
-        background: var(--qh-primary-dark);
-    }
-    
-    .qh-otp-btn:disabled {
-        background: #ccc;
-        color: #888;
-        cursor: not-allowed;
-    }
-    
-    .qh-otp-message {
-        text-align: center;
-        padding: 8px;
-        margin-bottom: 12px;
-        border-radius: var(--qh-radius);
-        font-size: 14px;
-    }
-    
-    .qh-otp-message.success {
-        background: #d4edda;
-        color: #155724;
-    }
-    
-    .qh-otp-message.error {
-        background: #f8d7da;
-        color: #721c24;
-    }
-</style>
+<link rel="stylesheet" href="{% static 'css/register.css' %}">
 {% endblock %}
 
 {% block content %}
 <div class="qh-register-page" style="padding: 10px 0;">
-    
+
     <div class="qh-auth-box">
         <h2 class="qh-auth-box-title">ĐĂNG KÝ</h2>
-        
+
         <!-- Messages will be shown via JavaScript Toast -->
         {% if messages %}
             {% for message in messages %}
                 <div class="qh-toast-message" data-type="{% if message.tags == 'error' %}error{% else %}success{% endif %}" data-message="{{ message|escapejs }}" style="display: none;"></div>
             {% endfor %}
         {% endif %}
-        
+
         <form method="POST" action="{% url 'store:register' %}" id="regForm">
             {% csrf_token %}
-            
+
             <div class="qh-form-group">
                 <label class="qh-label">Họ Tên</label>
                 <input type="text" name="fullname" class="qh-input" placeholder="Nhập họ tên" required>
             </div>
-            
+
             <div class="qh-form-group">
                 <label class="qh-label">Email</label>
                 <div class="qh-otp-group">
@@ -175,52 +35,62 @@
                     <button type="button" class="qh-otp-btn" id="otpBtn" disabled>Lấy mã</button>
                 </div>
             </div>
-            
+
             <!-- OTP Message -->
             <div id="otpMessage" class="qh-otp-message" style="display: none;"></div>
-            
+
             <div class="qh-form-group">
                 <label class="qh-label">Nhập mã OTP</label>
                 <input type="text" name="otp" id="otp" class="qh-input" placeholder="Nhập mã OTP" required>
             </div>
-            
+
             <div class="qh-form-group">
                 <label class="qh-label">Số điện thoại</label>
                 <input type="text" name="phone" class="qh-input" placeholder="Nhập số điện thoại" required>
             </div>
-            
+
             <div class="qh-form-group">
                 <label class="qh-label">Mật khẩu</label>
                 <input type="password" name="password" class="qh-input" placeholder="Nhập mật khẩu" required>
             </div>
-            
+
             <div class="qh-form-group">
                 <label class="qh-label">Nhập lại Mật khẩu</label>
                 <input type="password" name="confirm_password" class="qh-input" placeholder="Nhập lại mật khẩu" required>
             </div>
-            
+
             <button type="submit" class="qh-btn qh-btn-primary" style="width: 100%;">
                 Đăng ký
             </button>
         </form>
-        
+
         <p class="qh-auth-link">
             Đã có tài khoản? <a href="{% url 'store:login' %}">Đăng nhập ngay</a>
         </p>
     </div>
 </div>
 
+<!-- External Register JS -->
 <script src="{% static 'js/register.js' %}?v=3"></script>
 
+<!-- Django Messages to Toast -->
+{# ========================================================================= #}
+{# NOTE: JS KHÔNG THỂ TÁCH RA FILE RIÊNG vì sử dụng Django template tags #}
+{# - {% if messages %} - Block từ Django #}
+{# - {% for message in messages %} - Loop từ Django #}
+{# - {{ message.tags|escapejs }} - Biến từ Django #}
+{# - {{ message|escapejs }} - Biến từ Django #}
+{# Nếu tách ra file .js thuần, các template tags này sẽ không được xử lý #}
+{# ========================================================================= #}
 {% if messages %}
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     {% for message in messages %}
     (function() {
-        const tags = "{{ message.tags|escapejs }}";
-        const messageText = "{{ message|escapejs }}";
-        const type = tags.includes('error') ? 'error' : 'success';
-        
+        var tags = "{{ message.tags|escapejs }}";
+        var messageText = "{{ message|escapejs }}";
+        var type = tags.includes('error') ? 'error' : 'success';
+
         if (window.QHToast) {
             window.QHToast.show(messageText, type);
         }

@@ -5,176 +5,7 @@
 {% block title %}TRẠNG THÁI - QHUN22 Mobile{% endblock %}
 
 {% block extra_css %}
-<style>
-/* ==================== ORDER SUCCESS PAGE ==================== */
-.qh-os-page {}
-
-/* ===== Outer wrapper box — đồng bộ với cart/checkout/wishlist ===== */
-.qh-os-wrapper {
-    background: var(--qh-card-bg, var(--qh-white));
-    border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
-    overflow: hidden;
-}
-
-/* ===== Hero: icon + title ===== */
-.qh-os-hero {
-    text-align: center;
-    padding: 40px 24px 32px;
-}
-.qh-os-icon {
-    width: 80px;
-    height: 80px;
-    margin: 0 auto 20px;
-    background: linear-gradient(135deg, #10b981, #059669);
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    animation: qh-pop 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 6px 20px rgba(16, 185, 129, 0.25);
-}
-@keyframes qh-pop {
-    0% { transform: scale(0); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-.qh-os-icon .qhc { width: 38px; height: 38px; }
-.qh-os-icon .qhc path {
-    stroke: #fff; stroke-width: 3;
-    stroke-linecap: round; stroke-linejoin: round;
-    fill: none;
-    stroke-dasharray: 50; stroke-dashoffset: 50;
-    animation: qh-draw 0.6s 0.3s ease forwards;
-}
-@keyframes qh-draw { to { stroke-dashoffset: 0; } }
-
-.qh-os-hero h2 {
-    font-size: 20px;
-    font-weight: 700;
-    color: var(--qh-text);
-    margin: 0;
-}
-
-/* ===== Two equal boxes ===== */
-.qh-os-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 0;
-    border-top: 1.5px solid var(--qh-border);
-}
-
-/* Left box */
-.qh-os-info {
-    padding: 28px 32px;
-    border-right: 1.5px solid var(--qh-border);
-}
-.qh-os-info-title {
-    font-size: 16px;
-    font-weight: 700;
-    color: var(--qh-text);
-    margin-bottom: 20px;
-}
-.qh-os-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 12px 0;
-    border-bottom: 1px solid #f0f0f0;
-}
-.qh-os-row:last-child { border-bottom: none; }
-.qh-os-row .label {
-    font-size: 15px;
-    color: var(--qh-text-light);
-    font-weight: 500;
-}
-.qh-os-row .value {
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--qh-text);
-}
-
-/* Right box */
-.qh-os-actions {
-    padding: 28px 32px;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    gap: 14px;
-}
-.qh-os-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 8px;
-    width: 100%;
-    padding: 14px 20px;
-    border-radius: 8px;
-    font-family: 'Signika', sans-serif;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: none;
-    cursor: pointer;
-    border: 1.5px solid var(--qh-border);
-    background: var(--qh-white);
-    color: var(--qh-text);
-    transition: all 0.2s;
-}
-.qh-os-btn:hover {
-    border-color: var(--qh-primary);
-    background: rgba(169, 204, 240, 0.08);
-}
-.qh-os-btn:active {
-    transform: scale(0.98);
-}
-.qh-os-btn i { font-size: 17px; }
-.qh-os-btn.primary {
-    background: linear-gradient(135deg, var(--qh-primary), var(--qh-primary-dark));
-    border-color: var(--qh-primary-dark);
-    box-shadow: 0 4px 12px rgba(169, 204, 240, 0.4);
-}
-.qh-os-btn.primary:hover {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 16px rgba(169, 204, 240, 0.5);
-}
-
-/* ===== Footer message ===== */
-.qh-os-footer {
-    text-align: center;
-    padding: 28px 24px;
-    font-size: 15px;
-    font-weight: 700;
-    color: var(--qh-text);
-    line-height: 1.6;
-    border-top: 1.5px solid var(--qh-border);
-}
-
-/* ===== Confetti ===== */
-.qh-confetti {
-    position: absolute;
-    width: 8px; height: 8px;
-    border-radius: 2px;
-    animation: qh-fall 2s ease forwards;
-    opacity: 0;
-}
-@keyframes qh-fall {
-    0%   { transform: translateY(-20px) rotate(0); opacity: 1; }
-    100% { transform: translateY(200px) rotate(720deg); opacity: 0; }
-}
-
-/* ===== Responsive ===== */
-@media (max-width: 640px) {
-    .qh-os-grid {
-        grid-template-columns: 1fr;
-    }
-    .qh-os-info {
-        border-right: none;
-        border-bottom: 1.5px solid var(--qh-border);
-    }
-    .qh-os-info, .qh-os-actions { padding: 20px; }
-    .qh-os-hero { padding: 28px 16px 24px; }
-    .qh-os-footer { padding: 20px 16px; font-size: 14px; }
-}
-</style>
+<link rel="stylesheet" href="{% static 'css/order_success.css' %}">
 {% endblock %}
 
 {% block content %}
@@ -243,6 +74,7 @@
 {% endblock %}
 
 {% block extra_js %}
+{# copyCode() KHÔNG THỂ TÁCH vì chứa Django template tag {{ order.order_code }} #}
 <script>
 function copyCode() {
     var code = '{{ order.order_code }}';
@@ -259,42 +91,8 @@ function copyCode() {
         doCopied(btn);
     }
 }
-function doCopied(btn) {
-    var ic = btn.querySelector('i');
-    var origText = btn.innerHTML;
-    if (ic) ic.className = 'ri-check-line';
-    btn.childNodes[btn.childNodes.length - 1].textContent = ' Đã sao chép!';
-    btn.style.borderColor = '#10b981';
-    btn.style.background = '#d1fae5';
-    if (window.QHToast) QHToast.show('Đã sao chép mã đơn hàng!', 'success');
-    setTimeout(function() {
-        btn.innerHTML = origText;
-        btn.style.borderColor = '';
-        btn.style.background = '';
-    }, 2000);
-}
-// confetti
-document.addEventListener('DOMContentLoaded', function() {
-    var c = document.getElementById('successCard');
-    if (!c) return;
-    var cls = ['#A9CCF0','#D3BAFF','#10b981','#f59e0b','#ec4899','#8b5cf6'];
-    for (var i = 0; i < 30; i++) {
-        (function(n) {
-            setTimeout(function() {
-                var d = document.createElement('div');
-                d.className = 'qh-confetti';
-                d.style.left = (Math.random()*100)+'%';
-                d.style.top = '-10px';
-                d.style.background = cls[Math.floor(Math.random()*cls.length)];
-                d.style.animationDelay = (Math.random()*0.5)+'s';
-                d.style.animationDuration = (1.5+Math.random())+'s';
-                d.style.width = (5+Math.random()*6)+'px';
-                d.style.height = (5+Math.random()*6)+'px';
-                c.appendChild(d);
-                setTimeout(function(){ d.remove(); }, 3000);
-            }, n*60);
-        })(i);
-    }
-});
 </script>
+
+{# JS thuần - đã tách ra file static/js/order_success.js #}
+<script src="{% static 'js/order_success.js' %}"></script>
 {% endblock %}
