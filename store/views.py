@@ -1883,38 +1883,44 @@ def dashboard_view(request):
     except EmptyPage:
         products_paginated = product_paginator.page(product_paginator.num_pages)
     
-    # Doanh thu hôm nay
+    # Doanh thu hôm nay - chỉ tính khi đơn hàng đã giao thành công (delivered)
     today = timezone.now().date()
     revenue_today = Order.objects.filter(
         created_at__date=today,
-        status__in=['processing', 'shipped', 'delivered']
+        status='delivered'
     ).aggregate(total=Sum('total_amount'))['total'] or 0
     
-    # Doanh thu tháng này
+    # Doanh thu tháng này - chỉ tính khi đơn hàng đã giao thành công (delivered)
     from datetime import datetime
     now = timezone.now()
-    start_of_month = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    current_year = now.year
+    current_month = now.month
+    
+    # Sử dụng __month và __year để tránh vấn đề timezone
     revenue_this_month = Order.objects.filter(
-        created_at__gte=start_of_month,
-        status__in=['processing', 'shipped', 'delivered']
+        created_at__year=current_year,
+        created_at__month=current_month,
+        status='delivered'
     ).aggregate(total=Sum('total_amount'))['total'] or 0
     
-    # Dữ liệu biểu đồ doanh thu năm 2026 (12 tháng)
+    # Dữ liệu biểu đồ doanh thu năm hiện tại (tự động theo năm)
     from django.db.models.functions import ExtractMonth
-    current_year = 2026
     
-    # Lấy doanh thu từng tháng trong năm 2026
+    # Lấy năm hiện tại từ timezone
+    current_year = now.year
+    
+    # Lấy doanh thu từng tháng trong năm hiện tại - chỉ tính đơn hàng đã giao
     monthly_revenue = {}
     for month in range(1, 13):
         monthly_revenue[month] = 0
     
-    # Query orders in 2026 with delivered status
-    orders_2026 = Order.objects.filter(
+    # Query orders with delivered status only
+    orders_current_year = Order.objects.filter(
         created_at__year=current_year,
-        status__in=['processing', 'shipped', 'delivered']
+        status='delivered'
     )
     
-    for order in orders_2026:
+    for order in orders_current_year:
         month = order.created_at.month
         monthly_revenue[month] += float(order.total_amount)
     
