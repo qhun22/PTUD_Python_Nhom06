@@ -523,7 +523,7 @@ function deleteColorImageRow(folderId, sku, colorName) {
         window.QHToast && window.QHToast.show && window.QHToast.show('Thiếu thông tin!', 'error');
         return;
     }
-    
+
     if (window.QHConfirm && window.QHConfirm.show) {
         window.QHConfirm.show(
             `Bạn có chắc muốn xóa tất cả ảnh của màu <strong>${colorName}</strong> (SKU: ${sku})?`,
@@ -541,7 +541,7 @@ function performDeleteColorImageRow(folderId, sku, colorName) {
     formData.append('folder_id', folderId);
     formData.append('sku', sku);
     formData.append('color_name', colorName);
-    
+
     fetch('/product-images/color/row-delete/', {
         method: 'POST',
         body: formData,
@@ -600,18 +600,18 @@ function closeAddImageFolderModal() {
 function loadFolderProductsByBrand() {
     const brandSelect = document.getElementById('folderBrandSelect');
     const productSelect = document.getElementById('folderProductSelect');
-    
+
     if (!productSelect) return;
-    
+
     const brandId = brandSelect ? brandSelect.value : '';
-    
+
     if (!brandId) {
         productSelect.innerHTML = '<option value="">-- Chọn hãng trước --</option>';
         return;
     }
-    
+
     productSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
-    
+
     fetch('/products/list/json/', {
         method: 'GET',
         headers: { 'X-Requested-With': 'XMLHttpRequest' }
@@ -620,12 +620,12 @@ function loadFolderProductsByBrand() {
         .then(data => {
             if (data.success) {
                 const filtered = data.products.filter(p => String(p.brand_id) === String(brandId));
-                
+
                 if (filtered.length === 0) {
                     productSelect.innerHTML = '<option value="">-- Không có sản phẩm --</option>';
                     return;
                 }
-                
+
                 let html = '<option value="">-- Chọn sản phẩm --</option>';
                 filtered.forEach(p => {
                     html += `<option value="${p.id}">${p.name}</option>`;
@@ -645,23 +645,23 @@ function saveImageFolder() {
     const brandSelect = document.getElementById('folderBrandSelect');
     const productSelect = document.getElementById('folderProductSelect');
     const input = document.getElementById('imageFolderNameInput');
-    
+
     if (!input) return;
-    
+
     const brandId = brandSelect ? brandSelect.value : '';
     const productId = productSelect ? productSelect.value : '';
     const name = input.value.trim();
-    
+
     if (!brandId) {
         window.QHToast && window.QHToast.show && window.QHToast.show('Vui lòng chọn hãng!', 'error');
         return;
     }
-    
+
     if (!productId) {
         window.QHToast && window.QHToast.show && window.QHToast.show('Vui lòng chọn sản phẩm!', 'error');
         return;
     }
-    
+
     if (!name) {
         window.QHToast && window.QHToast.show && window.QHToast.show('Vui lòng nhập tên thư mục!', 'error');
         return;
@@ -734,7 +734,7 @@ function openAddColorImageModal(folderId = null, sku = '', colorName = '', brand
 
     // Nếu có dữ liệu cũ (chỉnh sửa), pre-fill các dropdown
     const effectiveBrandId = brandId || folderBrandId;
-    
+
     if (effectiveBrandId && folderId && sku) {
         _colorImageEditOriginal = {
             folder_id: folderId,
@@ -745,11 +745,11 @@ function openAddColorImageModal(folderId = null, sku = '', colorName = '', brand
         if (brandSelect) {
             brandSelect.value = String(effectiveBrandId);
         }
-        
+
         if (colorInput) {
             colorInput.value = colorName || '';
         }
-        
+
         // Load folders và products theo brand, sau đó select đúng giá trị
         Promise.all([
             fetch(`/product-images/folders/list/?brand_id=${effectiveBrandId}`, {
@@ -772,7 +772,7 @@ function openAddColorImageModal(folderId = null, sku = '', colorName = '', brand
                 });
                 folderSelect.innerHTML = html;
             }
-            
+
             // Populate product dropdown
             if (productSelect && productsData.success) {
                 const filtered = productsData.products.filter(p => String(p.brand_id) === String(effectiveBrandId));
@@ -782,7 +782,7 @@ function openAddColorImageModal(folderId = null, sku = '', colorName = '', brand
                 });
                 productSelect.innerHTML = html;
             }
-            
+
             // Populate SKU dropdown với SKU hiện tại
             if (skuSelect) {
                 let html = '<option value="">-- Chọn SKU --</option>';
@@ -792,7 +792,7 @@ function openAddColorImageModal(folderId = null, sku = '', colorName = '', brand
         }).catch(err => {
             console.error('Error loading edit data:', err);
         });
-        
+
         // Load ảnh hiện có
         loadColorImageList(folderId, sku, colorName).then(images => {
             imageFolderPreviewImages = (images || []).map(img => ({ id: img.id, url: img.url }));
@@ -853,8 +853,8 @@ function saveColorImageModal() {
                 'X-CSRFToken': window.csrfToken
             }
         })
-            .then(function(r) { return r.json(); })
-            .then(function(data) {
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
                 if (data.success) {
                     window.QHToast && window.QHToast.show(data.message, 'success');
                     _colorImageEditOriginal.color_name = newColor;
@@ -864,7 +864,7 @@ function saveColorImageModal() {
                 loadImageFolderRows();
                 closeAddColorImageModal();
             })
-            .catch(function() {
+            .catch(function () {
                 window.QHToast && window.QHToast.show('Lỗi kết nối!', 'error');
                 closeAddColorImageModal();
             });
@@ -915,21 +915,21 @@ function loadColorImageProductsByBrand() {
     const productSelect = document.getElementById('colorImageProductSelect');
     const folderSelect = document.getElementById('colorImageFolderSelect');
     const skuSelect = document.getElementById('colorImageSkuSelect');
-    
+
     if (!productSelect) return;
-    
+
     const brandId = brandSelect ? brandSelect.value : '';
-    
+
     if (!brandId) {
         productSelect.innerHTML = '<option value="">-- Chọn hãng trước --</option>';
         if (folderSelect) folderSelect.innerHTML = '<option value="">-- Chọn hãng trước --</option>';
         if (skuSelect) skuSelect.innerHTML = '<option value="">-- Chọn sản phẩm trước --</option>';
         return;
     }
-    
+
     productSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
     if (folderSelect) folderSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
-    
+
     // Load products filtered by brand
     fetch('/products/list/json/', {
         method: 'GET',
@@ -939,12 +939,12 @@ function loadColorImageProductsByBrand() {
         .then(data => {
             if (data.success) {
                 const filtered = data.products.filter(p => String(p.brand_id) === String(brandId));
-                
+
                 if (filtered.length === 0) {
                     productSelect.innerHTML = '<option value="">-- Không có sản phẩm --</option>';
                     return;
                 }
-                
+
                 let html = '<option value="">-- Chọn sản phẩm --</option>';
                 filtered.forEach(p => {
                     html += `<option value="${p.id}">${p.name}</option>`;
@@ -953,14 +953,14 @@ function loadColorImageProductsByBrand() {
             } else {
                 productSelect.innerHTML = '<option value="">-- Lỗi tải dữ liệu --</option>';
             }
-            
+
             if (skuSelect) skuSelect.innerHTML = '<option value="">-- Chọn sản phẩm trước --</option>';
         })
         .catch(error => {
             console.error('Error loading products:', error);
             productSelect.innerHTML = '<option value="">-- Lỗi kết nối --</option>';
         });
-    
+
     // Load folders filtered by brand
     if (folderSelect) {
         fetch(`/product-images/folders/list/?brand_id=${brandId}`, {
@@ -971,12 +971,12 @@ function loadColorImageProductsByBrand() {
             .then(data => {
                 if (data.success) {
                     const folders = data.folders || [];
-                    
+
                     if (folders.length === 0) {
                         folderSelect.innerHTML = '<option value="">-- Chưa có thư mục --</option>';
                         return;
                     }
-                    
+
                     let html = '<option value="">-- Chọn thư mục --</option>';
                     folders.forEach(f => {
                         const label = f.product_name ? `${f.name} (${f.product_name})` : f.name;
@@ -998,18 +998,18 @@ function loadColorImageProductsByBrand() {
 function loadColorImageSkusByProduct() {
     const productSelect = document.getElementById('colorImageProductSelect');
     const skuSelect = document.getElementById('colorImageSkuSelect');
-    
+
     if (!skuSelect) return;
-    
+
     const productId = productSelect ? productSelect.value : '';
-    
+
     if (!productId) {
         skuSelect.innerHTML = '<option value="">-- Chọn sản phẩm trước --</option>';
         return;
     }
-    
+
     skuSelect.innerHTML = '<option value="">-- Đang tải... --</option>';
-    
+
     // Fetch SKUs for this product from ProductDetail
     fetch(`/products/detail/get/?product_id=${productId}`, {
         method: 'GET',
@@ -1020,19 +1020,19 @@ function loadColorImageSkusByProduct() {
             if (data.success) {
                 // Lấy SKU từ ProductDetail hoặc từ allSkus
                 let productSkus = [];
-                
+
                 // Check allSkus for this product
                 const skusFromList = (allSkus || []).filter(s => String(s.product_id) === String(productId));
-                
+
                 if (skusFromList.length > 0) {
                     productSkus = skusFromList.map(s => s.sku);
                 }
-                
+
                 if (productSkus.length === 0) {
                     skuSelect.innerHTML = '<option value="">-- Chưa có SKU nào --</option>';
                     return;
                 }
-                
+
                 let html = '<option value="">-- Chọn SKU --</option>';
                 productSkus.forEach(sku => {
                     html += `<option value="${sku}">${sku}</option>`;
@@ -1633,7 +1633,7 @@ function renderBannerGrid() {
             this.querySelector('.banner-hover-overlay').style.opacity = '0';
         });
     });
-    
+
     // Render pagination
     var totalPages = Math.ceil(banners.length / _bannerPerPage);
     _renderPagination('banners', totalPages, _bannerPage);
@@ -2161,7 +2161,7 @@ function renderProductContentTable() {
         `;
     });
     tbody.innerHTML = html;
-    
+
     // Render pagination
     var totalPages = Math.ceil(contents.length / _productContentPerPage);
     _renderPagination('productContent', totalPages, _productContentPage);
@@ -3051,10 +3051,10 @@ function _renderAdminOrdersTable() {
     if (_adminOrdersFilter !== 'all') {
         if (_adminOrdersFilter === 'refund') {
             // Filter: đơn cần hoàn tiền (đã hủy + VNPay/VietQR + chờ hoàn tiền)
-            filtered = _adminOrdersData.filter(function (o) { 
-                return o.status === 'cancelled' && 
-                       (o.payment_method === 'vietqr' || o.payment_method === 'vnpay') &&
-                       o.refund_status === 'pending';
+            filtered = _adminOrdersData.filter(function (o) {
+                return o.status === 'cancelled' &&
+                    (o.payment_method === 'vietqr' || o.payment_method === 'vnpay') &&
+                    o.refund_status === 'pending';
             });
         } else {
             filtered = _adminOrdersData.filter(function (o) { return o.status === _adminOrdersFilter; });
@@ -3083,7 +3083,7 @@ function _renderAdminOrdersTable() {
     paged.forEach(function (o, idx) {
         var statusBadge = _getStatusBadge(o.status, o.status_display, o.refund_status);
         var globalIdx = startIdx + idx + 1;
-        var items = o.items && o.items.length ? o.items : [{product_name:'—', quantity:0, color_name:'—', storage:'—', price:'0'}];
+        var items = o.items && o.items.length ? o.items : [{ product_name: '—', quantity: 0, color_name: '—', storage: '—', price: '0' }];
         var rowspan = items.length;
         var borderTop = idx > 0 ? 'border-top: 2px solid #e2e8f0;' : '';
         items.forEach(function (item, iIdx) {
@@ -3194,7 +3194,7 @@ function openAdminOrderDetail(id) {
             html += _infoRow('Ngày đặt', _escHtml(o.created_at));
             html += _infoRow('Voucher', o.voucher ? _escHtml(o.voucher) : '<span style="color:#94a3b8;">Không có</span>');
             html += _infoRow('Giảm giá', _formatVND(o.discount_amount));
-            
+
             // Hiển thị thông tin hoàn tiền nếu là đơn hủy
             if (o.status === 'cancelled' && (o.refund_account || o.refund_bank)) {
                 html += '</div>'; // close grid
@@ -3203,7 +3203,7 @@ function openAdminOrderDetail(id) {
                 html += '<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 13px;">';
                 html += _infoRow('Số tài khoản', o.refund_account ? '<span style="font-weight:600; color:#1e293b;">' + _escHtml(o.refund_account) + '</span>' : '<span style="color:#94a3b8;">—</span>');
                 html += _infoRow('Ngân hàng', o.refund_bank ? '<span style="font-weight:600; color:#1e293b;">' + _escHtml(o.refund_bank) + '</span>' : '<span style="color:#94a3b8;">—</span>');
-                
+
                 // Hiển thị trạng thái hoàn tiền
                 var refundStatusText = '';
                 var refundStatusColor = '';
@@ -3219,7 +3219,7 @@ function openAdminOrderDetail(id) {
                 }
                 html += _infoRow('Trạng thái', '<span style="font-weight:600; color:' + refundStatusColor + ';">' + refundStatusText + '</span>');
                 html += '</div>';
-                
+
                 // Button cập nhật trạng thái hoàn tiền
                 if (o.refund_status !== 'completed') {
                     html += '<div style="margin-top: 12px;">';
@@ -3316,13 +3316,13 @@ function _renderPagination(section, totalPages, currentPage) {
         if (container) container.innerHTML = '';
         return;
     }
-    
+
     var html = '';
     // Prev button
     if (currentPage > 1) {
         html += '<button type="button" onclick="_goToPage(\'' + section + '\', ' + (currentPage - 1) + ')" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px;">‹ Trước</button>';
     }
-    
+
     // Page numbers
     var startPage = Math.max(1, currentPage - 2);
     var endPage = Math.min(totalPages, currentPage + 2);
@@ -3341,19 +3341,19 @@ function _renderPagination(section, totalPages, currentPage) {
         if (endPage < totalPages - 1) html += '<span style="color: #94a3b8;">...</span>';
         html += '<button type="button" onclick="_goToPage(\'' + section + '\', ' + totalPages + ')" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px;">' + totalPages + '</button>';
     }
-    
+
     // Next button
     if (currentPage < totalPages) {
         html += '<button type="button" onclick="_goToPage(\'' + section + '\', ' + (currentPage + 1) + ')" style="padding: 6px 12px; border: 1px solid #e2e8f0; background: white; border-radius: 6px; cursor: pointer; font-size: 13px;">Sau ›</button>';
     }
-    
+
     html += '<span style="color: #64748b; font-size: 13px; margin-left: 8px;">Trang ' + currentPage + '/' + totalPages + '</span>';
-    
+
     container.innerHTML = html;
 }
 
 function _goToPage(section, page) {
-    switch(section) {
+    switch (section) {
         case 'adminOrders':
             _adminOrdersPage = page;
             _renderAdminOrdersTable();
@@ -3468,67 +3468,67 @@ function loadCouponList() {
     var tbody = document.getElementById('couponTableBody');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Đang tải...</td></tr>';
-    
+
     fetch(window.couponListUrl, {
         headers: { 'X-CSRFToken': window.csrfToken }
     })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-        if (!data.success) {
-            tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi: ' + (data.message || 'Không thể tải') + '</td></tr>';
-            return;
-        }
-        var coupons = data.coupons || [];
-        _couponData = coupons;
-        
-        // Pagination
-        var totalPages = Math.ceil(coupons.length / _couponPerPage);
-        if (_couponPage > totalPages) _couponPage = totalPages || 1;
-        var startIdx = (_couponPage - 1) * _couponPerPage;
-        var paged = coupons.slice(startIdx, startIdx + _couponPerPage);
-        
-        if (paged.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Chưa có mã giảm giá nào</td></tr>';
-            return;
-        }
-        var html = '';
-        var startIdx = (_couponPage - 1) * _couponPerPage;
-        paged.forEach(function(c, idx) {
-            var globalIdx = startIdx + idx + 1;
-            var discountLabel = c.discount_type === 'percentage' ? c.discount_value + '%' : Number(c.discount_value).toLocaleString('vi-VN') + 'đ';
-            var statusBg = c.is_valid ? '#d1fae5' : '#fee2e2';
-            var statusColor = c.is_valid ? '#065f46' : '#991b1b';
-            var statusText = c.is_valid ? 'Còn sử dụng' : 'Đã hết hạn';
-            var usageText = c.used_count + (c.usage_limit > 0 ? '/' + c.usage_limit : '/∞');
-            var targetText = c.target_type === 'all' ? 'Mọi người' : c.target_email;
-            var maxProdText = c.max_products > 0 ? c.max_products : '∞';
-            
-            html += '<tr style="border-bottom:1px solid #f1f5f9;">'
-                + '<td style="padding:12px 14px;text-align:center;font-size:14px;color:#64748b;">' + globalIdx + '</td>'
-                + '<td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1e293b;white-space:nowrap;">' + c.code + '</td>'
-                + '<td style="padding:12px 14px;font-size:13px;color:#64748b;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (c.name || '-') + '</td>'
-                + '<td style="padding:12px 14px;text-align:center;font-size:14px;font-weight:500;color:#1e293b;">' + discountLabel + '</td>'
-                + '<td style="padding:12px 14px;text-align:center;font-size:12px;color:#64748b;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + targetText + '</td>'
-                + '<td style="padding:12px 14px;text-align:right;font-size:13px;color:#64748b;">' + (c.min_order_amount > 0 ? Number(c.min_order_amount).toLocaleString('vi-VN') + 'đ' : '0đ') + '</td>'
-                + '<td style="padding:12px 14px;text-align:center;font-size:13px;color:#64748b;">' + maxProdText + '</td>'
-                + '<td style="padding:12px 14px;text-align:center;font-size:13px;color:#64748b;">' + usageText + '</td>'
-                + '<td style="padding:12px 14px;text-align:center;"><span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:' + statusBg + ';color:' + statusColor + ';">' + statusText + '</span></td>'
-                + '<td style="padding:12px 14px;font-size:12px;color:#64748b;white-space:nowrap;">' + c.expire_at + '</td>'
-                + '<td style="padding:12px 14px;text-align:center;white-space:nowrap;">'
-                + '<button type="button" onclick="editCoupon(' + c.id + ')" style="padding:6px 12px;background:#dbeafe;color:#1e40af;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:\'Signika\',sans-serif;font-weight:500;margin-right:4px;">Sửa</button>'
-                + '<button type="button" onclick="deleteCoupon(' + c.id + ',\'' + c.code + '\')" style="padding:6px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:\'Signika\',sans-serif;font-weight:500;">Xóa</button>'
-                + '</td>'
-                + '</tr>';
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data.success) {
+                tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi: ' + (data.message || 'Không thể tải') + '</td></tr>';
+                return;
+            }
+            var coupons = data.coupons || [];
+            _couponData = coupons;
+
+            // Pagination
+            var totalPages = Math.ceil(coupons.length / _couponPerPage);
+            if (_couponPage > totalPages) _couponPage = totalPages || 1;
+            var startIdx = (_couponPage - 1) * _couponPerPage;
+            var paged = coupons.slice(startIdx, startIdx + _couponPerPage);
+
+            if (paged.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Chưa có mã giảm giá nào</td></tr>';
+                return;
+            }
+            var html = '';
+            var startIdx = (_couponPage - 1) * _couponPerPage;
+            paged.forEach(function (c, idx) {
+                var globalIdx = startIdx + idx + 1;
+                var discountLabel = c.discount_type === 'percentage' ? c.discount_value + '%' : Number(c.discount_value).toLocaleString('vi-VN') + 'đ';
+                var statusBg = c.is_valid ? '#d1fae5' : '#fee2e2';
+                var statusColor = c.is_valid ? '#065f46' : '#991b1b';
+                var statusText = c.is_valid ? 'Còn sử dụng' : 'Đã hết hạn';
+                var usageText = c.used_count + (c.usage_limit > 0 ? '/' + c.usage_limit : '/∞');
+                var targetText = c.target_type === 'all' ? 'Mọi người' : c.target_email;
+                var maxProdText = c.max_products > 0 ? c.max_products : '∞';
+
+                html += '<tr style="border-bottom:1px solid #f1f5f9;">'
+                    + '<td style="padding:12px 14px;text-align:center;font-size:14px;color:#64748b;">' + globalIdx + '</td>'
+                    + '<td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1e293b;white-space:nowrap;">' + c.code + '</td>'
+                    + '<td style="padding:12px 14px;font-size:13px;color:#64748b;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (c.name || '-') + '</td>'
+                    + '<td style="padding:12px 14px;text-align:center;font-size:14px;font-weight:500;color:#1e293b;">' + discountLabel + '</td>'
+                    + '<td style="padding:12px 14px;text-align:center;font-size:12px;color:#64748b;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + targetText + '</td>'
+                    + '<td style="padding:12px 14px;text-align:right;font-size:13px;color:#64748b;">' + (c.min_order_amount > 0 ? Number(c.min_order_amount).toLocaleString('vi-VN') + 'đ' : '0đ') + '</td>'
+                    + '<td style="padding:12px 14px;text-align:center;font-size:13px;color:#64748b;">' + maxProdText + '</td>'
+                    + '<td style="padding:12px 14px;text-align:center;font-size:13px;color:#64748b;">' + usageText + '</td>'
+                    + '<td style="padding:12px 14px;text-align:center;"><span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:' + statusBg + ';color:' + statusColor + ';">' + statusText + '</span></td>'
+                    + '<td style="padding:12px 14px;font-size:12px;color:#64748b;white-space:nowrap;">' + c.expire_at + '</td>'
+                    + '<td style="padding:12px 14px;text-align:center;white-space:nowrap;">'
+                    + '<button type="button" onclick="editCoupon(' + c.id + ')" style="padding:6px 12px;background:#dbeafe;color:#1e40af;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:\'Signika\',sans-serif;font-weight:500;margin-right:4px;">Sửa</button>'
+                    + '<button type="button" onclick="deleteCoupon(' + c.id + ',\'' + c.code + '\')" style="padding:6px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:\'Signika\',sans-serif;font-weight:500;">Xóa</button>'
+                    + '</td>'
+                    + '</tr>';
+            });
+            tbody.innerHTML = html;
+
+            // Render pagination
+            var totalPages = Math.ceil(_couponData.length / _couponPerPage);
+            _renderPagination('coupons', totalPages, _couponPage);
+        })
+        .catch(function () {
+            tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi kết nối</td></tr>';
         });
-        tbody.innerHTML = html;
-        
-        // Render pagination
-        var totalPages = Math.ceil(_couponData.length / _couponPerPage);
-        _renderPagination('coupons', totalPages, _couponPage);
-    })
-    .catch(function() {
-        tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi kết nối</td></tr>';
-    });
 }
 
 function openAddCouponModal() {
@@ -3561,45 +3561,45 @@ function editCoupon(id) {
     fetch(window.couponListUrl + '?id=' + id, {
         headers: { 'X-CSRFToken': window.csrfToken }
     })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-        if (!data.success) return alert(data.message || 'Lỗi');
-        var c = data.coupon;
-        document.getElementById('couponModalTitle').textContent = 'Sửa mã giảm giá';
-        document.getElementById('couponEditId').value = c.id;
-        document.getElementById('couponName').value = c.name || '';
-        document.getElementById('couponCode').value = c.code;
-        document.getElementById('couponCode').disabled = true;
-        document.getElementById('couponDiscountType').value = c.discount_type;
-        toggleDiscountInput();
-        if (c.discount_type === 'percentage') {
-            document.getElementById('couponPercentValue').value = c.discount_value;
-        } else {
-            document.getElementById('couponFixedValue').value = c.discount_value;
-        }
-        var targetRadio = document.querySelector('input[name="couponTarget"][value="' + c.target_type + '"]');
-        if (targetRadio) targetRadio.checked = true;
-        toggleTargetEmail();
-        document.getElementById('couponTargetEmail').value = c.target_email || '';
-        document.getElementById('couponMaxProducts').value = c.max_products || '0';
-        document.getElementById('couponMinOrder').value = c.min_order_amount || '0';
-        document.getElementById('couponUsageLimit').value = c.usage_limit || '0';
-        document.getElementById('couponExpireDays').value = c.expire_days || '';
-        previewExpireDate();
-        document.getElementById('couponStatus').value = c.is_active ? '1' : '0';
-        document.getElementById('couponModal').style.display = 'flex';
-    });
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (!data.success) return alert(data.message || 'Lỗi');
+            var c = data.coupon;
+            document.getElementById('couponModalTitle').textContent = 'Sửa mã giảm giá';
+            document.getElementById('couponEditId').value = c.id;
+            document.getElementById('couponName').value = c.name || '';
+            document.getElementById('couponCode').value = c.code;
+            document.getElementById('couponCode').disabled = true;
+            document.getElementById('couponDiscountType').value = c.discount_type;
+            toggleDiscountInput();
+            if (c.discount_type === 'percentage') {
+                document.getElementById('couponPercentValue').value = c.discount_value;
+            } else {
+                document.getElementById('couponFixedValue').value = c.discount_value;
+            }
+            var targetRadio = document.querySelector('input[name="couponTarget"][value="' + c.target_type + '"]');
+            if (targetRadio) targetRadio.checked = true;
+            toggleTargetEmail();
+            document.getElementById('couponTargetEmail').value = c.target_email || '';
+            document.getElementById('couponMaxProducts').value = c.max_products || '0';
+            document.getElementById('couponMinOrder').value = c.min_order_amount || '0';
+            document.getElementById('couponUsageLimit').value = c.usage_limit || '0';
+            document.getElementById('couponExpireDays').value = c.expire_days || '';
+            previewExpireDate();
+            document.getElementById('couponStatus').value = c.is_active ? '1' : '0';
+            document.getElementById('couponModal').style.display = 'flex';
+        });
 }
 
 function saveCoupon() {
     var editId = document.getElementById('couponEditId').value;
     var code = document.getElementById('couponCode').value.trim().toUpperCase();
     var name = document.getElementById('couponName').value.trim();
-    
+
     if (!name) return alert('Vui lòng nhập tên chương trình');
     if (!code) return alert('Vui lòng nhập tên mã giảm');
     if (/\s/.test(code)) return alert('Mã giảm không được chứa khoảng trắng');
-    
+
     var discountType = document.getElementById('couponDiscountType').value;
     var discountValue;
     if (discountType === 'percentage') {
@@ -3609,17 +3609,17 @@ function saveCoupon() {
         discountValue = parseInt(document.getElementById('couponFixedValue').value) || 0;
         if (discountValue < 1) return alert('Số tiền giảm phải lớn hơn 0');
     }
-    
+
     var targetType = document.querySelector('input[name="couponTarget"]:checked').value;
     var targetEmail = '';
     if (targetType === 'single') {
         targetEmail = document.getElementById('couponTargetEmail').value.trim();
         if (!targetEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(targetEmail)) return alert('Vui lòng nhập email hợp lệ');
     }
-    
+
     var expireDays = parseInt(document.getElementById('couponExpireDays').value) || 0;
     if (!editId && expireDays < 1) return alert('Hạn sử dụng phải ít nhất 1 ngày');
-    
+
     var fd = new FormData();
     fd.append('name', name);
     fd.append('code', code);
@@ -3632,46 +3632,46 @@ function saveCoupon() {
     fd.append('usage_limit', document.getElementById('couponUsageLimit').value || '0');
     fd.append('expire_days', expireDays);
     fd.append('is_active', document.getElementById('couponStatus').value);
-    
+
     var url = editId ? window.couponEditUrl : window.couponAddUrl;
     if (editId) fd.append('id', editId);
-    
+
     fetch(url, {
         method: 'POST',
         body: fd,
         headers: { 'X-CSRFToken': window.csrfToken }
     })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-        if (data.success) {
-            closeCouponModal();
-            loadCouponList();
-        } else {
-            alert(data.message || 'Lỗi khi lưu');
-        }
-    })
-    .catch(function() { alert('Lỗi kết nối'); });
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.success) {
+                closeCouponModal();
+                loadCouponList();
+            } else {
+                alert(data.message || 'Lỗi khi lưu');
+            }
+        })
+        .catch(function () { alert('Lỗi kết nối'); });
 }
 
 function deleteCoupon(id, code) {
     if (!confirm('Bạn có chắc muốn xóa mã giảm giá "' + code + '"?')) return;
     var fd = new FormData();
     fd.append('id', id);
-    
+
     fetch(window.couponDeleteUrl, {
         method: 'POST',
         body: fd,
         headers: { 'X-CSRFToken': window.csrfToken }
     })
-    .then(function(res) { return res.json(); })
-    .then(function(data) {
-        if (data.success) {
-            loadCouponList();
-        } else {
-            alert(data.message || 'Lỗi khi xóa');
-        }
-    })
-    .catch(function() { alert('Lỗi kết nối'); });
+        .then(function (res) { return res.json(); })
+        .then(function (data) {
+            if (data.success) {
+                loadCouponList();
+            } else {
+                alert(data.message || 'Lỗi khi xóa');
+            }
+        })
+        .catch(function () { alert('Lỗi kết nối'); });
 }
 
 // ==================== END COUPON MANAGEMENT ====================

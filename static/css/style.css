@@ -527,6 +527,7 @@ body {
     body {
         padding-top: 70px;
     }
+
     .qh-header-container {
         padding: 0 16px;
     }
@@ -1420,15 +1421,15 @@ body {
     .qh-pf-student-split {
         grid-template-columns: 1fr;
     }
-    
+
     .qh-pf-student-voucher-grid {
         grid-template-columns: 1fr;
     }
-    
+
     .qh-pf-student-title {
         font-size: 20px;
     }
-    
+
     .qh-pf-student-form {
         padding: 20px;
     }
