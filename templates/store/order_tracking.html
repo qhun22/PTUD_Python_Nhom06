@@ -127,7 +127,7 @@
     top: 0; left: 0;
     width: 100%; height: 100%;
     background: rgba(0,0,0,0.5);
-    z-index: 1000;
+    z-index: 20000;
     align-items: center;
     justify-content: center;
 }
@@ -176,7 +176,7 @@
     top: 0; left: 0;
     width: 100%; height: 100%;
     background: rgba(0,0,0,0.5);
-    z-index: 2000;
+    z-index: 21000;
     align-items: center;
     justify-content: center;
 }
@@ -337,6 +337,14 @@
 }
 
 
+/* ===== Order group separator ===== */
+#otTableBody tr.order-group-start td {
+    border-top: 2px solid #e2e8f0;
+}
+#otTableBody tr.order-group-start:first-child td {
+    border-top: none;
+}
+
 /* ===== Responsive ===== */
 @media (max-width: 768px) {
     .qh-ot-table { font-size: 13px; }
@@ -361,7 +369,7 @@
                     <th class="center">Số lượng</th>
                     <th class="center">Màu sắc</th>
                     <th class="center">Dung lượng</th>
-                    <th class="right">Giá</th>
+                    <th class="right">Tổng đơn</th>
                     <th>Ngày đặt hàng</th>
                     <th>Mã đơn hàng</th>
                     <th class="center">Trạng thái</th>
@@ -369,19 +377,24 @@
                 </tr>
             </thead>
             <tbody id="otTableBody">
-                {% with counter=0 %}
                 {% for order in orders %}
-                    {% for item in order.items.all %}
-                    <tr data-status="{{ order.status }}" data-order-id="{{ order.id }}">
-                        <td class="stt"></td>
+                    {% with all_items=order.items.all %}
+                    {% for item in all_items %}
+                    <tr data-status="{{ order.status }}" data-order-id="{{ order.id }}"{% if forloop.first %} class="order-group-start"{% endif %}>
+                        {% if forloop.first %}
+                        <td class="stt" rowspan="{{ all_items|length }}" style="vertical-align:middle;">{{ forloop.parentloop.counter }}</td>
+                        {% endif %}
                         <td class="name">{{ item.product_name }}</td>
                         <td class="qty">{{ item.quantity }}</td>
                         <td class="color">{{ item.color_name|default:"—"|color_only }}</td>
                         <td class="storage">{{ item.storage|default:"—" }}</td>
-                        <td class="price">{{ item.price|format_price_with_unit }}</td>
-                        <td class="date">{{ order.created_at|date:"d/m/Y H:i" }}</td>
-                        <td class="code">{{ order.order_code }}</td>
-                        <td class="center">
+                        {% if forloop.first %}
+                        <td class="price" rowspan="{{ all_items|length }}" style="vertical-align:middle;">{{ order.total_amount|format_price_with_unit }}</td>
+                        {% endif %}
+                        {% if forloop.first %}
+                        <td class="date" rowspan="{{ all_items|length }}" style="vertical-align:middle;">{{ order.created_at|date:"d/m/Y H:i" }}</td>
+                        <td class="code" rowspan="{{ all_items|length }}" style="vertical-align:middle;">{{ order.order_code }}</td>
+                        <td class="center" rowspan="{{ all_items|length }}" style="vertical-align:middle;">
                             {% if order.status == 'cancelled' and order.refund_status == 'pending' %}
                             <span class="qh-ot-badge refunding">Chờ hoàn tiền</span>
                             {% elif order.status == 'cancelled' and order.refund_status == 'completed' %}
@@ -392,13 +405,14 @@
                             <span class="qh-ot-badge {{ order.status }}">{{ order.get_status_display }}</span>
                             {% endif %}
                         </td>
-                        <td class="detail-cell">
+                        <td class="detail-cell" rowspan="{{ all_items|length }}" style="vertical-align:middle;">
                             <button class="qh-ot-detail-btn" onclick="openOtDetail('{{ order.order_code }}')">Xem</button>
                         </td>
+                        {% endif %}
                     </tr>
                     {% empty %}
-                    <tr data-status="{{ order.status }}" data-order-id="{{ order.id }}">
-                        <td class="stt"></td>
+                    <tr data-status="{{ order.status }}" data-order-id="{{ order.id }}" class="order-group-start">
+                        <td class="stt">{{ forloop.counter }}</td>
                         <td class="name">—</td>
                         <td class="qty">0</td>
                         <td class="color">—</td>
@@ -422,8 +436,8 @@
                         </td>
                     </tr>
                     {% endfor %}
+                    {% endwith %}
                 {% endfor %}
-                {% endwith %}
             </tbody>
         </table>
     </div>
@@ -562,17 +576,7 @@ OT_ORDERS['{{ order.order_code }}'] = {
 };
 {% endfor %}
 
-/* ===== Number STT rows ===== */
-(function() {
-    var rows = document.querySelectorAll('#otTableBody tr[data-status]');
-    var currentPage = {{ orders.number|default:1 }};
-    var itemsPerPage = 10;
-    var startStt = (currentPage - 1) * itemsPerPage;
-    for (var i = 0; i < rows.length; i++) {
-        var sttCell = rows[i].querySelector('.stt');
-        if (sttCell) sttCell.textContent = startStt + i + 1;
-    }
-})();
+/* ===== STT handled by Django forloop.counter ===== */
 
 /* ===== Filter ===== */
 function filterOtOrders(status) {

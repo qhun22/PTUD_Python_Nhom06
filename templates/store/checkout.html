@@ -218,16 +218,16 @@
 
 {% block extra_js %}
 <script>
-    var QH_CHECKOUT_TOTAL = {{ total }};
-    var QH_CSRF_TOKEN = '{{ csrf_token }}';
-    var QH_VNPAY_CREATE_URL = '{% url "store:vnpay_create" %}';
-    var QH_PLACE_ORDER_URL = '{% url "store:place_order" %}';
-    var QH_VIETQR_CREATE_ORDER_URL = '{% url "store:vietqr_create_order" %}';
-    var QH_CHECKOUT_ITEMS_PARAM = '{{ items_param }}';
-    var QH_COUPON_APPLY_URL = '{% url "store:coupon_apply" %}';
-    var QH_APPLIED_COUPON = '';
-    var QH_DISCOUNT_AMOUNT = 0;
-    var QH_ITEM_COUNT = {{ cart_items|length }};
+    window.QH_CHECKOUT_TOTAL = {{ total }};
+    window.QH_CSRF_TOKEN = '{{ csrf_token }}';
+    window.QH_VNPAY_CREATE_URL = '{% url "store:vnpay_create" %}';
+    window.QH_PLACE_ORDER_URL = '{% url "store:place_order" %}';
+    window.QH_VIETQR_CREATE_ORDER_URL = '{% url "store:vietqr_create_order" %}';
+    window.QH_CHECKOUT_ITEMS_PARAM = '{{ items_param }}';
+    window.QH_COUPON_APPLY_URL = '{% url "store:coupon_apply" %}';
+    window.QH_APPLIED_COUPON = '';
+    window.QH_DISCOUNT_AMOUNT = 0;
+    window.QH_ITEM_COUNT = {{ cart_items|length }};
 </script>
 <script src="{% static 'js/checkout.js' %}"></script>
 {% endblock %}

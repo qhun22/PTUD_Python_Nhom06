@@ -257,15 +257,11 @@ function applyCoupon() {
     .then(function(res) { return res.json(); })
     .then(function(data) {
         if (data.success) {
-            msg.style.display = 'block';
-            msg.style.color = '#16a34a';
-            msg.textContent = 'Áp dụng thành công!';
             if (window.QHToast) QHToast.show('Đã áp dụng mã giảm giá thành công!', 'success');
             
             window.QH_APPLIED_COUPON = data.code;
             window.QH_DISCOUNT_AMOUNT = parseInt(data.discount);
-            discountAmount = parseInt(data.discount); // Update discount tracker
-            totalAmount = totalAmount - discountAmount; // Update total with discount
+            window.QH_CHECKOUT_TOTAL = window.QH_CHECKOUT_TOTAL - window.QH_DISCOUNT_AMOUNT; // Update total with discount
             
             var voucherEl = document.getElementById('summaryVoucher');
             var discountEl = document.getElementById('summaryDiscount');
@@ -280,9 +276,6 @@ function applyCoupon() {
             btn.style.background = '#10b981';
         } else {
             if (window.QHToast) QHToast.show(data.message || 'Mã không hợp lệ', 'error');
-            msg.style.display = 'block';
-            msg.style.color = '#dc2626';
-            msg.textContent = data.message || 'Mã không hợp lệ';
             btn.disabled = false;
             btn.textContent = 'Áp dụng';
         }

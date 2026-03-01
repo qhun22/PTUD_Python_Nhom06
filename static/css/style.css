@@ -468,7 +468,7 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 10000;
+    z-index: 30000;
     opacity: 0;
     visibility: hidden;
     transition: all 0.3s ease;
@@ -888,4 +888,548 @@ body {
     font-weight: 600;
     margin-bottom: 24px;
     color: var(--qh-text);
+}
+
+/* ==================== STUDENT-TEACHER VERIFICATION STYLES ==================== */
+.qh-pf-student {
+    max-width: 100%;
+    margin: 0 auto;
+}
+
+/* Split Layout - 2 Columns */
+.qh-pf-student-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+}
+
+.qh-pf-student-left,
+.qh-pf-student-right {
+    background: var(--qh-white);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.qh-pf-student-col-title {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--qh-text);
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid var(--qh-primary);
+}
+
+/* Empty State */
+.qh-pf-student-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 32px 16px;
+    color: #94a3b8;
+    text-align: center;
+}
+
+.qh-pf-student-empty svg {
+    width: 48px;
+    height: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.qh-pf-student-empty p {
+    font-size: 14px;
+    margin: 0;
+}
+
+/* Header Section */
+.qh-pf-student-header {
+    text-align: center;
+    margin-bottom: 24px;
+}
+
+.qh-pf-student-header-icon {
+    width: 64px;
+    height: 64px;
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+}
+
+.qh-pf-student-header-icon svg {
+    width: 32px;
+    height: 32px;
+    color: #0284c7;
+}
+
+.qh-pf-student-title {
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--qh-text);
+    margin-bottom: 8px;
+}
+
+.qh-pf-student-desc {
+    color: var(--qh-text-light);
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.qh-pf-student-desc strong {
+    color: #0284c7;
+    font-weight: 600;
+}
+
+/* Success Badge */
+.qh-pf-student-success {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+/* Status Badge - Green check */
+.qh-pf-student-status-badge {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: #d1fae5;
+    border: 1px solid #6ee7b7;
+    border-radius: 8px;
+    padding: 12px 16px;
+    color: #065f46;
+    font-weight: 500;
+}
+
+.qh-pf-student-status-badge svg {
+    width: 20px;
+    height: 20px;
+    color: #059669;
+    flex-shrink: 0;
+}
+
+/* Description */
+.qh-pf-student-desc {
+    color: var(--qh-text-light);
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    line-height: 1.5;
+}
+
+.qh-pf-student-desc strong {
+    color: #0284c7;
+    font-weight: 600;
+}
+
+.qh-pf-student-success-icon {
+    width: 24px;
+    height: 24px;
+    color: #059669;
+    flex-shrink: 0;
+}
+
+.qh-pf-student-success-text {
+    color: #059669;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.qh-pf-student-success-text strong {
+    font-weight: 600;
+}
+
+/* Verified Email Display */
+.qh-pf-student-verified {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border: 1px solid #86efac;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.qh-pf-student-verified-icon {
+    width: 48px;
+    height: 48px;
+    background: #d1fae5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+}
+
+.qh-pf-student-verified-icon svg {
+    width: 24px;
+    height: 24px;
+    color: #059669;
+}
+
+.qh-pf-student-verified-title {
+    color: #059669;
+    font-size: 16px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.qh-pf-student-verified-email {
+    color: #166534;
+    font-size: 14px;
+    font-weight: 500;
+}
+
+/* Voucher Grid */
+.qh-pf-student-voucher-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.qh-pf-student-voucher-status {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+}
+
+.qh-pf-student-voucher-status-icon {
+    width: 48px;
+    height: 48px;
+    background: #d1fae5;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 12px;
+}
+
+.qh-pf-student-voucher-status-icon svg {
+    width: 24px;
+    height: 24px;
+    color: #059669;
+}
+
+.qh-pf-student-voucher-status-title {
+    color: #059669;
+    font-size: 16px;
+    font-weight: 600;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.qh-pf-student-voucher-status-desc {
+    color: #166534;
+    font-size: 13px;
+    margin: 0;
+}
+
+/* Voucher Code Card */
+.qh-pf-student-voucher-code {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    color: white;
+    position: relative;
+    overflow: hidden;
+}
+
+.qh-pf-student-voucher-code::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.08'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
+    opacity: 0.5;
+}
+
+.qh-pf-student-voucher-code-title {
+    font-size: 13px;
+    opacity: 0.9;
+    margin-bottom: 8px;
+    position: relative;
+}
+
+.qh-pf-student-voucher-code-discount {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+    position: relative;
+}
+
+.qh-pf-student-voucher-code-limit {
+    font-size: 12px;
+    opacity: 0.9;
+    margin-bottom: 10px;
+    position: relative;
+}
+
+.qh-pf-student-voucher-code-box {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    padding: 8px;
+    display: inline-block;
+    position: relative;
+}
+
+.qh-pf-student-voucher-code-label {
+    font-size: 11px;
+    opacity: 0.8;
+    margin-bottom: 2px;
+    position: relative;
+}
+
+.qh-pf-student-voucher-code-value {
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    position: relative;
+}
+
+.qh-pf-student-voucher-code-expire {
+    font-size: 11px;
+    opacity: 0.7;
+    margin-top: 8px;
+    position: relative;
+}
+
+/* Voucher Used Status */
+.qh-pf-student-voucher-used {
+    background: #fef3c7;
+    border: 1px solid #fcd34d;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.qh-pf-student-voucher-used-icon {
+    width: 20px;
+    height: 20px;
+    color: #d97706;
+    flex-shrink: 0;
+}
+
+.qh-pf-student-voucher-used-text {
+    color: #92400e;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.qh-pf-student-voucher-used-desc {
+    margin: 8px 0 0 0;
+    color: #b45309;
+    font-size: 13px;
+}
+
+/* Voucher Expired Status */
+.qh-pf-student-voucher-expired {
+    background: #fee2e2;
+    border: 1px solid #fecaca;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.qh-pf-student-voucher-expired-icon {
+    width: 20px;
+    height: 20px;
+    color: #dc2626;
+    flex-shrink: 0;
+}
+
+.qh-pf-student-voucher-expired-text {
+    color: #dc2626;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Form Card */
+.qh-pf-student-form {
+    background: var(--qh-white);
+    border: 1px solid var(--qh-border);
+    border-radius: 12px;
+    padding: 24px;
+}
+
+.qh-pf-student-form-group {
+    margin-bottom: 20px;
+}
+
+.qh-pf-student-form-group:last-of-type {
+    margin-bottom: 0;
+}
+
+.qh-pf-student-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--qh-text);
+    margin-bottom: 8px;
+    text-align: left;
+}
+
+.qh-pf-student-input {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--qh-border);
+    border-radius: 8px;
+    font-size: 15px;
+    box-sizing: border-box;
+    font-family: 'Signika', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: all 0.3s ease;
+    background: var(--qh-white);
+    color: var(--qh-text);
+}
+
+.qh-pf-student-input:focus {
+    outline: none;
+    border-color: var(--qh-primary);
+    box-shadow: 0 0 0 3px rgba(169, 204, 240, 0.2);
+}
+
+.qh-pf-student-input::placeholder {
+    color: #9ca3af;
+}
+
+/* OTP Input with letter spacing */
+.qh-pf-student-input-otp {
+    width: 100%;
+    padding: 12px 16px;
+    border: 1px solid var(--qh-border);
+    border-radius: 8px;
+    font-size: 18px;
+    letter-spacing: 6px;
+    text-align: center;
+    box-sizing: border-box;
+    font-family: 'Signika', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    transition: all 0.3s ease;
+    background: var(--qh-white);
+    color: var(--qh-text);
+}
+
+.qh-pf-student-input-otp:focus {
+    outline: none;
+    border-color: var(--qh-primary);
+    box-shadow: 0 0 0 3px rgba(169, 204, 240, 0.2);
+}
+
+.qh-pf-student-input-otp::placeholder {
+    color: #d1d5db;
+    letter-spacing: 2px;
+}
+
+/* Message Display */
+.qh-pf-student-message {
+    margin-bottom: 16px;
+    font-size: 14px;
+    min-height: 20px;
+}
+
+.qh-pf-student-message.error {
+    color: #dc2626;
+    background: rgba(239, 68, 68, 0.1);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.qh-pf-student-message.success {
+    color: #059669;
+    background: rgba(5, 150, 105, 0.1);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(5, 150, 105, 0.2);
+}
+
+.qh-pf-student-message.info {
+    color: #0284c7;
+    background: rgba(2, 132, 199, 0.1);
+    padding: 8px 12px;
+    border-radius: 6px;
+    border: 1px solid rgba(2, 132, 199, 0.2);
+}
+
+/* Buttons */
+.qh-pf-student-btn {
+    width: 100%;
+    padding: 14px;
+    font-size: 15px;
+    font-weight: 600;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: 'Signika', sans-serif;
+}
+
+.qh-pf-student-btn-primary {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+}
+
+.qh-pf-student-btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.qh-pf-student-btn-secondary {
+    background: var(--qh-primary);
+    color: var(--qh-text);
+}
+
+.qh-pf-student-btn-secondary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(169, 204, 240, 0.4);
+}
+
+.qh-pf-student-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .qh-pf-student-split {
+        grid-template-columns: 1fr;
+    }
+    
+    .qh-pf-student-voucher-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .qh-pf-student-title {
+        font-size: 20px;
+    }
+    
+    .qh-pf-student-form {
+        padding: 20px;
+    }
 }

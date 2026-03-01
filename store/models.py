@@ -813,7 +813,7 @@ class Coupon(models.Model):
     target_email = models.EmailField(blank=True, default='', verbose_name='Email áp dụng')
     max_products = models.PositiveIntegerField(default=0, verbose_name='Giới hạn sản phẩm', help_text='Số SP tối đa được áp dụng. 0 = không giới hạn')
     min_order_amount = models.DecimalField(max_digits=15, decimal_places=0, default=0, verbose_name='Đơn tối thiểu')
-    usage_limit = models.PositiveIntegerField(default=0, verbose_name='Giới hạn lượt dùng', help_text='0 = không giới hạn')
+    usage_limit = models.PositiveIntegerField(default=0, verbose_name='Giới hạn lượt dùng (mỗi người)', help_text='Số lần mỗi người dùng được tối đa. 0 = không giới hạn')
     used_count = models.PositiveIntegerField(default=0, verbose_name='Đã sử dụng')
     expire_days = models.PositiveIntegerField(default=30, verbose_name='Hạn sử dụng (ngày)')
     is_active = models.BooleanField(default=True, verbose_name='Còn sử dụng')
@@ -846,8 +846,7 @@ class Coupon(models.Model):
             return False
         if self.is_expired():
             return False
-        if self.usage_limit > 0 and self.used_count >= self.usage_limit:
-            return False
+        # Lưu ý: usage_limit là giới hạn per-user, được kiểm tra riêng qua CouponUsage
         return True
     
     def calculate_discount(self, order_total):
@@ -858,6 +857,24 @@ class Coupon(models.Model):
         else:
             discount = self.discount_value
         return min(discount, order_total)
+
+
+class CouponUsage(models.Model):
+    """
+    Lưu lịch sử dụng voucher theo từng user.
+    Đảm bảo kiểm tra giới hạn per-user (usage_limit).
+    """
+    coupon = models.ForeignKey(Coupon, on_delete=models.CASCADE, related_name='usages', verbose_name='Mã giảm')
+    user = models.ForeignKey('CustomUser', on_delete=models.CASCADE, related_name='coupon_usages', verbose_name='Người dùng')
+    used_at = models.DateTimeField(auto_now_add=True, verbose_name='Thời điểm dùng')
+
+    class Meta:
+        verbose_name = 'Lịch sử dụng voucher'
+        verbose_name_plural = 'Lịch sử dụng voucher'
+        ordering = ['-used_at']
+
+    def __str__(self):
+        return f"{self.user} dùng {self.coupon.code}"
 
 
 class EmailVerification(models.Model):

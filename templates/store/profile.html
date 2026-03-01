@@ -1000,99 +1000,114 @@
 
         <!-- Student - Teacher -->
         <div class="qh-pf-tab-panel" id="tab-student">
-            <div style="max-width: 500px; margin: 0 auto;">
-                {% if user.is_student_verified or user.is_teacher_verified %}
-                {# Hiển thị thông tin xác thực và voucher #}
-                <div style="text-align: center; margin-bottom: 24px;">
-                    <h3 style="font-size: 22px; font-weight: 600; color: var(--qh-text); margin-bottom: 8px;">Xác thực Student/Teacher</h3>
-                    {% if is_edu_verified %}
-                    <p style="color: #059669; margin: 0;">✅ Bạn đã xác thực thành công!</p>
+            <!-- Layout chia 2 cột: Trái = Thông tin xác thực, Phải = Lịch sử -->
+            <div class="qh-pf-pw-grid">
+                <!-- Cột trái: Thông tin xác thực -->
+                <div class="qh-pf-pw-section">
+                    <div class="qh-pf-pw-title">
+                        <i class="ri-shield-check-line"></i> Xác thực tài khoản Edu
+                    </div>
+                    
+                    {% if user.is_student_verified or user.is_teacher_verified %}
+                    {# Đã xác thực - hiển thị thông tin #}
+                    <div class="qh-pf-student-verified">
+                        <div class="qh-pf-student-verified-icon">
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                        </div>
+                        <span class="qh-pf-student-verified-title">Bạn đã xác thực thành công!</span>
+                    </div>
+                    
+                    <div class="qh-pf-form">
+                        <div class="qh-form-group">
+                            <label class="qh-label">Tài khoản sinh viên</label>
+                            <input type="text" class="qh-input" value="{{ user.verified_student_email|default:'' }}" readonly>
+                        </div>
+                        
+                        <div class="qh-form-group">
+                            <label class="qh-label">Trạng thái</label>
+                            <div class="qh-pf-student-status-badge">
+                                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                <span>Bạn đã xác thực tài khoản</span>
+                            </div>
+                        </div>
+                    </div>
+                    
                     {% else %}
-                    <p style="color: var(--qh-text-light); margin: 0;">Sử dụng email <strong>.edu.vn</strong> để xác minh và nhận ưu đãi đặc biệt!</p>
+                    {# Chưa xác thực - hiển thị form #}
+                    <p class="qh-pf-student-desc">Sử dụng email <strong>.edu.vn</strong> để xác minh và nhận ưu đãi đặc biệt!</p>
+                    
+                    <div class="qh-pf-form">
+                        <div class="qh-form-group">
+                            <label class="qh-label">Email .edu.vn</label>
+                            <input type="email" id="edu-email" class="qh-input" placeholder="ví dụ: sinhvien@ictu.edu.vn" 
+                                pattern=".*\.edu\.vn$" title="Vui lòng nhập email .edu.vn">
+                        </div>
+                        
+                        <div id="edu-code-section" class="qh-form-group" style="display: none;">
+                            <label class="qh-label">Mã xác thực</label>
+                            <input type="text" id="edu-code" class="qh-input" placeholder="Nhập mã 6 số" maxlength="6">
+                        </div>
+                        
+                        <p id="edu-message" class="qh-pf-student-message"></p>
+                        
+                        <button type="button" id="edu-send-btn" onclick="sendEduVerificationCode()" 
+                            class="qh-btn qh-btn-primary" style="width: 100%; font-size: 16px; font-weight: 600;">
+                            Gửi mã xác thực
+                        </button>
+                        
+                        <button type="button" id="edu-verify-btn" onclick="verifyEduCode()" 
+                            class="qh-btn qh-btn-primary" style="width: 100%; font-size: 16px; font-weight: 600; display: none;">
+                            Xác thực ngay
+                        </button>
+                    </div>
                     {% endif %}
                 </div>
                 
-                {# Hiển thị thông tin xác thực #}
-                {% if is_edu_verified %}
-                <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 16px; text-align: center; margin-bottom: 16px;">
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <svg style="width: 20px; height: 20px; color: #059669;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
-                        <span style="color: #059669; font-weight: 600;">
-                            {% if user.is_student_verified %}Student: {{ user.verified_student_email }}{% endif %}
-                            {% if user.is_teacher_verified %}{% if user.is_student_verified %} | {% endif %}Teacher: {{ user.verified_teacher_email }}{% endif %}
-                        </span>
+                <!-- Cột phải: Ưu đãi -->
+                <div class="qh-pf-pw-section">
+                    <div class="qh-pf-pw-title">
+                        <i class="ri-gift-line"></i> Ưu đãi
                     </div>
-                </div>
-                {% endif %}
-                {% endif %}
-                
-                {# Hiển thị voucher #}
-                {% if edu_voucher and edu_voucher_status == 'available' %}
-                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
-                    <div style="background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px; padding: 20px; text-align: center;">
-                        <div style="width: 48px; height: 48px; background: #d1fae5; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px;">
-                            <svg style="width: 24px; height: 24px; color: #059669;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg>
+                    
+                    {% if user.is_student_verified or user.is_teacher_verified %}
+                    {# Đã xác thực - hiển thị voucher #}
+                    {% if edu_voucher and edu_voucher_status == 'available' %}
+                    <div class="qh-pf-student-voucher-code" style="text-align: center; padding: 24px;">
+                        <div class="qh-pf-student-voucher-code-title">🎉 Ưu đãi đặc biệt dành cho bạn!</div>
+                        <div class="qh-pf-student-voucher-code-discount">GIẢM 50%</div>
+                        <div class="qh-pf-student-voucher-code-limit">Cho 1 đơn hàng duy nhất</div>
+                        <div class="qh-pf-student-voucher-code-box">
+                            <div class="qh-pf-student-voucher-code-label">Mã voucher của bạn:</div>
+                            <div class="qh-pf-student-voucher-code-value">{{ edu_voucher.code }}</div>
                         </div>
-                        <strong style="color: #059669; font-size: 16px; display: block; margin-bottom: 8px;">Voucher chưa sử dụng</strong>
-                        <p style="margin: 0; color: #166534; font-size: 13px;">Sử dụng ngay để giảm 50%!</p>
+                        <div class="qh-pf-student-voucher-code-expire">Hết hạn: {{ edu_voucher.expire_at|date:"d/m/Y" }}</div>
                     </div>
-                    
-                    <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 20px; text-align: center; color: white;">
-                        <div style="font-size: 13px; opacity: 0.9; margin-bottom: 8px;">🎉 Ưu đãi đặc biệt dành cho bạn!</div>
-                        <div style="font-size: 24px; font-weight: 700; margin-bottom: 4px;">GIẢM 50%</div>
-                        <div style="font-size: 12px; opacity: 0.9; margin-bottom: 10px;">Cho 1 đơn hàng duy nhất</div>
-                        <div style="background: rgba(255,255,255,0.2); border-radius: 6px; padding: 8px; display: inline-block;">
-                            <div style="font-size: 11px; opacity: 0.8; margin-bottom: 2px;">Mã voucher của bạn:</div>
-                            <div style="font-size: 20px; font-weight: 700; letter-spacing: 1px;">{{ edu_voucher.code }}</div>
-                        </div>
-                        <div style="font-size: 11px; opacity: 0.7; margin-top: 8px;">Hết hạn: {{ edu_voucher.expire_at|date:"d/m/Y" }}</div>
+                    {% elif edu_voucher_status == 'used' %}
+                    <div class="qh-pf-student-voucher-used">
+                        <svg class="qh-pf-student-voucher-used-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span class="qh-pf-student-voucher-used-text">Voucher đã được sử dụng</span>
                     </div>
+                    {% elif edu_voucher_status == 'expired' %}
+                    <div class="qh-pf-student-voucher-expired">
+                        <svg class="qh-pf-student-voucher-expired-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                        <span class="qh-pf-student-voucher-expired-text">Voucher đã hết hạn</span>
+                    </div>
+                    {% else %}
+                    <div class="qh-pf-empty">
+                        <i class="ri-gift-line"></i>
+                        <h3>Chưa có ưu đãi</h3>
+                        <p>Xác thực tài khoản Edu để nhận voucher giảm 50%!</p>
+                    </div>
+                    {% endif %}
+                    {% else %}
+                    {# Chưa xác thực #}
+                    <div class="qh-pf-empty">
+                        <i class="ri-gift-line"></i>
+                        <h3>Chưa có ưu đãi</h3>
+                        <p>Xác thực tài khoản Edu để nhận voucher giảm 50%!</p>
+                    </div>
+                    {% endif %}
                 </div>
-                {% elif edu_voucher_status == 'used' %}
-                <div style="background: #fef3c7; border: 1px solid #fcd34d; border-radius: 12px; padding: 16px; text-align: center;">
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <svg style="width: 20px; height: 20px; color: #d97706;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span style="color: #92400e; font-weight: 600;">Voucher đã được sử dụng</span>
-                    </div>
-                    <p style="margin: 8px 0 0 0; color: #b45309; font-size: 13px;">Cảm ơn bạn đã sử dụng voucher!</p>
-                </div>
-                {% elif edu_voucher_status == 'expired' %}
-                <div style="background: #fee2e2; border: 1px solid #fecaca; border-radius: 12px; padding: 16px; text-align: center;">
-                    <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
-                        <svg style="width: 20px; height: 20px; color: #dc2626;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
-                        <span style="color: #dc2626; font-weight: 600;">Voucher đã hết hạn</span>
-                    </div>
-                </div>
-                {% else %}
-                {# Chưa xác thực - hiển thị form #}
-                
-                <div style="background: var(--qh-card-bg); border: 1px solid var(--qh-border); border-radius: 12px; padding: 24px;">
-                    <div style="margin-bottom: 20px;">
-                        <label style="display: block; font-size: 14px; font-weight: 600; color: var(--qh-text); margin-bottom: 8px; text-align: left;">Email .edu.vn</label>
-                        <input type="email" id="edu-email" placeholder="ví dụ: sinhvien@ictu.edu.vn" 
-                            style="width: 100%; padding: 12px 16px; border: 1px solid var(--qh-border); border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;"
-                            pattern=".*\.edu\.vn$" title="Vui lòng nhập email .edu.vn">
-                    </div>
-                    
-                    <div id="edu-code-section" style="display: none; margin-bottom: 20px;">
-                        <label style="display: block; font-size: 14px; font-weight: 600; color: var(--qh-text); margin-bottom: 8px; text-align: left;">Mã xác thực</label>
-                        <input type="text" id="edu-code" placeholder="Nhập mã 6 số" maxlength="6"
-                            style="width: 100%; padding: 12px 16px; border: 1px solid var(--qh-border); border-radius: 8px; font-size: 18px; letter-spacing: 6px; text-align: center; box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;">
-                    </div>
-                    
-                    <p id="edu-message" style="margin-bottom: 16px; font-size: 14px; min-height: 20px;"></p>
-                    
-                    <button type="button" id="edu-send-btn" onclick="sendEduVerificationCode()" 
-                        class="qh-btn qh-btn-primary" style="width: 100%; padding: 12px; font-size: 15px;">
-                        Gửi mã xác thực
-                    </button>
-                    
-                    <button type="button" id="edu-verify-btn" onclick="verifyEduCode()" 
-                        class="qh-btn qh-btn-primary" style="width: 100%; padding: 12px; font-size: 15px; display: none;">
-                        Xác thực ngay
-                    </button>
-                </div>
-                {% endif %}
             </div>
         </div>
 

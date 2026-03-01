@@ -3083,19 +3083,30 @@ function _renderAdminOrdersTable() {
     paged.forEach(function (o, idx) {
         var statusBadge = _getStatusBadge(o.status, o.status_display, o.refund_status);
         var globalIdx = startIdx + idx + 1;
-        html += '<tr style="border-bottom: 1px solid #f1f5f9;">'
-            + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + globalIdx + '</td>'
-            + '<td style="padding: 12px 14px; font-size: 14px; color: #1e293b; font-weight: 500;">' + _escHtml(o.product_name) + '</td>'
-            + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + o.quantity + '</td>'
-            + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + _escHtml(o.color_name) + '</td>'
-            + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + _escHtml(o.storage) + '</td>'
-            + '<td style="padding: 12px 14px; text-align: right; font-size: 14px; color: #1e293b; font-weight: 600;">' + _formatVND(o.total_amount) + '</td>'
-            + '<td style="padding: 12px 14px; font-size: 13px; color: #64748b;">' + _escHtml(o.created_at) + '</td>'
-            + '<td style="padding: 12px 14px; font-size: 13px; color: #3b82f6; font-weight: 600; font-family: monospace;">' + _escHtml(o.order_code) + '</td>'
-            + '<td style="padding: 12px 14px; text-align: center;">' + statusBadge + '</td>'
-            + '<td style="padding: 12px 14px; text-align: center;">'
-            + '<button type="button" onclick="openAdminOrderDetail(' + o.id + ')" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-family: \'Signika\', sans-serif; font-weight: 500;">Xem</button>'
-            + '</td></tr>';
+        var items = o.items && o.items.length ? o.items : [{product_name:'—', quantity:0, color_name:'—', storage:'—', price:'0'}];
+        var rowspan = items.length;
+        var borderTop = idx > 0 ? 'border-top: 2px solid #e2e8f0;' : '';
+        items.forEach(function (item, iIdx) {
+            var isFirst = iIdx === 0;
+            html += '<tr style="border-bottom: 1px solid #f1f5f9; ' + (isFirst ? borderTop : '') + '">';
+            if (isFirst) {
+                html += '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b; vertical-align: middle;" rowspan="' + rowspan + '">' + globalIdx + '</td>';
+            }
+            html += '<td style="padding: 12px 14px; font-size: 14px; color: #1e293b; font-weight: 500;">' + _escHtml(item.product_name) + '</td>'
+                + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + item.quantity + '</td>'
+                + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + _escHtml(item.color_name) + '</td>'
+                + '<td style="padding: 12px 14px; text-align: center; font-size: 14px; color: #64748b;">' + _escHtml(item.storage) + '</td>'
+                + '<td style="padding: 12px 14px; text-align: right; font-size: 14px; color: #1e293b; font-weight: 600;">' + _formatVND(item.price) + '</td>';
+            if (isFirst) {
+                html += '<td style="padding: 12px 14px; font-size: 13px; color: #64748b; vertical-align: middle;" rowspan="' + rowspan + '">' + _escHtml(o.created_at) + '</td>'
+                    + '<td style="padding: 12px 14px; font-size: 13px; color: #3b82f6; font-weight: 600; font-family: monospace; vertical-align: middle;" rowspan="' + rowspan + '">' + _escHtml(o.order_code) + '</td>'
+                    + '<td style="padding: 12px 14px; text-align: center; vertical-align: middle;" rowspan="' + rowspan + '">' + statusBadge + '</td>'
+                    + '<td style="padding: 12px 14px; text-align: center; vertical-align: middle;" rowspan="' + rowspan + '">'
+                    + '<button type="button" onclick="openAdminOrderDetail(' + o.id + ')" style="background: #3b82f6; color: white; border: none; border-radius: 6px; padding: 6px 14px; font-size: 13px; cursor: pointer; font-family: \'Signika\', sans-serif; font-weight: 500;">Xem</button>'
+                    + '</td>';
+            }
+            html += '</tr>';
+        });
     });
     tbody.innerHTML = html;
 }

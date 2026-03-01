@@ -1381,16 +1381,31 @@ def profile(request):
                 return redirect('store:profile')
         
         # Voucher khả dụng cho user
-        from store.models import Coupon
+        from store.models import Coupon, CouponUsage
         all_coupons = Coupon.objects.filter(is_active=True)
         available_coupons = []
         for cp in all_coupons:
             if cp.is_expired():
                 continue
-            if cp.usage_limit > 0 and cp.used_count >= cp.usage_limit:
-                continue
-            if cp.target_type == 'single' and cp.target_email.lower() != request.user.email.lower():
-                continue
+            # Kiểm tra giới hạn per-user
+            if cp.usage_limit > 0:
+                user_used = CouponUsage.objects.filter(coupon=cp, user=request.user).count()
+                if user_used >= cp.usage_limit:
+                    continue
+            if cp.target_type == 'single':
+                user_email = request.user.email.lower() if request.user.email else ''
+                target_email = cp.target_email.lower() if cp.target_email else ''
+                verified_student = (getattr(request.user, 'verified_student_email', None) or '').lower()
+                verified_teacher = (getattr(request.user, 'verified_teacher_email', None) or '').lower()
+                is_match = (
+                    user_email == target_email or
+                    user_email == verified_student or
+                    user_email == verified_teacher or
+                    target_email == verified_student or
+                    target_email == verified_teacher
+                )
+                if not is_match:
+                    continue
             available_coupons.append(cp)
         
         context.update({
@@ -1403,6 +1418,32 @@ def profile(request):
             'refunded_orders': refunded_orders,
             'available_coupons': available_coupons,
         })
+        
+        # Lấy voucher Edu cho người dùng đã xác thực
+        if request.user.is_student_verified or request.user.is_teacher_verified:
+            edu_email = request.user.verified_student_email or request.user.verified_teacher_email
+            edu_voucher = Coupon.objects.filter(
+                target_type='single',
+                target_email__iexact=edu_email,
+                is_active=True
+            ).first()
+            
+            if edu_voucher:
+                if edu_voucher.is_expired():
+                    edu_voucher_status = 'expired'
+                else:
+                    user_used_edu = CouponUsage.objects.filter(coupon=edu_voucher, user=request.user).count()
+                    if edu_voucher.usage_limit > 0 and user_used_edu >= edu_voucher.usage_limit:
+                        edu_voucher_status = 'used'
+                    else:
+                        edu_voucher_status = 'available'
+            else:
+                edu_voucher_status = None
+                
+            context.update({
+                'edu_voucher': edu_voucher,
+                'edu_voucher_status': edu_voucher_status,
+            })
     
     return render(request, 'store/profile.html', context)
 
@@ -3765,13 +3806,36 @@ def place_order(request):
         from store.models import Coupon
         try:
             coupon = Coupon.objects.get(code=coupon_code)
+            # Kiểm tra target giống coupon_apply: hỗ trợ cả email edu đã xác thực
+            _target_ok = False
+            if coupon.target_type == 'all':
+                _target_ok = True
+            elif coupon.target_type == 'single':
+                _user_email = request.user.email.lower() if request.user.email else ''
+                _target_email = coupon.target_email.lower() if coupon.target_email else ''
+                _verified_student = (getattr(request.user, 'verified_student_email', None) or '').lower()
+                _verified_teacher = (getattr(request.user, 'verified_teacher_email', None) or '').lower()
+                _target_ok = (
+                    _user_email == _target_email or
+                    _user_email == _verified_student or
+                    _user_email == _verified_teacher or
+                    _target_email == _verified_student or
+                    _target_email == _verified_teacher
+                )
             if (coupon.is_valid()
                 and total_amount >= coupon.min_order_amount
                 and (coupon.max_products == 0 or item_count <= coupon.max_products)
-                and (coupon.target_type == 'all' or request.user.email.lower() == coupon.target_email.lower())):
-                discount_amount = coupon.calculate_discount(total_amount)
-                coupon.used_count += 1
-                coupon.save(update_fields=['used_count'])
+                and _target_ok):
+                # Kiểm tra per-user usage
+                from store.models import CouponUsage
+                _user_usage = CouponUsage.objects.filter(coupon=coupon, user=request.user).count()
+                if coupon.usage_limit > 0 and _user_usage >= coupon.usage_limit:
+                    coupon_code = ''  # Người dùng này hết lượt
+                else:
+                    discount_amount = coupon.calculate_discount(total_amount)
+                    CouponUsage.objects.create(coupon=coupon, user=request.user)
+                    coupon.used_count += 1
+                    coupon.save(update_fields=['used_count'])
             else:
                 coupon_code = ''
         except Coupon.DoesNotExist:
@@ -4100,54 +4164,42 @@ def admin_order_list(request):
     orders = Order.objects.select_related('user').prefetch_related('items').order_by('-created_at')
     
     result = []
-    stt = 0
     for order in orders:
-        items = list(order.items.all())
-        if not items:
-            # Đơn không có item → vẫn hiển thị 1 dòng
-            stt += 1
-            result.append({
-                'stt': stt,
-                'id': order.id,
-                'order_code': order.order_code,
-                'product_name': '—',
-                'quantity': 0,
-                'color_name': '—',
-                'storage': '—',
-                'price': str(order.total_amount),
-                'total_amount': str(order.total_amount),
-                'status': order.status,
-                'status_display': order.get_status_display(),
-                'payment_method': order.payment_method,
-                'refund_account': order.refund_account or '',
-                'refund_bank': order.refund_bank or '',
-                'refund_status': order.refund_status or '',
-                'created_at': order.created_at.strftime('%d/%m/%Y %H:%M'),
-            })
-        else:
-            for item in items:
-                stt += 1
+        raw_items = list(order.items.all())
+        items_data = []
+        if raw_items:
+            for item in raw_items:
                 c_name = item.color_name or '—'
                 if ' - ' in c_name:
                     c_name = c_name.split(' - ', 1)[1]
-                result.append({
-                    'stt': stt,
-                    'id': order.id,
-                    'order_code': order.order_code,
+                items_data.append({
                     'product_name': item.product_name,
                     'quantity': item.quantity,
                     'color_name': c_name,
                     'storage': item.storage or '—',
                     'price': str(item.price),
-                    'total_amount': str(order.total_amount),
-                    'status': order.status,
-                    'status_display': order.get_status_display(),
-                    'payment_method': order.payment_method,
-                    'refund_account': order.refund_account or '',
-                    'refund_bank': order.refund_bank or '',
-                    'refund_status': order.refund_status or '',
-                    'created_at': order.created_at.strftime('%d/%m/%Y %H:%M'),
                 })
+        else:
+            items_data.append({
+                'product_name': '—',
+                'quantity': 0,
+                'color_name': '—',
+                'storage': '—',
+                'price': str(order.total_amount),
+            })
+        result.append({
+            'id': order.id,
+            'order_code': order.order_code,
+            'total_amount': str(order.total_amount),
+            'status': order.status,
+            'status_display': order.get_status_display(),
+            'payment_method': order.payment_method,
+            'refund_account': order.refund_account or '',
+            'refund_bank': order.refund_bank or '',
+            'refund_status': order.refund_status or '',
+            'created_at': order.created_at.strftime('%d/%m/%Y %H:%M'),
+            'items': items_data,
+        })
     
     return JsonResponse({'success': True, 'orders': result})
 
@@ -5108,7 +5160,25 @@ def coupon_apply(request):
     if coupon.target_type == 'single':
         if not request.user.is_authenticated:
             return JsonResponse({'success': False, 'message': 'Vui lòng đăng nhập để sử dụng mã này'})
-        if request.user.email.lower() != coupon.target_email.lower():
+        
+        # Kiểm tra email đăng nhập HOẶC email edu đã xác thực
+        user_email = request.user.email.lower() if request.user.email else ''
+        target_email = coupon.target_email.lower() if coupon.target_email else ''
+        
+        # Lấy email edu đã xác thực (xử lý None)
+        verified_student = (request.user.verified_student_email or '').lower()
+        verified_teacher = (request.user.verified_teacher_email or '').lower()
+        
+        # So sánh trực tiếp hoặc qua email đã xác thực edu
+        is_valid = (
+            user_email == target_email or
+            user_email == verified_student or
+            user_email == verified_teacher or
+            target_email == verified_student or
+            target_email == verified_teacher
+        )
+        
+        if not is_valid:
             return JsonResponse({'success': False, 'message': 'Mã giảm giá không áp dụng cho tài khoản của bạn'})
     
     # 5. Đơn có đạt tối thiểu không?
@@ -5118,11 +5188,18 @@ def coupon_apply(request):
     
     # 6. Có vượt số lượng sản phẩm không?
     if coupon.max_products > 0 and item_count > coupon.max_products:
-        return JsonResponse({'success': False, 'message': f'Voucher chỉ áp dụng cho tối đa {coupon.max_products} sản phẩm'})
+        return JsonResponse({
+            'success': False, 
+            'message': f'Voucher chỉ áp dụng cho tối đa {coupon.max_products} sản phẩm. Vui lòng chọn lại sản phẩm để áp dụng voucher.',
+            'max_products': coupon.max_products
+        })
     
-    # 7. Đã vượt số lượt chưa?
-    if coupon.usage_limit > 0 and coupon.used_count >= coupon.usage_limit:
-        return JsonResponse({'success': False, 'message': 'Mã giảm giá đã hết lượt sử dụng'})
+    # 7. Đã vượt số lượt chưa? (per-user)
+    if coupon.usage_limit > 0:
+        from store.models import CouponUsage
+        user_usage = CouponUsage.objects.filter(coupon=coupon, user=request.user).count()
+        if user_usage >= coupon.usage_limit:
+            return JsonResponse({'success': False, 'message': f'Bạn đã dùng hết {coupon.usage_limit} lượt của mã này'})
     
     try:
         discount = coupon.calculate_discount(order_total)
@@ -5143,7 +5220,6 @@ def coupon_apply(request):
 # ── AI Chatbot ──────────────────────────────────────────────────
 @csrf_exempt
 @require_POST
-@require_POST
 @login_required
 def send_verification_code(request):
     """Gửi mã OTP 6 số tới email .edu.vn để xác thực Student/Teacher."""
@@ -5154,6 +5230,16 @@ def send_verification_code(request):
     if not email.endswith('.edu.vn'):
         return JsonResponse({'success': False, 'message': 'Chỉ chấp nhận email .edu.vn'})
 
+    # Kiểm tra email đã được xác thực bởi người khác chưa
+    from django.contrib.auth import get_user_model
+    User = get_user_model()
+    existing_user = User.objects.filter(
+        Q(verified_student_email__iexact=email) | Q(verified_teacher_email__iexact=email)
+    ).exclude(id=request.user.id).first()
+    
+    if existing_user:
+        return JsonResponse({'success': False, 'message': 'Email này đã được xác thực bởi tài khoản khác.'})
+
     # Tạo OTP 6 chữ số
     import random, time as _time
     otp = str(random.randint(100000, 999999))
@@ -5163,9 +5249,17 @@ def send_verification_code(request):
     request.session['edu_otp_email'] = email
     request.session['edu_otp_created_at'] = int(_time.time())
 
+    # Debug: in OTP ra console để test (nếu không có SendGrid)
+    print(f"=== OTP for {email}: {otp} ===")
+
     # Gửi email qua SendGrid
     api_key = os.getenv('SENDGRID_API_KEY', '')
     from_email = os.getenv('SENDGRID_FROM_EMAIL', 'noreply@qhun22.com')
+
+    # Debug: kiểm tra API key
+    if not api_key:
+        import logging
+        logging.getLogger(__name__).warning('SENDGRID_API_KEY not configured')
 
     html_body = (
         f"<h2>Xác thực Student/Teacher - QHUN22</h2>"
@@ -5190,9 +5284,14 @@ def send_verification_code(request):
         if resp.status_code in [200, 201, 202]:
             return JsonResponse({'success': True, 'message': f'Đã gửi mã xác thực tới {email}. Vui lòng kiểm tra hộp thư.'})
         else:
-            return JsonResponse({'success': False, 'message': f'Không thể gửi email. Vui lòng thử lại.'})
-    except Exception:
-        return JsonResponse({'success': False, 'message': 'Lỗi kết nối, vui lòng thử lại.'})
+            # Debug: trả về thông tin lỗi
+            import logging
+            logging.getLogger(__name__).error(f'SendGrid error: {resp.status_code} - {resp.text}')
+            return JsonResponse({'success': False, 'message': f'Không thể gửi email. Mã lỗi: {resp.status_code}'})
+    except Exception as e:
+        import logging
+        logging.getLogger(__name__).exception(f'SendGrid connection error: {str(e)}')
+        return JsonResponse({'success': False, 'message': f'Lỗi kết nối: {str(e)}'})
 
 
 @require_POST
@@ -5238,12 +5337,57 @@ def verify_code(request):
         'is_student_verified', 'verified_student_email'
     ])
 
+    # Tạo voucher giảm 50% cho người dùng Edu (chỉ tạo 1 lần)
+    from store.models import Coupon
+    from datetime import timedelta
+    from django.utils import timezone
+    
+    # Kiểm tra xem đã có voucher edu chưa
+    existing_edu_coupon = Coupon.objects.filter(
+        target_type='single',
+        target_email=email,
+        is_active=True
+    ).first()
+    
+    if not existing_edu_coupon:
+        # Tạo mã voucher duy nhất: QHUN + 5 số
+        import random
+        voucher_code = 'QHUN' + ''.join(random.choices('0123456789', k=5))
+        
+        # Tạo coupon/voucher
+        Coupon.objects.create(
+            name='Ưu đãi Edu - Giảm 50%',
+            code=voucher_code,
+            discount_type='percentage',
+            discount_value=50,
+            target_type='single',
+            target_email=email,
+            max_products=1,
+            min_order_amount=100000,
+            usage_limit=1,
+            used_count=0,
+            expire_days=90,  # 90 ngày
+            is_active=True,
+            expire_at=timezone.now() + timedelta(days=90)
+        )
+        voucher_created = True
+        voucher_code_display = voucher_code
+    else:
+        voucher_created = False
+        voucher_code_display = existing_edu_coupon.code
+
     # Xóa OTP khỏi session
     for key in ['edu_otp', 'edu_otp_email', 'edu_otp_created_at']:
         request.session.pop(key, None)
 
     role = 'Teacher' if is_teacher else 'Student'
-    return JsonResponse({'success': True, 'message': f'Xác thực {role} thành công! Tài khoản của bạn đã được xác thực.'})
+    if voucher_created:
+        return JsonResponse({
+            'success': True, 
+            'message': f'Xác thực {role} thành công! Bạn đã nhận được voucher giảm 50% (Mã: {voucher_code_display}). Vui lòng kiểm tra trang tài khoản.'
+        })
+    else:
+        return JsonResponse({'success': True, 'message': f'Xác thực {role} thành công! Tài khoản của bạn đã được xác thực.'})
 
 
 def chatbot_api(request):
