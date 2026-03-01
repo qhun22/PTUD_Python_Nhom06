@@ -13,7 +13,7 @@
     <div class="qh-auth-box">
         <h2 class="qh-auth-box-title">ĐĂNG KÝ</h2>
 
-        <!-- Messages will be shown via JavaScript Toast -->
+        <!-- Thông báo sẽ hiển thị qua JavaScript Toast -->
         {% if messages %}
             {% for message in messages %}
                 <div class="qh-toast-message" data-type="{% if message.tags == 'error' %}error{% else %}success{% endif %}" data-message="{{ message|escapejs }}" style="display: none;"></div>
@@ -36,7 +36,7 @@
                 </div>
             </div>
 
-            <!-- OTP Message -->
+            <!-- Thông báo OTP -->
             <div id="otpMessage" class="qh-otp-message" style="display: none;"></div>
 
             <div class="qh-form-group">
@@ -70,10 +70,10 @@
     </div>
 </div>
 
-<!-- External Register JS -->
+<!-- JS đăng ký ngoài -->
 <script src="{% static 'js/register.js' %}?v=3"></script>
 
-<!-- Django Messages to Toast -->
+<!-- Chuyển Django Messages thành Toast -->
 {# ========================================================================= #}
 {# NOTE: JS KHÔNG THỂ TÁCH RA FILE RIÊNG vì sử dụng Django template tags #}
 {# - {% if messages %} - Block từ Django #}

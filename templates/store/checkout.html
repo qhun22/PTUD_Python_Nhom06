@@ -14,10 +14,10 @@
     <h1 class="qh-page-title">THANH TOÁN</h1>
 
     <div class="qh-checkout-grid">
-        <!-- ==================== LEFT ==================== -->
+        <!-- ==================== CỘT TRÁI ==================== -->
         <div class="qh-checkout-left">
 
-            <!-- Address Section -->
+            <!-- Phần địa chỉ nhận hàng -->
             <div class="qh-checkout-section">
                 <div class="qh-checkout-section-title">
                     <i class="ri-map-pin-line"></i> Địa chỉ giao hàng
@@ -43,7 +43,7 @@
                 {% endif %}
             </div>
 
-            <!-- Products Section -->
+            <!-- Phần sản phẩm -->
             <div class="qh-checkout-section">
                 <div class="qh-checkout-section-title">
                     <i class="ri-smartphone-line"></i> Sản phẩm đã chọn ({{ cart_items|length }})
@@ -86,14 +86,14 @@
                 </div>
             </div>
 
-            <!-- Payment Method Section -->
+            <!-- Phần phương thức thanh toán -->
             <div class="qh-checkout-section">
                 <div class="qh-checkout-section-title">
                     <i class="ri-bank-card-line"></i> Phương thức thanh toán
                 </div>
 
                 <div class="qh-checkout-payments">
-                    <!-- COD -->
+                    <!-- Thanh toán khi nhận hàng (COD) -->
                     <div class="qh-checkout-pay-opt selected verified" data-pay-label="Thanh toán khi nhận hàng (COD)" data-pay-short="COD" data-pay-type="cod">
                         <div class="qh-checkout-pay-icon">
                             <i class="ri-hand-coin-line"></i>
@@ -105,7 +105,7 @@
                         <span class="qh-checkout-pay-check"><i class="ri-checkbox-circle-fill"></i></span>
                     </div>
 
-                    <!-- VIETQR -->
+                    <!-- Chuyển khoản VietQR -->
                     <div class="qh-checkout-pay-opt" data-pay-label="Chuyển khoản VIETQR" data-pay-short="VIETQR" data-pay-type="vietqr">
                         <div class="qh-checkout-pay-icon">
                             <i class="ri-qr-code-line"></i>
@@ -117,7 +117,7 @@
                         <span class="qh-checkout-pay-check"><i class="ri-checkbox-circle-fill"></i></span>
                     </div>
 
-                    <!-- VNPAY -->
+                    <!-- Thanh toán VNPay -->
                     <div class="qh-checkout-pay-opt" data-pay-label="VNPAY" data-pay-short="VNPAY" data-pay-type="vnpay">
                         <div class="qh-checkout-pay-icon">
                             <i class="ri-secure-payment-line"></i>
@@ -150,12 +150,12 @@
 
         </div>
 
-        <!-- ==================== RIGHT - SUMMARY ==================== -->
+        <!-- ==================== CỘT PHẢI - TÓM TẮT ĐƠN HÀNG ==================== -->
         <div class="qh-checkout-right">
             <div class="qh-checkout-summary">
                 <h2 class="qh-checkout-summary-title">Tóm tắt đơn hàng</h2>
 
-                <!-- Coupon Input -->
+                <!-- Ô nhập mã giảm giá -->
                 <div style="margin-bottom: 16px;">
                     <div style="display: flex; gap: 8px;">
                         <input type="text" id="couponInput" placeholder="Nhập mã giảm giá" style="flex: 1; padding: 10px 14px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Signika', sans-serif; text-transform: uppercase; box-sizing: border-box;">
@@ -195,7 +195,7 @@
 
 </div><!-- .qh-checkout-page -->
 
-<!-- ==================== No Address Modal ==================== -->
+<!-- ==================== Modal chưa có địa chỉ ==================== -->
 {% if not has_default_address %}
 <div class="qh-checkout-noaddr-overlay" id="noAddrModal">
     <div class="qh-checkout-noaddr-box">

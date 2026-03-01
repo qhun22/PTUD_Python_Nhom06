@@ -8,7 +8,7 @@
 <link rel="stylesheet" href="{% static 'css/product_detail.css' %}">
 
 <div class="pd-page">
-    <!-- Breadcrumb -->
+    <!-- Điều hướng -->
     <div class="pd-breadcrumb">
         <a href="/">Trang chủ</a> <span>›</span>
         <a href="/">Điện thoại</a> <span>›</span>
@@ -16,11 +16,11 @@
         <span class="current">{{ product.name }}</span>
     </div>
 
-    <!-- Product Name -->
+    <!-- Tên sản phẩm -->
     <h1 class="pd-product-name">{{ product.name }}</h1>
 
     <div class="pd-grid">
-        <!-- ===== LEFT: Images ===== -->
+        <!-- ===== TRÁI: Ảnh sản phẩm ===== -->
         <div class="pd-images">
             <div class="pd-main-image"
                  onmouseenter="pauseAutoSlide()"
@@ -34,13 +34,13 @@
                 </button>
             </div>
 
-            <!-- Bottom tabs (mini thumbnails + spec/info/gallery) -->
+            <!-- Tab phía dưới (ảnh thumbnail nhỏ + spec/info/gallery) -->
             <div class="pd-bottom-tabs" id="pdBottomTabs"></div>
         </div>
 
-        <!-- ===== RIGHT: Info ===== -->
+        <!-- ===== PHẢI: Thông tin ===== -->
         <div class="pd-info">
-            <!-- Price -->
+            <!-- Giá -->
             <div class="pd-price-section">
                 <span class="pd-price-current" id="pdPrice">
                     {% if first_variant %}{{ first_variant.price|format_price }} đ{% else %}Liên hệ{% endif %}
@@ -51,10 +51,10 @@
                 <span class="pd-sku-inline">SKU: <strong id="pdSku">{{ first_variant.sku|default:'-' }}</strong></span>
             </div>
 
-            <!-- Installment -->
+            <!-- Trả góp -->
             <div class="pd-installment" id="pdInstallment"></div>
 
-            <!-- Storage Selection -->
+            <!-- Chọn dung lượng -->
             <div class="pd-variant-section">
                 <div class="pd-variant-label">Lựa chọn dung lượng</div>
                 <div class="pd-storage-options" id="pdStorageOptions">
@@ -67,7 +67,7 @@
                 </div>
             </div>
 
-            <!-- Color Selection -->
+            <!-- Chọn màu sắc -->
             <div class="pd-variant-section">
                 <div class="pd-variant-label">Lựa chọn màu</div>
                 <div class="pd-color-options" id="pdColorOptions">
@@ -87,7 +87,7 @@
                 <span style="color: #ef4444; font-weight: 600;">Hết hàng</span>
             </div>
             
-            <!-- Buy Section -->
+            <!-- Phần mua hàng -->
             <div class="pd-buy-section">
                 <button class="pd-btn-cart" onclick="addToCart()">
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
@@ -99,7 +99,7 @@
                 </button>
             </div>
 
-            <!-- Promo Banner -->
+            <!-- Banner khuyến mãi -->
             {% if promo_banner %}
             <div class="pd-promo-banner">
                 <div class="pd-promo-banner-img">
@@ -114,7 +114,7 @@
         </div>
     </div>
 
-    <!-- Product Description Section -->
+    <!-- Phần mô tả sản phẩm -->
     <div class="pd-spec-section" id="pdDescSection" style="display: none;">
         <h2 class="pd-spec-title">Thông tin sản phẩm</h2>
         <div id="pdDescContent" style="font-size: 14px; color: #334155; line-height: 1.7; white-space: pre-line;"></div>
@@ -123,7 +123,7 @@
     <!-- Video về sản phẩm & Cam kết sản phẩm -->
     {% if youtube_id %}
     <div class="pd-extra-row">
-        <!-- Box Video YouTube -->
+        <!-- Hộp Video YouTube -->
         <div class="pd-extra-box">
             <h2 class="pd-extra-title">
                 <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
@@ -333,7 +333,7 @@
     {% endif %}
 </div>
 
-<!-- Product Content Panel (slide from right, y hệt Thông số kỹ thuật) -->
+<!-- Panel nội dung sản phẩm (trượt từ phải, tương tự Thông số kỹ thuật) -->
 <div class="pd-spec-overlay" id="pdContentOverlay" onclick="closeContentModal(event)">
     <div class="pd-spec-panel" id="pdContentPanel" onclick="event.stopPropagation()">
         <div class="pd-spec-panel-header">
@@ -352,7 +352,7 @@
     </div>
 </div>
 
-<!-- Spec Panel (slide from right) -->
+<!-- Panel thông số kỹ thuật (trượt từ phải) -->
 <div class="pd-spec-overlay" id="pdSpecOverlay" onclick="closeSpecModal(event)">
     <div class="pd-spec-panel" id="pdSpecPanel" onclick="event.stopPropagation()">
         <div class="pd-spec-panel-header">
@@ -366,7 +366,7 @@
     </div>
 </div>
 
-<!-- Gallery Lightbox -->
+<!-- Hộp Gallery Lightbox -->
 <div class="pd-gallery-overlay" id="pdGalleryOverlay" onclick="closeGalleryOverlay(event)">
     <div class="pd-gallery-box" onclick="event.stopPropagation()">
         <div class="pd-gallery-color-tabs" id="pdGalleryColorTabs"></div>
@@ -479,7 +479,7 @@ function onYouTubeIframeAPIReady() {
 </script>
 {% endif %}
 
-<!-- Student Verify Handler -->
+<!-- Xử lý xác thực sinh viên -->
 <script>
 function handleStudentVerify() {
     var isLoggedIn = {{ request.user.is_authenticated|lower }};

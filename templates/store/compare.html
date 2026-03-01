@@ -15,12 +15,12 @@
 </style>
 <link rel="stylesheet" href="{% static 'css/compare.css' %}">
 
-<!-- Header -->
+<!-- Tiêu đề -->
 <div class="qh-compare-header">
     <h1>SO SÁNH SẢN PHẨM ({{ products|length }})</h1>
 </div>
 
-<!-- Filter -->
+<!-- Bộ lọc -->
 <div class="qh-compare-filter">
     <label for="qh-compare-filter-select"><i class="ri-filter-3-line"></i> Lọc thông số:</label>
     <select id="qh-compare-filter-select" onchange="filterSpecs(this.value)">
@@ -30,11 +30,11 @@
     </select>
 </div>
 
-<!-- Product Columns -->
+<!-- Các cột sản phẩm -->
 <div class="qh-compare-grid">
     {% for item in compare_data %}
     <div class="qh-compare-col">
-        <!-- Product Header -->
+        <!-- Tiêu đề sản phẩm -->
         <div class="qh-compare-col-header">
             <button class="qh-compare-col-remove" onclick="removeAndReload({{ item.product.id }})" title="Xóa khỏi so sánh">
                 <i class="ri-close-line"></i>
@@ -55,7 +55,7 @@
             </div>
         </div>
 
-        <!-- Spec Groups -->
+        <!-- Nhóm thông số kỹ thuật -->
         {% for group in item.groups %}
         <div class="qh-compare-spec-group">
             <div class="qh-compare-spec-group-title">{{ group.title }}</div>

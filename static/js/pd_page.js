@@ -2,7 +2,7 @@
    QHUN22 – Product Detail Page Logic
    ======================================================== */
 
-// ========== State ==========
+// ========== Trạng thái ==========
 let selectedColor = null;
 let selectedStorage = null;
 let currentImages = [];
@@ -10,12 +10,12 @@ let currentImageIndex = 0;
 let autoSlideInterval = null;
 let isAutoSlideActive = true;
 
-// Gallery lightbox state
+// Trạng thái gallery lightbox
 let galleryImages = [];
 let galleryIndex = 0;
 let galleryCurrentSku = null;
 
-// ========== Init ==========
+// ========== Khởi tạo ==========
 document.addEventListener('DOMContentLoaded', function () {
     const firstStorageBtn = document.querySelector('.pd-storage-btn');
     if (firstStorageBtn) selectStorage(firstStorageBtn);
@@ -42,7 +42,7 @@ document.addEventListener('visibilitychange', function () {
     else resumeAutoSlide();
 });
 
-// ========== Storage Selection ==========
+// ========== Chọn dung lượng ==========
 function selectStorage(btn) {
     document.querySelectorAll('.pd-storage-btn').forEach(function (b) { b.classList.remove('selected'); });
     btn.classList.add('selected');
@@ -60,7 +60,7 @@ function updateStoragePrices() {
     });
 }
 
-// ========== Color Selection ==========
+// ========== Chọn màu sắc ==========
 function selectColor(btn) {
     document.querySelectorAll('.pd-color-btn').forEach(function (b) { b.classList.remove('selected'); });
     btn.classList.add('selected');
@@ -92,7 +92,7 @@ function updateColorButtons() {
     });
 }
 
-// ========== Image Gallery ==========
+// ========== Thư viện ảnh ==========
 function loadColorImages(sku) {
     if (colorImagesData[sku] && colorImagesData[sku].images.length > 0) {
         currentImages = colorImagesData[sku].images;
@@ -111,10 +111,10 @@ function renderGallery() {
     if (!mainImg || currentImages.length === 0) return;
 
     var newSrc = currentImages[currentImageIndex];
-    // If same image, skip
+    // Nếu cùng ảnh, bỏ qua
     if (mainImg.src && mainImg.src.endsWith(newSrc.replace(/^.*\/\/[^\/]+/, ''))) return;
 
-    // Quick fade out (150ms)
+    // Fade out nhanh (150ms)
     mainImg.classList.add('pd-fade-out');
     setTimeout(function () {
         mainImg.src = newSrc;
@@ -122,14 +122,14 @@ function renderGallery() {
             mainImg.classList.remove('pd-fade-out');
             mainImg.onload = null;
         };
-        // Fallback: if image is cached and onload doesn't fire
+        // Dự phòng: nếu ảnh được cache và onload không kích hoạt
         setTimeout(function () {
             mainImg.classList.remove('pd-fade-out');
         }, 100);
     }, 150);
 }
 
-// ========== Auto Slide ==========
+// ========== Tự động chuyển ảnh ==========
 function startAutoSlide() {
     if (autoSlideInterval) clearInterval(autoSlideInterval);
     if (currentImages && currentImages.length > 1 && isAutoSlideActive) {
@@ -164,7 +164,7 @@ function nextImage() {
     renderGallery();
 }
 
-// ========== Price Display ==========
+// ========== Hiển thị giá ==========
 function updatePriceDisplay() {
     if (!selectedColor || !selectedStorage) return;
 
@@ -233,7 +233,7 @@ function updatePriceDisplay() {
     }
 }
 
-// ========== Bottom Tabs ==========
+// ========== Tab điều hướng phía dưới ==========
 function renderBottomTabs() {
     var container = document.getElementById('pdBottomTabs');
     if (!container) return;
@@ -286,17 +286,17 @@ function selectColorByName(colorName) {
 }
 
 function scrollToSpec() {
-    // Open spec modal instead of scrolling to inline section
+    // Mở modal thông số thay vì cuộn đến phần inline
     openSpecModal();
 }
 
 function scrollToDescription() {
-    // If product content panel exists, open it (slide from right like spec)
+    // Nếu có panel nội dung sản phẩm, mở nó (trượt từ phải như spec)
     if (typeof hasProductContent !== 'undefined' && hasProductContent) {
         openContentModal();
         return;
     }
-    // Fallback: show inline description
+    // Dự phòng: hiển thị mô tả inline
     var el = document.getElementById('pdDescSection');
     if (el) {
         el.style.display = 'block';
@@ -308,7 +308,7 @@ function scrollToDescription() {
     }
 }
 
-// ========== Gallery Lightbox ==========
+// ========== Hộp xem ảnh Gallery Lightbox ==========
 function openGallery() {
     var overlay = document.getElementById('pdGalleryOverlay');
     if (!overlay) return;
@@ -429,15 +429,15 @@ document.addEventListener('keydown', function (e) {
     else if (e.key === 'Escape') closeGallery();
 });
 
-// ========== Specifications (FPTShop-style) ==========
-var specGroups = []; // Parsed groups: [{name, specs: [{name, value}]}]
+// ========== Thông số kỹ thuật (dạng FPTShop) ==========
+var specGroups = []; // Nhóm thông số đã phân tích: [{name, specs: [{name, value}]}]
 
 function parseSpecData(data) {
     var groups = [];
     if (!data) return groups;
 
     if (data.groups && Array.isArray(data.groups)) {
-        // Structured format: {groups: [{name/title, specs/items: [{name/key/label, value}]}]}
+        // Định dạng cấu trúc: {groups: [{name/title, specs/items: [{name/key/label, value}]}]}
         data.groups.forEach(function (g) {
             var specs = [];
             var specArr = g.specs || g.items || [];
@@ -449,7 +449,7 @@ function parseSpecData(data) {
             groups.push({ name: g.name || g.title || '', specs: specs });
         });
     } else if (typeof data === 'object') {
-        // Flat format: {key: value} or {key: {k2: v2}}
+        // Định dạng phẳng: {key: value} hoặc {key: {k2: v2}}
         var flatSpecs = [];
         for (var key in data) {
             if (!data.hasOwnProperty(key)) continue;
@@ -522,12 +522,12 @@ function renderSpecModalBody() {
 }
 
 function specTabClick(idx) {
-    // Update active tab
+    // Cập nhật tab đang active
     document.querySelectorAll('.pd-spec-tab').forEach(function (tab) {
         tab.classList.toggle('active', parseInt(tab.dataset.group) === idx);
     });
 
-    // Scroll to group section
+    // Cuộn đến phần nhóm thông số
     var target = document.getElementById('specGroup_' + idx);
     var body = document.getElementById('pdSpecModalBody');
     if (target && body) {
@@ -535,7 +535,7 @@ function specTabClick(idx) {
     }
 }
 
-// Update active tab on scroll
+// Cập nhật tab đang active khi cuộn
 function setupSpecScrollSpy() {
     var body = document.getElementById('pdSpecModalBody');
     if (!body) return;
@@ -555,7 +555,7 @@ function setupSpecScrollSpy() {
             tab.classList.toggle('active', parseInt(tab.dataset.group) === activeIdx);
         });
 
-        // Auto-scroll tab into view
+        // Tự động cuộn tab vào vùng hiển thị
         var activeTab = document.querySelector('.pd-spec-tab.active');
         if (activeTab) {
             activeTab.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
@@ -575,7 +575,7 @@ function closeSpecModalBtn() {
     }
 }
 
-// Close spec modal with Escape
+// Đóng modal thông số khi nhấn Escape
 document.addEventListener('keydown', function (e) {
     var overlay = document.getElementById('pdSpecOverlay');
     if (overlay && overlay.classList.contains('show') && e.key === 'Escape') {
@@ -583,7 +583,7 @@ document.addEventListener('keydown', function (e) {
     }
 });
 
-// ========== Utilities ==========
+// ========== Tiện ích ==========
 function formatPrice(value) {
     if (!value) return '0';
     return parseInt(value).toLocaleString('vi-VN').replace(/,/g, '.');
@@ -754,7 +754,7 @@ function getCsrfToken() {
     return cookieValue;
 }
 
-// ========== Product Content Panel (slide from right, like Spec) ==========
+// ========== Panel nội dung sản phẩm (trượt từ phải, như Spec) ==========
 function openContentModal() {
     var overlay = document.getElementById('pdContentOverlay');
     if (!overlay) return;
@@ -774,7 +774,7 @@ function closeContentModalBtn() {
     }
 }
 
-// Close content modal with Escape
+// Đóng modal nội dung khi nhấn Escape
 document.addEventListener('keydown', function (e) {
     var overlay = document.getElementById('pdContentOverlay');
     if (overlay && overlay.classList.contains('show') && e.key === 'Escape') {

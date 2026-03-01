@@ -15,10 +15,10 @@
 
     <div class="qh-vqr-wrapper" id="vqrCard">
 
-        <!-- ==================== PENDING STATE ==================== -->
+        <!-- ==================== TRẠNG THÁI ĐANG CHỜ THANH TOÁN ==================== -->
         <div id="vqrPending">
 
-            <!-- Header -->
+            <!-- Tiêu đề -->
             <div class="qh-vqr-header">
                 <div class="qh-vqr-header-left">
                     <i class="ri-qr-code-line"></i>
@@ -33,7 +33,7 @@
                 </div>
             </div>
 
-            <!-- QR + Info -->
+            <!-- Mã QR và thông tin thanh toán -->
             <div class="qh-vqr-body">
                 <div class="qh-vqr-qr-wrap">
                     <div class="qh-vqr-qr-img">
@@ -69,7 +69,7 @@
                 </div>
             </div>
 
-            <!-- Footer -->
+            <!-- Chân trang -->
             <div class="qh-vqr-footer">
                 <div class="qh-vqr-notice">
                     <i class="ri-error-warning-line"></i>
@@ -85,9 +85,9 @@
             </div>
 
         </div>
-        <!-- /vqrPending -->
+        <!-- Kết thúc trạng thái đang chờ -->
 
-        <!-- ==================== EXPIRED STATE ==================== -->
+        <!-- ==================== TRẠNG THÁI HẾT HẠN ==================== -->
         <div class="qh-vqr-expired" id="vqrExpired">
             <div class="qh-vqr-expired-hero">
                 <div class="qh-vqr-expired-icon">
@@ -105,16 +105,16 @@
                 </a>
             </div>
         </div>
-        <!-- /vqrExpired -->
+        <!-- Kết thúc trạng thái hết hạn -->
 
     </div>
-    <!-- /vqrCard -->
+    <!-- Kết thúc thẻ QR -->
 
 </div>
 {% endblock %}
 
 {% block extra_js %}
-<!-- VietQR Payment JavaScript -->
+<!-- JavaScript thanh toán VietQR -->
 <script>
 (function() {
     // ==================== CONFIGURATION ====================

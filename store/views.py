@@ -50,7 +50,7 @@ def send_otp_view(request):
         email = request.POST.get('email')
         
         if not email:
-            return JsonResponse({'status': 'error', 'message': 'Email missing'})
+            return JsonResponse({'status': 'error', 'message': 'Thiếu email'})
         
         # Kiểm tra email đã tồn tại chưa
         from store.models import CustomUser
@@ -69,16 +69,27 @@ def send_otp_view(request):
         # Gửi email qua SendGrid
         api_key = os.getenv('SENDGRID_API_KEY', '')
         from_email = os.getenv('SENDGRID_FROM_EMAIL', 'noreply@qhun22.com')
-        
+
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
+            <div style="background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h2 style="color: #333; text-align: center;">Xác minh tài khoản QHUN22</h2>
+                <p style="color: #666;">Mã OTP của bạn là:</p>
+                <div style="background: #f0f0f0; padding: 15px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #333;">{otp}</div>
+                <p style="color: #999; font-size: 12px;">Mã có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này cho ai.</p>
+            </div>
+        </div>
+        """
+
         data = {
             "personalizations": [{
                 "to": [{"email": email}],
-                "subject": "OTP Verification - QHUN22"
+                "subject": "Xác minh OTP - QHUN22"
             }],
             "from": {"email": from_email},
             "content": [{
                 "type": "text/html",
-                "value": f"<h1>Mã OTP của bạn: {otp}</h1><p>Mã có hiệu lực trong 5 phút.</p>"
+                "value": html_body
             }]
         }
         
@@ -96,12 +107,12 @@ def send_otp_view(request):
             if response.status_code in [200, 201, 202]:
                 return JsonResponse({'status': 'success', 'message': 'OTP_SENT'})
             else:
-                return JsonResponse({'status': 'error', 'message': f'Failed to send email: {response.status_code}'})
+                return JsonResponse({'status': 'error', 'message': f'Gửi email thất bại: {response.status_code}'})
                 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
     
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+            return JsonResponse({'status': 'error', 'message': 'Yêu cầu không hợp lệ'})
 
 
 def product_detail_view(request, product_id):
@@ -268,7 +279,7 @@ def submit_review(request):
     from store.models import Product, ProductReview, OrderItem
 
     if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Method not allowed'}, status=405)
+        return JsonResponse({'success': False, 'message': 'Phương thức không được phép'}, status=405)
     if not request.user.is_authenticated:
         return JsonResponse({'success': False, 'message': 'Vui lòng đăng nhập'}, status=401)
 
@@ -596,12 +607,47 @@ def order_tracking(request):
     """
     Tra cứu đơn hàng - hiển thị tất cả đơn hàng của user đang đăng nhập
     (bao gồm cả đơn đã tất toán)
+    Tự động hủy đơn "Chờ thanh toán" khi quá 15 phút
     """
-    from store.models import Order
+    from store.models import Order, PendingQRPayment
     from django.core.paginator import Paginator
+    from django.utils import timezone
+    from datetime import timedelta
     
     context = {}
     if request.user.is_authenticated:
+        # Tự động hủy đơn "Chờ thanh toán" quá 15 phút (VietQR)
+        fifteen_minutes_ago = timezone.now() - timedelta(minutes=15)
+        
+        # Lấy các đơn VietQR quá 15 phút chưa được duyệt
+        expired_orders = Order.objects.filter(
+            user=request.user,
+            status='awaiting_payment',
+            payment_method='vietqr',
+            created_at__lt=fifteen_minutes_ago
+        )
+        
+        if expired_orders.exists():
+            # Lấy thông tin để cập nhật PendingQRPayment
+            # Dựa vào: cùng user, cùng amount, gần thời gian tạo
+            cutoff_time = timezone.now() - timedelta(minutes=15)
+            
+            for order in expired_orders:
+                # Tìm PendingQRPayment tương ứng (cùng user, gần thời điểm tạo đơn)
+                pending_qr = PendingQRPayment.objects.filter(
+                    user=request.user,
+                    amount=order.total_amount,
+                    status='pending',
+                    created_at__gte=cutoff_time
+                ).first()
+                
+                if pending_qr:
+                    pending_qr.status = 'cancelled'
+                    pending_qr.save()
+            
+            # Hủy các đơn hàng
+            expired_orders.update(status='cancelled')
+        
         # Lấy tất cả đơn hàng (bao gồm cả đã tất toán)
         orders = Order.objects.filter(
             user=request.user
@@ -671,7 +717,7 @@ def refund_pending(request):
     from store.models import Order
     
     if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
+        return JsonResponse({'error': 'Không được phép'}, status=401)
     
     orders = Order.objects.filter(
         user=request.user,
@@ -714,7 +760,7 @@ def refund_history(request):
     from store.models import Order
     
     if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
+        return JsonResponse({'error': 'Không được phép'}, status=401)
     
     orders = Order.objects.filter(
         user=request.user,
@@ -749,7 +795,7 @@ def refund_detail(request, order_code):
     from store.models import Order
     
     if not request.user.is_authenticated:
-        return JsonResponse({'error': 'Unauthorized'}, status=401)
+        return JsonResponse({'error': 'Không được phép'}, status=401)
     
     try:
         order = Order.objects.get(order_code=order_code, user=request.user)
@@ -1550,7 +1596,7 @@ def address_add(request):
     Thêm địa chỉ mới vào sổ địa chỉ
     """
     if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
+        return JsonResponse({'success': False, 'message': 'Yêu cầu không hợp lệ'}, status=405)
     
     from store.models import Address
     
@@ -1612,7 +1658,7 @@ def address_delete(request):
     Xóa địa chỉ
     """
     if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
+        return JsonResponse({'success': False, 'message': 'Yêu cầu không hợp lệ'}, status=405)
     
     from store.models import Address
     
@@ -1640,7 +1686,7 @@ def address_set_default(request):
     Đặt địa chỉ mặc định
     """
     if request.method != 'POST':
-        return JsonResponse({'success': False, 'message': 'Invalid request'}, status=405)
+        return JsonResponse({'success': False, 'message': 'Yêu cầu không hợp lệ'}, status=405)
     
     from store.models import Address
     
@@ -1739,7 +1785,7 @@ def send_otp_forgot_password_view(request):
         email = request.POST.get('email')
         
         if not email:
-            return JsonResponse({'status': 'error', 'message': 'Email missing'})
+            return JsonResponse({'status': 'error', 'message': 'Thiếu email'})
         
         # Kiểm tra email có tồn tại trong hệ thống không
         from store.models import CustomUser
@@ -1758,7 +1804,18 @@ def send_otp_forgot_password_view(request):
         # Gửi email qua SendGrid
         api_key = os.getenv('SENDGRID_API_KEY', '')
         from_email = os.getenv('SENDGRID_FROM_EMAIL', 'noreply@qhun22.com')
-        
+
+        html_body = f"""
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
+            <div style="background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+                <h2 style="color: #d9534f; text-align: center;">Đặt lại mật khẩu QHUN22</h2>
+                <p style="color: #666;">Mã OTP của bạn để đặt lại mật khẩu là:</p>
+                <div style="background: #f0f0f0; padding: 15px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #333;">{otp}</div>
+                <p style="color: #999; font-size: 12px;">Mã có hiệu lực trong 5 phút. Nếu bạn không yêu cầu mã này, vui lòng bỏ qua.</p>
+            </div>
+        </div>
+        """
+
         data = {
             "personalizations": [{
                 "to": [{"email": email}],
@@ -1767,7 +1824,7 @@ def send_otp_forgot_password_view(request):
             "from": {"email": from_email},
             "content": [{
                 "type": "text/html",
-                "value": f"<h1>Mã OTP quên mật khẩu của bạn: {otp}</h1><p>Mã có hiệu lực trong 5 phút.</p><p>Nếu bạn không yêu cầu mã này, vui lòng bỏ qua.</p>"
+                "value": html_body
             }]
         }
         
@@ -1785,12 +1842,12 @@ def send_otp_forgot_password_view(request):
             if response.status_code in [200, 201, 202]:
                 return JsonResponse({'status': 'success', 'message': 'OTP_SENT'})
             else:
-                return JsonResponse({'status': 'error', 'message': f'Failed to send email: {response.status_code}'})
+                return JsonResponse({'status': 'error', 'message': f'Gửi email thất bại: {response.status_code}'})
                 
         except Exception as e:
             return JsonResponse({'status': 'error', 'message': str(e)})
     
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+            return JsonResponse({'status': 'error', 'message': 'Yêu cầu không hợp lệ'})
 
 
 def verify_otp_forgot_password_view(request):
@@ -1802,7 +1859,7 @@ def verify_otp_forgot_password_view(request):
         otp_input = request.POST.get('otp')
         
         if not email or not otp_input:
-            return JsonResponse({'status': 'error', 'message': 'Missing parameters'})
+            return JsonResponse({'status': 'error', 'message': 'Thiếu tham số'})
         
         # Kiểm tra OTP
         session_otp = request.session.get('fp_otp')
@@ -1818,8 +1875,6 @@ def verify_otp_forgot_password_view(request):
         request.session['fp_verified'] = True
         
         return JsonResponse({'status': 'success', 'message': 'OTP verified'})
-    
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
 
 def reset_password_view(request):
@@ -1831,7 +1886,7 @@ def reset_password_view(request):
         new_password = request.POST.get('new_password')
         
         if not email or not new_password:
-            return JsonResponse({'status': 'error', 'message': 'Missing parameters'})
+            return JsonResponse({'status': 'error', 'message': 'Thiếu tham số'})
         
         # Kiểm tra đã xác minh OTP chưa
         if not request.session.get('fp_verified') or request.session.get('fp_otp_email') != email:
@@ -1851,11 +1906,11 @@ def reset_password_view(request):
             request.session.pop('fp_otp_expire', None)
             request.session.pop('fp_verified', None)
             
-            return JsonResponse({'status': 'success', 'message': 'Password reset successful'})
+            return JsonResponse({'status': 'success', 'message': 'Đặt lại mật khẩu thành công'})
         except CustomUser.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'User not found'})
+            return JsonResponse({'status': 'error', 'message': 'Không tìm thấy người dùng'})
     
-    return JsonResponse({'status': 'error', 'message': 'Invalid request'})
+            return JsonResponse({'status': 'error', 'message': 'Yêu cầu không hợp lệ'})
 
 
 @login_required
@@ -5274,12 +5329,16 @@ def send_verification_code(request):
         import logging
         logging.getLogger(__name__).warning('SENDGRID_API_KEY not configured')
 
-    html_body = (
-        f"<h2>Xác thực Student/Teacher - QHUN22</h2>"
-        f"<p>Mã xác thực của bạn là:</p>"
-        f"<h1 style='letter-spacing:8px;color:#A9CCF0;'>{otp}</h1>"
-        f"<p>Mã có hiệu lực trong <strong>5 phút</strong>. Không chia sẻ mã này cho ai.</p>"
-    )
+    html_body = f"""
+    <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f5f5;">
+        <div style="background: #fff; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+            <h2 style="color: #5bc0de; text-align: center;">Xác thực Student/Teacher - QHUN22</h2>
+            <p style="color: #666;">Mã xác thực của bạn là:</p>
+            <div style="background: #e8f4fd; padding: 15px; text-align: center; font-size: 32px; font-weight: bold; letter-spacing: 8px; color: #A9CCF0;">{otp}</div>
+            <p style="color: #999; font-size: 12px;">Mã có hiệu lực trong 5 phút. Vui lòng không chia sẻ mã này cho ai.</p>
+        </div>
+    </div>
+    """
 
     payload = {
         "personalizations": [{"to": [{"email": email}], "subject": "Mã xác thực Student/Teacher - QHUN22"}],

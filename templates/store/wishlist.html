@@ -14,12 +14,12 @@
     <h1 class="qh-page-title">YÊU THÍCH CỦA BẠN</h1>
 
     {% if products %}
-    <!-- Product Grid: 5 products per row -->
+    <!-- Lưới sản phẩm: 5 sản phẩm mỗi hàng -->
     <div class="qh-product-grid">
         {% for product in products %}
         <a href="{% url 'store:product_detail' product.id %}" class="qh-product-card {% if product.stock == 0 %}out-of-stock{% endif %}">
 
-            <!-- Product Image -->
+            <!-- Ảnh sản phẩm -->
             <div class="qh-product-image">
                 {% if product.image %}
                 <img src="{{ product.image.url }}" alt="{{ product.name }}">
@@ -31,34 +31,34 @@
                 </div>
                 {% endif %}
 
-                <!-- Discount Badge -->
+                <!-- Huy hiệu giảm giá -->
                 {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
                 <div class="discount-badge">
                     -{{ product.detail.summary_discount_percent }}%
                 </div>
                 {% endif %}
 
-                <!-- Wishlist Heart Button -->
+                <!-- Nút tim danh sách yêu thích -->
                 <button class="wishlist-btn liked" data-product-id="{{ product.id }}" onclick="toggleWishlist(event, this, {{ product.id }}); return false;">
                     <svg viewBox="0 0 24 24" stroke-width="2">
                         <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                     </svg>
                 </button>
 
-                <!-- Out of Stock Overlay -->
+                <!-- Lớp phủ hết hàng -->
                 {% if product.stock == 0 %}
                 <div class="out-of-stock-overlay"></div>
                 {% endif %}
             </div>
 
-            <!-- Product Info -->
+            <!-- Thông tin sản phẩm -->
             <div class="qh-product-info">
-                <!-- Product Name -->
+                <!-- Tên sản phẩm -->
                 <h3 class="qh-product-name">
                     {{ product.name }}
                 </h3>
 
-                <!-- Price -->
+                <!-- Giá -->
                 <div class="qh-product-price">
                     {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
                     <span class="original-price">
@@ -74,7 +74,7 @@
                     {% endif %}
                 </div>
 
-                <!-- Status Row -->
+                <!-- Hàng hiển thị trạng thái sản phẩm -->
                 <div class="qh-product-status">
                     {% if product.stock > 0 %}
                     <span class="status-tag in-stock">Còn hàng</span>
@@ -84,7 +84,7 @@
                     {% endif %}
                 </div>
 
-                <!-- Action Buttons -->
+                <!-- Các nút hành động -->
                 <div style="display: flex; gap: 6px;">
                     <button class="qh-btn qh-btn-outline qh-compare-btn"
                             data-product-id="{{ product.id }}"
@@ -100,7 +100,7 @@
         {% endfor %}
     </div>
 
-    <!-- Pagination -->
+    <!-- Phân trang -->
     {% if products.has_other_pages %}
     <div class="qh-pagination">
         {% if products.has_previous %}
@@ -130,7 +130,7 @@
     {% endif %}
 
     {% else %}
-    <!-- Empty State -->
+    <!-- Trạng thái danh sách rỗng -->
     <div class="qh-card">
         <svg class="qh-empty-heart" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
@@ -147,7 +147,7 @@
 {% endblock %}
 
 {% block extra_js %}
-<!-- Wishlist Toggle JavaScript -->
+<!-- JavaScript điều khiển Wishlist -->
 <script>
 function updateWishlistBadge(count) {
     var badge = document.getElementById('qh-wishlist-count');

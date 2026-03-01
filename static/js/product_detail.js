@@ -1,5 +1,5 @@
 /**
- * Product Detail Management JS
+ * JavaScript quản lý trang chi tiết sản phẩm
  */
 
 let currentProductId = null;
@@ -17,7 +17,7 @@ function toggleVariantColorOption(sku, label, colorName) {
         variantSimpleSelectedColors.push({ sku: sku, label: label, color_name: colorName || '' });
     }
     updateVariantSimpleSelectedLabels();
-    // Update selected state on the box
+    // Cập nhật trạng thái được chọn trên ô
     const container = document.getElementById('variantSimpleColorOptions');
     if (container) {
         const box = container.querySelector('[data-sku="' + sku.replace(/"/g, '&quot;') + '"]');
@@ -39,21 +39,21 @@ function updateVariantSimpleSelectedLabels() {
     container.innerHTML = html;
 }
 
-// ==================== Open/Close Modal ====================
+// ==================== Mở/Đóng Modal ====================
 function openProductDetailModal(productId, productName) {
     currentProductId = productId;
 
-    // Show modal
+    // Hiển thị modal
     const modal = document.getElementById('productDetailModal');
     modal.style.display = 'flex';
 
-    // Set product name
+    // Đặt tên sản phẩm
     document.getElementById('detailProductName').textContent = productName;
 
-    // Load product detail data
+    // Tải dữ liệu chi tiết sản phẩm
     loadProductDetail(productId);
 
-    // Reset simple variant form
+    // Đặt lại form biến thể đơn giản
     const storageInput = document.getElementById('variantSimpleStorage');
     const basePriceInput = document.getElementById('variantSimpleBasePrice');
     const discountInput = document.getElementById('variantSimpleDiscountPercent');
@@ -67,7 +67,7 @@ function openProductDetailModal(productId, productName) {
 
     // Danh sách ô "Chọn màu" được fill từ loadProductDetail (skus_with_color)
 
-    // Reset spec upload form
+    // Đặt lại form tải thông số
     const specFileInput = document.getElementById('specJsonFileInput');
     const specFileName = document.getElementById('specFileName');
     const specStatusLabel = document.getElementById('specStatusLabel');
@@ -76,7 +76,7 @@ function openProductDetailModal(productId, productName) {
     if (specStatusLabel) { specStatusLabel.textContent = 'Bạn chưa tải file JSON nào.'; specStatusLabel.style.color = '#9ca3af'; }
     currentHasSpec = false;
 
-    // Reset YouTube ID input
+    // Đặt lại ô nhập YouTube ID
     const youtubeInput = document.getElementById('youtubeIdInput');
     const youtubeStatusLabel = document.getElementById('youtubeStatusLabel');
     if (youtubeInput) youtubeInput.value = '';
@@ -111,7 +111,7 @@ function toggleVariantsList() {
     if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
 }
 
-// Close modal when clicking outside
+// Đóng modal khi nhấp bên ngoài
 document.addEventListener('click', function (e) {
     const modal = document.getElementById('productDetailModal');
     if (modal && modal.style.display === 'flex' && e.target === modal) {
@@ -119,7 +119,7 @@ document.addEventListener('click', function (e) {
     }
 });
 
-// ==================== Load Product Detail ====================
+// ==================== Tải chi tiết sản phẩm ====================
 function loadProductDetail(productId) {
     fetch(`/products/detail/get/?product_id=${productId}`, {
         headers: {
@@ -151,7 +151,7 @@ function loadProductDetail(productId) {
         });
 }
 
-// ==================== Simple Variant by Storage + Color (SKU) ====================
+// ==================== Biến thể đơn giản theo Dung lượng + Màu (SKU) ====================
 function loadProductSkusForDetail(productId) {
     const container = document.getElementById('variantSimpleColorOptions');
     if (!container) return;
@@ -320,7 +320,7 @@ function addVariantSimple() {
                     alert('Đã thêm dung lượng & nhiều màu (SKU).');
                 }
             }
-            // Clear fields for next entry
+            // Xóa các trường để nhập tiếp
             storageEl.value = '';
             baseEl.value = '';
             if (discountInput) discountInput.value = 0;
@@ -333,7 +333,7 @@ function addVariantSimple() {
             }
             updateVariantSimpleSelectedLabels();
 
-            // Reload variants list so admin thấy ngay dòng mới
+            // Tải lại danh sách biến thể để admin thấy ngay dòng mới
             loadProductDetail(currentProductId);
         })
         .catch(function (error) {
@@ -393,7 +393,7 @@ function saveAllVariantRows() {
     return Promise.all(promises);
 }
 
-// ==================== Save Product Detail ====================
+// ==================== Lưu chi tiết sản phẩm ====================
 function saveProductDetail() {
     const stockEl = document.getElementById('detailStock');
     const stock = stockEl ? stockEl.value : 0;
@@ -456,7 +456,7 @@ function variantDisplayLabel(v) {
     return (sku ? sku + ' - ' + colorOnly : raw);
 }
 
-// ==================== Variants Management (gộp theo dung lượng: 1 block = 1 dung lượng + nhiều màu) ====================
+// ==================== Quản lý biến thể (gộp theo dung lượng: 1 block = 1 dung lượng + nhiều màu) ====================
 function renderVariants(variants) {
     const container = document.getElementById('variantsList');
     if (!container) return;
@@ -709,13 +709,13 @@ function deleteVariant(id, name) {
     }
 }
 
-// ==================== Image Management ====================
+// ==================== Quản lý ảnh ====================
 function renderDetailImages(images, variantImages, productName) {
     const container = document.getElementById('detailImagesList');
 
     let html = '';
 
-    // Cover images
+    // Ảnh đại diện
     const coverImages = images.filter(img => img.image_type === 'cover');
     if (coverImages.length > 0) {
         html += '<div style="margin-bottom: 20px;"><h4 style="margin-bottom: 10px;">Ảnh đại diện</h4><div style="display: flex; flex-wrap: wrap; gap: 10px;">';
@@ -729,7 +729,7 @@ function renderDetailImages(images, variantImages, productName) {
         html += '</div></div>';
     }
 
-    // Variant images grouped by color
+    // Ảnh biến thể được nhóm theo màu
     const colors = [...new Set(variantImages.map(vi => vi.color_name))];
     colors.forEach(color => {
         const colorImages = variantImages.filter(vi => vi.color_name === color);
@@ -914,7 +914,7 @@ function uploadSpecification() {
                 else alert(data.message || 'Thành công!');
                 // Hiển thị preview
                 loadSpecPreview(data.spec_data);
-                // Reset file input
+                // Đặt lại input file
                 fileInput.value = '';
                 const fileNameEl = document.getElementById('specFileName');
                 if (fileNameEl) fileNameEl.textContent = '';
@@ -1001,18 +1001,18 @@ function deleteSpecification() {
     }
 }
 
-// ==================== Product Images Functions ====================
+// ==================== Quản lý Ảnh sản phẩm ====================
 function openAddProductImageModal() {
-    // Placeholder - will be implemented
+    // Chức năng đang được phát triển
     alert('Tính năng đang được phát triển!');
 }
 
 function loadProductImages(productId) {
-    // Placeholder - will be implemented
+    // Chức năng đang được phát triển
     console.log('Loading images for product:', productId);
 }
 
-// ==================== YouTube ID Management ====================
+// ==================== Quản lý YouTube ID ====================
 function saveYoutubeId() {
     const input = document.getElementById('youtubeIdInput');
     const youtubeId = input ? input.value.trim() : '';

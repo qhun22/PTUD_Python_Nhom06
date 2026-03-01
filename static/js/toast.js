@@ -38,7 +38,7 @@ const QHToast = {
         const toast = document.createElement('div');
         toast.className = `qh-toast qh-toast-${type}`;
         
-        // Add icon based on type
+        // Thêm icon dựa trên loại thông báo
         const icon = type === 'success' 
             ? '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>'
             : '<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>';
@@ -54,7 +54,7 @@ const QHToast = {
         // Force reflow để animation hoạt động
         toast.offsetHeight;
 
-        // Add show class for smooth entrance
+        // Thêm class show để tạo hiệu ứng hiển thị mượt mà
         toast.classList.add('qh-toast-show');
 
         // Tự động ẩn sau 3 giây

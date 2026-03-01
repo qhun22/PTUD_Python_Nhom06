@@ -1,4 +1,4 @@
-/* ==================== CSRF Token ==================== */
+/* ==================== CSRF Token (mã xác thực) ==================== */
 function getCsrfToken() {
     var name = 'csrftoken';
     var cookieValue = null;

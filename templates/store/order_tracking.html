@@ -12,7 +12,7 @@
 
     {% if orders %}
 
-    <!-- Orders Table -->
+    <!-- Bảng đơn hàng -->
     <div class="qh-ot-table-wrap">
         <table class="qh-ot-table">
             <thead>
@@ -95,7 +95,7 @@
         </table>
     </div>
 
-    <!-- Pagination -->
+    <!-- Phân trang -->
     {% if orders.has_other_pages %}
     <div class="qh-pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 40px; flex-wrap: wrap;">
         {% if orders.has_previous %}
@@ -134,7 +134,7 @@
         <button type="button" class="qh-ot-filter-btn" data-filter="cancelled" onclick="filterOtOrders('cancelled')">Hủy đơn</button>
     </div> {% endcomment %}
 
-    <!-- Detail Modal -->
+    <!-- Modal chi tiết -->
     <div class="qh-ot-modal-overlay" id="otDetailModal" onclick="closeOtDetailOnClickOutside(event)">
         <div class="qh-ot-modal" onclick="event.stopPropagation()">
             <div class="qh-ot-modal-header">
@@ -148,7 +148,7 @@
         </div>
     </div>
 
-    <!-- Confirm Cancel Modal -->
+    <!-- Modal xác nhận hủy -->
     <div class="qh-ot-confirm-overlay" id="otConfirmModal">
         <div class="qh-ot-confirm-modal">
             <svg class="qh-ot-confirm-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -163,7 +163,7 @@
         </div>
     </div>
 
-    <!-- Refund Info Modal for VNPay/VietQR -->
+    <!-- Modal thông tin hoàn tiền cho VNPay/VietQR -->
     <div class="qh-ot-confirm-overlay" id="otRefundModal">
         <div class="qh-ot-confirm-modal" style="width: 420px;">
             <svg class="qh-ot-confirm-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #3b82f6;">
@@ -185,7 +185,7 @@
     </div>
 
     {% else %}
-    <!-- Empty State -->
+    <!-- Trạng thái danh sách rỗng -->
     <div class="qh-ot-empty">
         <svg class="qh-ot-empty-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/>
@@ -199,7 +199,7 @@
     {% endif %}
 </div>
 
-<!-- Embed order data as JSON for detail modal -->
+<!-- Nhúng dữ liệu đơn hàng dạng JSON cho modal chi tiết -->
 <script>
 var OT_ORDERS = {};
 {% for order in orders %}

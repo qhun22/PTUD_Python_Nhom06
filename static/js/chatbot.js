@@ -1,5 +1,5 @@
 /**
- * QHUN22 AI Chatbot Widget
+ * Widget Chatbot AI của QHUN22
  */
 const QHChat = (() => {
     const API_URL = '/api/chatbot/';

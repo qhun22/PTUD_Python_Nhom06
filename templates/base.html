@@ -25,7 +25,7 @@
 
     {% block extra_css %}{% endblock %}
 
-    <!-- Load JS early -->
+    <!-- Tải JS sớm -->
     <script src="{% static 'js/toast.js' %}"></script>
     <script src="{% static 'js/confirm.js' %}"></script>
     <script src="{% static 'js/banner.js' %}"></script>
@@ -152,17 +152,17 @@
         </div>
     </header>
 
-    <!-- Main Content -->
+    <!-- Nội dung chính -->
     <main class="qh-main">
         {% block content %}{% endblock %}
     </main>
 
-    <!-- ==================== FOOTER ==================== -->
+    <!-- ==================== CHÂN TRANG ==================== -->
     <footer class="qh-footer">
         <div class="qh-footer-main">
             <div class="qh-footer-container">
                 <div class="qh-footer-grid">
-                    <!-- Column 1: Brand -->
+                    <!-- Cột 1: Thương hiệu -->
                     <div class="qh-footer-col qh-footer-brand">
                         <a href="{% url 'store:home' %}" class="qh-footer-logo">
                             <img src="{% static 'logos/sean.gif' %}" alt="QHUN22 Mobile" class="qh-footer-logo-img">
@@ -187,7 +187,7 @@
                         </div>
                     </div>
 
-                    <!-- Column 2: Quick Links -->
+                    <!-- Cột 2: Liên kết nhanh -->
                     <div class="qh-footer-col">
                         <h3 class="qh-footer-col-title">Liên kết nhanh</h3>
                         <nav class="qh-footer-nav">
@@ -198,7 +198,7 @@
                         </nav>
                     </div>
 
-                    <!-- Column 3: Policies -->
+                    <!-- Cột 3: Chính sách -->
                     <div class="qh-footer-col">
                         <h3 class="qh-footer-col-title">Chính sách</h3>
                         <nav class="qh-footer-nav">
@@ -210,7 +210,7 @@
                         </nav>
                     </div>
 
-                    <!-- Column 4: Contact -->
+                    <!-- Cột 4: Liên hệ -->
                     <div class="qh-footer-col">
                         <h3 class="qh-footer-col-title">Liên hệ</h3>
                         <div class="qh-footer-contact">
@@ -239,16 +239,16 @@
             </div>
         </div>
 
-        <!-- Bottom Bar -->
+        <!-- Thanh đáy -->
         <div class="qh-footer-bottom">
             <div class="qh-footer-container">
                 <p>&copy; 2026 QHUN22 Mobile. All rights reserved.</p>
             </div>
         </div>
     </footer>
-    <!-- ==================== END FOOTER ==================== -->
+    <!-- ==================== KẾT THÚC CHÂN TRANG ==================== -->
 
-    <!-- Compare Bar -->
+    <!-- Thanh so sánh -->
     <div id="qh-compare-bar" class="qh-compare-bar">
         <div class="qh-compare-bar-inner">
             <div id="qh-compare-items" class="qh-compare-bar-items"></div>
@@ -266,16 +266,16 @@
         </div>
     </div>
 
-    <!-- Compare FAB -->
+    <!-- Nút nổi so sánh -->
     <button id="qh-compare-fab" class="qh-compare-fab" onclick="QHCompare.toggleBar()">
         <i class="ri-arrow-left-right-line" style="font-size:22px;"></i>
         <span id="qh-compare-fab-count" class="qh-compare-fab-badge">0</span>
     </button>
 
-    <!-- JavaScript Files -->
+    <!-- Các file JavaScript -->
     <script src="{% static 'js/compare.js' %}"></script>
 
-    <!-- AI Chatbot Widget -->
+    <!-- Widget Chatbot AI -->
     <div id="qh-chat-window" class="qh-chat-window">
         <div class="qh-chat-header">
             <div class="qh-chat-avatar"><i class="ri-robot-2-line"></i></div>

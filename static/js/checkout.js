@@ -4,22 +4,22 @@
 
 document.addEventListener('DOMContentLoaded', function () {
 
-    /* ==================== Config ==================== */
+    /* ==================== Cấu hình ==================== */
     var totalAmount = window.QH_CHECKOUT_TOTAL || 0;
-    var discountAmount = 0; // Track discount amount
+    var discountAmount = 0; // Theo dõi số tiền giảm giá
 
-    /* ==================== Elements ==================== */
+    /* ==================== Các phần tử DOM ==================== */
     var payOpts = document.querySelectorAll('.qh-checkout-pay-opt:not(.disabled)');
     var payText = document.getElementById('checkoutPayText');
     var summaryPayMethod = document.getElementById('summaryPayMethod');
     var summaryTotalEl = document.querySelector('.qh-checkout-summary-row.total .qh-checkout-summary-val');
 
-    /* ==================== Helpers ==================== */
+    /* ==================== Hàm hỗ trợ ==================== */
     function formatPrice(num) {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + 'đ';
     }
 
-    /* ==================== Payment Selection ==================== */
+    /* ==================== Chọn phương thức thanh toán ==================== */
     function updatePaySelection(opt) {
         var label = opt.getAttribute('data-pay-label');
         if (payText && label) {
@@ -59,7 +59,7 @@ document.addEventListener('DOMContentLoaded', function () {
         updatePaySelection(defaultSelected);
     }
 
-    /* ==================== VNPay Payment ==================== */
+    /* ==================== Thanh toán VNPay ==================== */
     function initiateVNPayPayment() {
         var submitBtn = document.getElementById('checkoutSubmitBtn');
         if (submitBtn) {
@@ -105,7 +105,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    /* ==================== VietQR → Redirect to Separate Page ==================== */
+    /* ==================== VietQR → Chuyển hướng đến trang riêng ==================== */
     function initiateVietQRPayment() {
         var submitBtn = document.getElementById('checkoutSubmitBtn');
         if (submitBtn) {
@@ -149,7 +149,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
     }
 
-    /* ==================== Place Order ==================== */
+    /* ==================== Đặt hàng ==================== */
     var submitBtn = document.getElementById('checkoutSubmitBtn');
     if (submitBtn) {
         submitBtn.addEventListener('click', function () {
@@ -261,7 +261,7 @@ function applyCoupon() {
 
                 window.QH_APPLIED_COUPON = data.code;
                 window.QH_DISCOUNT_AMOUNT = parseInt(data.discount);
-                window.QH_CHECKOUT_TOTAL = window.QH_CHECKOUT_TOTAL - window.QH_DISCOUNT_AMOUNT; // Update total with discount
+                window.QH_CHECKOUT_TOTAL = window.QH_CHECKOUT_TOTAL - window.QH_DISCOUNT_AMOUNT; // Cập nhật tổng tiền sau khi áp dụng giảm giá
 
                 var voucherEl = document.getElementById('summaryVoucher');
                 var discountEl = document.getElementById('summaryDiscount');

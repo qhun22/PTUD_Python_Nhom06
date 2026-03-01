@@ -1,4 +1,4 @@
-/* ==================== Hero Slider JavaScript ==================== */
+/* ==================== JavaScript điều khiển Hero Slider ==================== */
 (function() {
     const slider = document.getElementById('qhHeroSlider');
     if (!slider) return;

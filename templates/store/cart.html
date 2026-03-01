@@ -14,9 +14,9 @@
 
     {% if cart_items %}
     <div class="qh-cart-container">
-        <!-- Left: Cart Items -->
+        <!-- Trái: Danh sách sản phẩm trong giỏ hàng -->
         <div class="qh-cart-list">
-            <!-- Select All Header -->
+            <!-- Tiêu đề chọn tất cả -->
             <div class="qh-cart-select-all">
                 <label>
                     <input type="checkbox" class="qh-cart-checkbox" id="selectAll" onchange="toggleSelectAll(this)">
@@ -29,15 +29,15 @@
                 </button>
             </div>
 
-            <!-- Cart Item Cards -->
+            <!-- Các thẻ sản phẩm trong giỏ hàng -->
             {% for item in cart_items %}
             <div class="qh-cart-item" data-item-id="{{ item.id }}">
-                <!-- Checkbox -->
+                <!-- Ô chọn -->
                 <div class="qh-cart-item-check">
                     <input type="checkbox" class="qh-cart-checkbox cart-item-check" data-item-id="{{ item.id }}" onchange="updateSelectedCount()">
                 </div>
 
-                <!-- Image -->
+                <!-- Ảnh -->
                 <div class="qh-cart-item-img">
                     {% if item.color_thumbnail %}
                     <a href="{% url 'store:product_detail' item.product.id %}">
@@ -56,13 +56,13 @@
                     {% endif %}
                 </div>
 
-                <!-- Details -->
+                <!-- Chi tiết -->
                 <div class="qh-cart-item-details">
                     <a href="{% url 'store:product_detail' item.product.id %}" class="qh-cart-item-name">
                         {{ item.product.name }}
                     </a>
 
-                    <!-- Color Dropdown -->
+                    <!-- Dropdown màu sắc -->
                     {% if item.color_name %}
                     <div class="qh-cart-color-dropdown" data-item-id="{{ item.id }}">
                         <div class="qh-cart-color-selected" onclick="toggleColorDropdown(this)">
@@ -71,7 +71,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </div>
-                        <!-- Color Options (inside the dropdown so toggle controls both) -->
+                        <!-- Tùy chọn màu sắc (bên trong dropdown) -->
                         {% if item.color_options %}
                         <div class="qh-cart-color-options" id="colorOptions_{{ item.id }}">
                             {% for opt in item.color_options %}
@@ -91,7 +91,7 @@
                     </div>
                     {% endif %}
 
-                    <!-- Storage Dropdown -->
+                    <!-- Dropdown dung lượng -->
                     {% if item.storage %}
                     <div class="qh-cart-storage-dropdown" data-item-id="{{ item.id }}">
                         <div class="qh-cart-storage-selected" onclick="toggleStorageDropdown(this)">
@@ -100,7 +100,7 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
                         </div>
-                        <!-- Storage Options (inside the dropdown) -->
+                        <!-- Tùy chọn dung lượng (bên trong dropdown) -->
                         {% if item.storage_options and item.storage_options|length > 1 %}
                         <div class="qh-cart-storage-options" id="storageOptions_{{ item.id }}">
                             {% for opt in item.storage_options %}
@@ -117,7 +117,7 @@
                     {% endif %}
                 </div>
 
-                <!-- Right: Price + Quantity + Delete -->
+                <!-- Phải: Giá + Số lượng + Xóa -->
                 <div class="qh-cart-item-right">
                     <div class="qh-cart-item-price">
                         <div class="qh-cart-item-current-price" id="itemPrice_{{ item.id }}">
@@ -149,7 +149,7 @@
             {% endfor %}
         </div>
 
-        <!-- Right: Cart Summary -->
+        <!-- Phải: Tóm tắt giỏ hàng -->
         <div class="qh-cart-summary">
             <h2 class="qh-cart-summary-title">Thông tin đang chọn</h2>
 
@@ -170,7 +170,7 @@
     </div>
 
     {% else %}
-    <!-- Empty State -->
+    <!-- Trạng thái danh sách rỗng -->
     <div class="qh-card" style="padding: 60px; text-align: center;">
         <svg class="qh-empty-cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>

@@ -1,4 +1,4 @@
-// Banner Slider JavaScript - Production Infinite Loop
+// JavaScript Banner Slider - Vòng lặp vô hạn (Production)
 (function() {
     const requiredBannerIds = [23412, 74346, 87412, 76234];
     let bannerTimer = null;
@@ -10,7 +10,7 @@
     let slidesPerView = 2;
     let transitionDuration = 500;
 
-    // Determine slides per view based on screen width
+    // Xác định số slide hiển thị dựa trên độ rộng màn hình
     function getSlidesPerView() {
         return window.innerWidth <= 768 ? 1 : 2;
     }
@@ -31,14 +31,14 @@
             return;
         }
 
-        // Show the section
+        // Hiển thị phần banner
         const section = document.querySelector('.qh-banner-slider');
         if (section) section.style.display = 'block';
 
-        // Auto slide every 3 seconds
+        // Tự động chuyển slide mỗi 3 giây
         startAutoSlide();
 
-        // Navigation buttons
+        // Nút điều hướng
         const prevBtn = document.getElementById('qhBannerPrev');
         const nextBtn = document.getElementById('qhBannerNext');
 
@@ -50,14 +50,14 @@
             nextBtn.addEventListener('click', nextSlide);
         }
 
-        // Pause on hover
+        // Tạm dừng khi di chuột vào
         const wrap = track.closest('.qh-banner-slider-wrap');
         if (wrap) {
             wrap.addEventListener('mouseenter', stopAutoSlide);
             wrap.addEventListener('mouseleave', startAutoSlide);
         }
 
-        // Handle window resize
+        // Xử lý khi thay đổi kích thước cửa sổ
         window.addEventListener('resize', handleResize);
     }
 
@@ -102,7 +102,7 @@
         const cloneCount = slidesPerView;
         const maxValidIndex = totalRealSlides + cloneCount; // = 6
         
-        // NEXT: vượt quá index max (ví dụ: 7, 8, ...)
+        // TIẾP: vượt quá index max (ví dụ: 7, 8, ...)
         if (currentSlide > maxValidIndex) {
             // Reset về vị trí real đầu tiên (sau clones head)
             currentSlide = cloneCount;
@@ -110,7 +110,7 @@
             return true;
         }
 
-        // PREV: đi qua clone đầu tiên (index < 0)
+        // LÙI: đi qua clone đầu tiên (index < 0)
         if (currentSlide < 0) {
             // Reset về vị trí real cuối cùng
             currentSlide = totalRealSlides - 1 + cloneCount;
@@ -265,13 +265,13 @@
         </div>`;
     }
 
-    // Initialize
+    // Khởi tạo
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', loadBanners);
     } else {
         loadBanners();
     }
 
-    // Expose for external calls
+    // Công khai để gọi từ bên ngoài
     window.initBannerSlider = initBannerSlider;
 })();

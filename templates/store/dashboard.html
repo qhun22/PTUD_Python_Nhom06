@@ -293,9 +293,9 @@
 {% endblock %}
 
 {% block content %}
-<!-- Main Container Box -->
+<!-- Hộp container chính -->
 <div class="qh-dashboard-container">
-    <!-- Sidebar -->
+    <!-- Thanh sidebar -->
     <div class="qh-dashboard-sidebar">
         <div class="qh-sidebar-header">
             <div class="qh-sidebar-title">TRANG QUẢN TRỊ</div>
@@ -371,17 +371,17 @@
         <div class="qh-sidebar-pagination" id="qhSidebarPagination" style="display: none;"></div>
     </div>
     
-    <!-- Main Content -->
+    <!-- Nội dung chính -->
     <div class="qh-dashboard-content">
         
-        <!-- Stats Section -->
+        <!-- Phần thống kê -->
         <div id="stats-section">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h1 class="qh-content-title">Thống kê tổng quan</h1>
             </div>
-            <!-- Stats Grid - 8 cards (4 per row) -->
+            <!-- Lưới thống kê - 8 thẻ (4 thẻ/hàng) -->
             <div class="qh-stats-grid">
-                <!-- Row 1 -->
+                <!-- Hàng 1 -->
                 <div class="qh-stat-card">
                     <div class="qh-stat-icon blue">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -427,7 +427,7 @@
                     </div>
                 </div>
                 
-                <!-- Row 2 -->
+                <!-- Hàng 2 -->
                 <div class="qh-stat-card">
                     <div class="qh-stat-icon cyan">
                         <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -478,7 +478,7 @@
                 </div>
             </div>
             
-            <!-- Chart Section - 2026 -->
+            <!-- Phần biểu đồ - 2026 -->
             <div class="qh-chart-section">
                 <div class="qh-chart-header">
                     <h3 class="qh-chart-title">BIỂU ĐỒ DOANH THU NĂM {{ chart_year }}</h3>
@@ -495,7 +495,7 @@
             </div>
         </div>
         
-        <!-- Users Section -->
+        <!-- Phần người dùng -->
         <div id="users-section" class="qh-users-section" style="display: none;">
             <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
                 <div style="position: relative; flex: 1; max-width: 400px;">
@@ -559,7 +559,7 @@
             {% endif %}
         </div>
         
-        <!-- Brands Section -->
+        <!-- Phần hãng sản phẩm -->
         <div id="brands-section" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <div style="display: flex; gap: 10px; align-items: center;">
@@ -631,7 +631,7 @@
             {% endif %}
         </div>
         
-        <!-- Products Section -->
+        <!-- Phần sản phẩm -->
         <div id="products-section" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <div style="display: flex; gap: 10px; align-items: center;">
@@ -718,7 +718,7 @@
             {% endif %}
         </div>
 
-<!-- Add Brand Modal -->
+<!-- Modal thêm hãng -->
 <div id="addBrandModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
     <div style="background: white; border-radius: 12px; padding: 32px; width: 500px; max-width: 90%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -738,7 +738,7 @@
     </div>
 </div>
 
-<!-- Edit Brand Modal -->
+<!-- Modal sửa hãng -->
 <div id="editBrandModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
     <div style="background: white; border-radius: 12px; padding: 32px; width: 500px; max-width: 90%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -759,7 +759,7 @@
     </div>
 </div>
 
-        <!-- Product Images Section -->
+        <!-- Phần ảnh sản phẩm -->
         <div id="product-images-section" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
@@ -904,17 +904,17 @@
             </div>
         </div>
 
-        <!-- SKU Section -->
+        <!-- Phần SKU -->
         <div id="sku-section" style="display: none;">
-            <!-- Search & Filter -->
+            <!-- Tìm kiếm & Lọc -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <!-- Search by SKU -->
+                    <!-- Tìm kiếm theo SKU -->
                     <div style="position: relative;">
                         <input type="text" id="skuSearchInput" placeholder="Tìm theo tên SKU..." onkeydown="if(event.key==='Enter')searchSku()" style="width: 220px; padding: 10px 16px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Signika', sans-serif; box-sizing: border-box;">
                         <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <!-- Filter by Brand -->
+                    <!-- Lọc theo hãng -->
                     <select id="skuBrandFilter" onchange="filterSkuByBrand()" style="padding: 10px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Signika', sans-serif; min-width: 150px; cursor: pointer;">
                         <option value="">Tất cả hãng</option>
                         {% for brand in brands %}
@@ -929,7 +929,7 @@
                 </button>
             </div>
             
-            <!-- SKU Table -->
+            <!-- Bảng SKU -->
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
                     <thead>
@@ -953,9 +953,9 @@
             </div>
         </div>
 
-        <!-- Banner Images Section -->
+        <!-- Phần ảnh Banner -->
         <div id="banner-images-section" style="display: none;">
-            <!-- Search & Filter -->
+            <!-- Tìm kiếm & Lọc -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                     <div style="position: relative;">
@@ -970,15 +970,15 @@
                 </button>
             </div>
 
-            <!-- Banner Grid -->
+            <!-- Lưới Banner -->
             <div id="bannerGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
-                <!-- Banner items will be rendered by JS -->
+                <!-- Các banner sẽ được hiển thị bởi JS -->
             </div>
         </div>
 
-        <!-- Product Content Section -->
+        <!-- Phần nội dung sản phẩm -->
         <div id="product-content-section" style="display: none;">
-            <!-- Search & Filter -->
+            <!-- Tìm kiếm & Lọc -->
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
                 <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
                     <div style="position: relative;">
@@ -993,7 +993,7 @@
                 </button>
             </div>
 
-            <!-- Product Content Table -->
+            <!-- Bảng nội dung sản phẩm -->
             <div id="productContentTableContainer" style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
                     <thead>
@@ -1006,18 +1006,18 @@
                         </tr>
                     </thead>
                     <tbody id="productContentTableBody">
-                        <!-- Product content rows will be rendered by JS -->
+                        <!-- Các hàng nội dung sản phẩm sẽ được hiển thị bởi JS -->
                     </tbody>
                 </table>
             </div>
 
-            <!-- Product Content Grid (Hidden - kept for compatibility) -->
+            <!-- Lưới nội dung sản phẩm (Ẩn - giữ lại để tương thích) -->
             <div id="productContentGrid" style="display: none; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
-                <!-- Product content items will be rendered by JS -->
+                <!-- Các mục nội dung sản phẩm sẽ được hiển thị bởi JS -->
             </div>
         </div>
 
-        <!-- ==================== QR Approval Section ==================== -->
+        <!-- ==================== Phần duyệt thanh toán QR ==================== -->
         <div id="qr-approval-section" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h1 class="qh-content-title">Duyệt đơn hàng (VietQR)</h1>
@@ -1054,7 +1054,7 @@
             </p>
         </div>
 
-        <!-- QR Detail Modal -->
+        <!-- Modal chi tiết QR -->
         <div id="qrDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
             <div style="background: white; border-radius: 12px; width: 480px; max-width: 94%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
@@ -1095,7 +1095,7 @@
             </div>
         </div>
 
-        <!-- ==================== ADMIN ORDERS SECTION ==================== -->
+        <!-- ==================== Phần quản lý đơn hàng (Admin) ==================== -->
         <div id="admin-orders-section" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h1 class="qh-content-title">Đơn hàng</h1>
@@ -1131,7 +1131,7 @@
                 </table>
             </div>
 
-            <!-- Status Filter Buttons -->
+            <!-- Nút lọc theo trạng thái -->
             <div id="adminOrderFilterBar" style="display: flex; align-items: center; gap: 0; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
                 <button type="button" data-filter="all" onclick="filterAdminOrders('all')" class="admin-order-filter-btn active" style="flex: 1; padding: 14px 8px; border: none; background: white; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid transparent; transition: all 0.2s;">Tất cả</button>
                 <button type="button" data-filter="awaiting_payment" onclick="filterAdminOrders('awaiting_payment')" class="admin-order-filter-btn" style="flex: 1; padding: 14px 8px; border: none; background: white; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid transparent; transition: all 0.2s;">Chờ TT</button>
@@ -1144,7 +1144,7 @@
             </div>
         </div>
 
-        <!-- ==================== COUPONS SECTION ==================== -->
+        <!-- ==================== Phần mã giảm giá ==================== -->
         <div id="coupons-section" style="display: none;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
                 <h1 class="qh-content-title">Mã giảm giá</h1>
@@ -1188,7 +1188,7 @@
             </div>
         </div>
 
-        <!-- Add/Edit Coupon Modal -->
+        <!-- Modal thêm/sửa mã giảm giá -->
         <div id="couponModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
             <div style="background: white; border-radius: 12px; width: 580px; max-width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
@@ -1298,25 +1298,25 @@
             </div>
         </div>
 
-        <!-- Admin Order Detail Modal -->
+        <!-- Modal chi tiết đơn hàng (Admin) -->
         <div id="adminOrderDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
             <div style="background: white; border-radius: 12px; width: 700px; max-width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
-                <!-- Header -->
+                <!-- Tiêu đề -->
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
                     <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0; color: #1e293b;">Chi tiết đơn hàng</h3>
                     <button type="button" onclick="closeAdminOrderDetail()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
                 </div>
-                <!-- Body -->
+                <!-- Nội dung -->
                 <div id="adminOrderDetailBody" style="padding: 20px 24px; overflow-y: auto; flex: 1;">
                     <p style="text-align: center; color: #94a3b8;">Đang tải...</p>
                 </div>
-                <!-- Footer: Action buttons -->
+                <!-- Chân: Nút hành động -->
                 <div id="adminOrderDetailFooter" style="padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; flex-wrap: wrap;">
                 </div>
             </div>
         </div>
 
-        <!-- Add Banner Modal -->
+        <!-- Modal thêm Banner -->
         <div id="addBannerModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
             <div style="background: white; border-radius: 12px; width: 620px; max-width: 94%; max-height: 92vh; display: flex; flex-direction: column;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
@@ -1349,7 +1349,7 @@
             </div>
         </div>
 
-        <!-- Add Product Content Modal -->
+        <!-- Modal thêm nội dung sản phẩm -->
         <div id="addProductContentModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
             <div style="background: white; border-radius: 12px; width: 800px; max-width: 94%; max-height: 92vh; display: flex; flex-direction: column;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 16px 22px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
@@ -1388,15 +1388,15 @@
             </div>
         </div>
 
-<!-- Add Product Modal -->
+<!-- Modal thêm sản phẩm -->
 <div id="addProductModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
     <div style="background: white; border-radius: 12px; width: 520px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
-        <!-- Sticky Header -->
+        <!-- Tiêu đề cố định -->
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
             <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0;">Thêm sản phẩm</h3>
             <button type="button" onclick="closeAddProductModal()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
         </div>
-        <!-- Scrollable Content -->
+        <!-- Vùng nội dung có thể cuộn -->
         <div style="padding: 20px 24px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c1c1c1 #f8fafc;">
         <form id="addProductForm">
             <div style="margin-bottom: 16px;">
@@ -1428,22 +1428,22 @@
             </div>
         </form>
         </div>
-        <!-- Sticky Footer -->
+        <!-- Chân trang cố định -->
         <div style="padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px; flex-shrink: 0;">
             <button type="submit" form="addProductForm" style="padding: 12px 32px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">Thêm</button>
         </div>
     </div>
 </div>
 
-<!-- Edit Product Modal -->
+<!-- Modal sửa sản phẩm -->
 <div id="editProductModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
     <div style="background: white; border-radius: 12px; width: 520px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
-        <!-- Sticky Header -->
+        <!-- Tiêu đề cố định -->
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
             <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0;">Chỉnh sửa sản phẩm</h3>
             <button type="button" onclick="closeEditProductModal()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
         </div>
-        <!-- Scrollable Content -->
+        <!-- Vùng nội dung có thể cuộn -->
         <div style="padding: 20px 24px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c1c1c1 #f8fafc;">
         <form id="editProductForm">
             <input type="hidden" name="product_id" id="editProductId">
@@ -1476,14 +1476,14 @@
             </div>
         </form>
         </div>
-        <!-- Sticky Footer -->
+        <!-- Chân trang cố định -->
         <div style="padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px; flex-shrink: 0;">
             <button type="submit" form="editProductForm" style="padding: 12px 32px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">Lưu</button>
         </div>
     </div>
 </div>
 
-<!-- Edit User Modal -->
+<!-- Modal sửa người dùng -->
 <div id="editUserModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
     <div style="background: white; border-radius: 12px; padding: 32px; width: 500px; max-width: 90%;">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
@@ -1517,7 +1517,7 @@
     </div>
 </div>
 
-<!-- Global Variables & Load JS -->
+<!-- Biến toàn cục & Tải JS -->
 <script>
     window.csrfToken = '{{ csrf_token }}';
     window.brandAddUrl = '{% url "store:brand_add" %}';
@@ -1548,10 +1548,10 @@
 <script src="{% static 'js/product.js' %}"></script>
 <script src="{% static 'js/product_detail.js' %}"></script>
 
-<!-- Product Detail Modal -->
+<!-- Modal chi tiết sản phẩm -->
 <div id="productDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
     <div id="productDetailModalBox" style="background: white; border-radius: 12px; width: 700px; max-width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
-        <!-- Sticky Header -->
+        <!-- Tiêu đề cố định -->
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
             <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0;">Chi tiết sản phẩm</h3>
             <button type="button" onclick="closeProductDetailModal()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
@@ -1582,7 +1582,7 @@
                     <span id="specFileName" style="font-size: 12px; color: #64748b; font-family: 'Signika', sans-serif;"></span>
                 </div>
                 <div id="specStatusLabel" style="margin-top: 8px; font-size: 11px; color: #9ca3af;">Bạn chưa tải file JSON nào.</div>
-                <!-- YouTube Video ID -->
+                <!-- ID Video YouTube -->
                 <div style="margin-top: 14px; padding-top: 14px; border-top: 1px solid #e2e8f0;">
                     <label style="display: block; margin-bottom: 6px; font-size: 13px; font-weight: 500; color: #334155;">Nhập ID YouTube</label>
                     <div style="display: flex; gap: 8px; align-items: center;">
@@ -1680,15 +1680,15 @@
     </div>
 </div>
 
-<!-- Add SKU Modal -->
+<!-- Modal thêm SKU -->
 <div id="addSkuModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
     <div style="background: white; border-radius: 12px; width: 500px; max-width: 95%; max-height: 90vh; display: flex; flex-direction: column;">
-        <!-- Sticky Header -->
+        <!-- Tiêu đề cố định -->
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
             <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0;">Thêm SKU</h3>
             <button type="button" onclick="closeAddSkuModal()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
         </div>
-        <!-- Scrollable Content -->
+        <!-- Vùng nội dung có thể cuộn -->
         <div style="padding: 20px 24px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c1c1c1 #f8fafc;">
             <div style="margin-bottom: 16px;">
                 <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn hãng *</label>
@@ -1742,7 +1742,7 @@
 
 </div>
 
-<!-- Best Sellers Modal -->
+<!-- Modal sản phẩm bán chạy -->
 <div id="bestSellersModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
     <div style="background: white; border-radius: 12px; width: 900px; max-width: 95%; max-height: 85vh; box-shadow: 0 10px 40px rgba(0,0,0,0.15); overflow: hidden; display: flex; flex-direction: column;">
         <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
@@ -1755,7 +1755,7 @@
             <button type="button" onclick="closeBestSellersModal()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
         </div>
         <div style="padding: 20px 24px; overflow-y: auto; flex: 1;">
-            <!-- Stats Row -->
+            <!-- Hàng thống kê -->
             <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
                 <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 10px; padding: 16px; color: white;">
                     <div style="font-size: 12px; opacity: 0.9;">Tổng sản phẩm</div>
@@ -1775,7 +1775,7 @@
                 </div>
             </div>
             
-            <!-- Table -->
+            <!-- Bảng -->
             <div style="overflow-x: auto;">
                 <table style="width: 100%; border-collapse: collapse; font-family: 'Signika', sans-serif; font-size: 14px;">
                     <thead>

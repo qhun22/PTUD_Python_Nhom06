@@ -12,7 +12,7 @@
 {% block content %}
 <div class="qh-home">
 
-    <!-- Hero Video Slider (media/videos) -->
+    <!-- Slider video hero (thư mục media/videos) -->
     <section class="qh-hero-slider">
         <div class="qh-hero-slider-wrap">
             <div class="qh-hero-stage" id="qhHeroSlider">
@@ -85,14 +85,14 @@
         </div>
     </section>
     
-    <!-- Banner Slider -->
+    <!-- Slider Banner -->
     <section class="qh-banner-slider" style="margin-bottom: 18px;">
         <div class="qh-banner-slider-wrap">
             <div class="qh-banner-track" id="qhBannerTrack">
-                <!-- Banners will be loaded via JavaScript from API -->
+                <!-- Banner sẽ được tải qua JavaScript từ API -->
             </div>
             
-            <!-- Navigation Buttons -->
+            <!-- Nút điều hướng -->
             <button type="button" class="qh-banner-nav prev" id="qhBannerPrev" aria-label="Banner trước">
                 <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
@@ -142,7 +142,7 @@
             <div class="qh-product-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 0;">
                 {% for product in suggest_products %}
                 <a href="{% url 'store:product_detail' product.id %}" class="qh-product-card {% if product.stock == 0 %}out-of-stock{% endif %}" style="text-decoration: none; color: inherit; display: block;">
-                    <!-- Product Image -->
+                    <!-- Ảnh sản phẩm -->
                     <div class="qh-product-image" style="position: relative; aspect-ratio: 1; background: #ffffff; overflow: hidden;">
                         {% if product.image %}
                         <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
@@ -153,13 +153,13 @@
                             </svg>
                         </div>
                         {% endif %}
-                        <!-- Discount Badge -->
+                        <!-- Huy hiệu giảm giá -->
                         {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
                         <div class="discount-badge">
                             -{{ product.detail.summary_discount_percent }}%
                         </div>
                         {% endif %}
-                        <!-- Wishlist Heart Button -->
+                        <!-- Nút tim danh sách yêu thích -->
                         {% if product.id in wishlist_product_ids %}
                         <button class="wishlist-btn liked" data-product-id="{{ product.id }}" onclick="toggleWishlist(this, {{ product.id }}); return false;">
                         {% else %}
@@ -169,18 +169,18 @@
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
                             </svg>
                         </button>
-                        <!-- Out of Stock Overlay -->
+                        <!-- Lớp phủ hết hàng -->
                         {% if product.stock == 0 %}
                         <div class="out-of-stock-overlay"></div>
                         {% endif %}
                     </div>
-                    <!-- Product Info -->
+                    <!-- Thông tin sản phẩm -->
                     <div class="qh-product-info" style="padding: 12px 14px 14px; border-top: 1px solid #f0f0f0;">
-                        <!-- Product Name -->
+                        <!-- Tên sản phẩm -->
                         <h3 class="qh-product-name" style="font-size: 17px; font-weight: 600; color: var(--qh-text); margin-bottom: 4px; line-height: 1.4; min-height: 44px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                             {{ product.name }}
                         </h3>
-                        <!-- Price -->
+                        <!-- Giá -->
                         <div class="qh-product-price" style="margin-bottom: 6px;">
                             {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
                             <span style="font-size: 13px; color: #999; text-decoration: line-through; display: block; margin-bottom: 1px;">
@@ -195,7 +195,7 @@
                             </span>
                             {% endif %}
                         </div>
-                        <!-- Status Row -->
+                        <!-- Hàng hiển thị trạng thái sản phẩm -->
                         <div style="display: flex; gap: 6px; margin-bottom: 10px;">
                             {% if product.stock > 0 %}
                             <span style="font-size: 11px; color: #059669; font-weight: 600; background: #d1fae5; padding: 4px 8px; border-radius: 4px; flex: 1; text-align: center;">
@@ -210,7 +210,7 @@
                             </span>
                             {% endif %}
                         </div>
-                        <!-- Action Buttons -->
+                        <!-- Các nút hành động -->
                         <div style="display: flex; gap: 6px;">
                             <button class="qh-btn qh-btn-outline qh-compare-btn"
                                     data-product-id="{{ product.id }}"
@@ -244,7 +244,7 @@
         {% with product=item.product %}
         <a href="{% url 'store:product_detail' product.id %}" class="qh-product-card {% if product.stock == 0 %}out-of-stock{% endif %}" style="text-decoration: none; color: inherit; display: block; background: var(--qh-white); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s;">
             
-            <!-- Product Image -->
+            <!-- Ảnh sản phẩm -->
             <div class="qh-product-image" style="position: relative; aspect-ratio: 1; background: #ffffff; overflow: hidden;">
                 
                 {% if product.image %}
@@ -257,14 +257,14 @@
                 </div>
                 {% endif %}
                 
-                <!-- Discount Badge -->
+                <!-- Huy hiệu giảm giá -->
                 {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
                 <div class="discount-badge">
                     -{{ product.detail.summary_discount_percent }}%
                 </div>
                 {% endif %}
                 
-                <!-- Wishlist Heart Button -->
+                <!-- Nút tim danh sách yêu thích -->
                 {% if product.id in wishlist_product_ids %}
                 <button class="wishlist-btn liked" data-product-id="{{ product.id }}" onclick="toggleWishlist(this, {{ product.id }}); return false;">
                 {% else %}
@@ -275,20 +275,20 @@
                     </svg>
                 </button>
                 
-                <!-- Out of Stock Overlay -->
+                <!-- Lớp phủ hết hàng -->
                 {% if product.stock == 0 %}
                 <div class="out-of-stock-overlay"></div>
                 {% endif %}
             </div>
             
-            <!-- Product Info -->
+            <!-- Thông tin sản phẩm -->
             <div class="qh-product-info" style="padding: 12px 14px 14px; border-top: 1px solid #f0f0f0;">
-                <!-- Product Name -->
+                <!-- Tên sản phẩm -->
                 <h3 class="qh-product-name" style="font-size: 17px; font-weight: 600; color: var(--qh-text); margin-bottom: 4px; line-height: 1.4; min-height: 44px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                     {{ product.name }}
                 </h3>
                 
-                <!-- Price -->
+                <!-- Giá -->
                 <div class="qh-product-price" style="margin-bottom: 6px;">
                     {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
                     <span style="font-size: 13px; color: #999; text-decoration: line-through; display: block; margin-bottom: 1px;">
@@ -304,7 +304,7 @@
                     {% endif %}
                 </div>
                 
-                <!-- Status Row -->
+                <!-- Hàng hiển thị trạng thái sản phẩm -->
                 <div style="display: flex; gap: 6px; margin-bottom: 10px;">
                     {% if product.stock > 0 %}
                     <span style="font-size: 11px; color: #059669; font-weight: 600; background: #d1fae5; padding: 4px 8px; border-radius: 4px; flex: 1; text-align: center;">
@@ -320,7 +320,7 @@
                     {% endif %}
                 </div>
                 
-                <!-- Action Buttons -->
+                <!-- Các nút hành động -->
                 <div style="display: flex; gap: 6px;">
                     <button class="qh-btn qh-btn-outline qh-compare-btn"
                             data-product-id="{{ product.id }}"
@@ -340,17 +340,17 @@
     {% endif %}
     
     {% if products %}
-    <!-- Section Title -->
+    <!-- Tiêu đề phần -->
 <div class="qh-featured-title-wrap">
         <span class="qh-featured-title">SẢN PHẨM NỔI BẬT</span>
     </div>
     
-    <!-- Product Grid: 5 products per row -->
+    <!-- Lưới sản phẩm: 5 sản phẩm mỗi hàng -->
     <div class="qh-product-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 20px; margin-bottom: 40px;">
         {% for product in products %}
         <a href="{% url 'store:product_detail' product.id %}" class="qh-product-card {% if product.stock == 0 %}out-of-stock{% endif %}" style="text-decoration: none; color: inherit; display: block; background: var(--qh-white); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s;">
             
-            <!-- Product Image -->
+            <!-- Ảnh sản phẩm -->
             <div class="qh-product-image" style="position: relative; aspect-ratio: 1; background: #ffffff; overflow: hidden;">
                 
                 {% if product.image %}
@@ -363,14 +363,14 @@
                 </div>
                 {% endif %}
                 
-                <!-- Discount Badge -->
+                <!-- Huy hiệu giảm giá -->
                 {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
                 <div class="discount-badge">
                     -{{ product.detail.summary_discount_percent }}%
                 </div>
                 {% endif %}
                 
-                <!-- Wishlist Heart Button -->
+                <!-- Nút tim danh sách yêu thích -->
                 {% if product.id in wishlist_product_ids %}
                 <button class="wishlist-btn liked" data-product-id="{{ product.id }}" onclick="toggleWishlist(this, {{ product.id }}); return false;">
                 {% else %}
@@ -381,20 +381,20 @@
                     </svg>
                 </button>
                 
-                <!-- Out of Stock Overlay (chỉ hiển thị overlay mờ, không hiển thị badge) -->
+                <!-- Lớp phủ hết hàng -->
                 {% if product.stock == 0 %}
                 <div class="out-of-stock-overlay"></div>
                 {% endif %}
             </div>
             
-            <!-- Product Info -->
+            <!-- Thông tin sản phẩm -->
             <div class="qh-product-info" style="padding: 12px 14px 14px; border-top: 1px solid #f0f0f0;">
-                <!-- Product Name -->
+                <!-- Tên sản phẩm -->
                 <h3 class="qh-product-name" style="font-size: 17px; font-weight: 600; color: var(--qh-text); margin-bottom: 4px; line-height: 1.4; min-height: 44px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
                     {{ product.name }}
                 </h3>
                 
-                <!-- Price -->
+                <!-- Giá -->
                 <div class="qh-product-price" style="margin-bottom: 6px;">
                     {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
                     <span style="font-size: 13px; color: #999; text-decoration: line-through; display: block; margin-bottom: 1px;">
@@ -410,7 +410,7 @@
                     {% endif %}
                 </div>
                 
-                <!-- Status Row -->
+                <!-- Hàng hiển thị trạng thái sản phẩm -->
                 <div style="display: flex; gap: 6px; margin-bottom: 10px;">
                     {% if product.stock > 0 %}
                     <span style="font-size: 11px; color: #059669; font-weight: 600; background: #d1fae5; padding: 4px 8px; border-radius: 4px; flex: 1; text-align: center;">
@@ -426,7 +426,7 @@
                     {% endif %}
                 </div>
                 
-                <!-- Action Buttons -->
+                <!-- Các nút hành động -->
                 <div style="display: flex; gap: 6px;">
                     <button class="qh-btn qh-btn-outline qh-compare-btn"
                             data-product-id="{{ product.id }}"
@@ -443,7 +443,7 @@
         {% endfor %}
     </div>
     
-    <!-- Pagination -->
+    <!-- Phân trang -->
     {% if products.has_other_pages %}
     <div class="qh-pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 40px;">
         {% if products.has_previous %}
@@ -483,7 +483,7 @@
     {% endif %}
 </div>
 
-<!-- Wishlist Toggle JavaScript -->
+<!-- JavaScript điều khiển Wishlist -->
 <script>
 function updateWishlistBadge(count) {
     const badge = document.getElementById('qh-wishlist-count');
@@ -553,7 +553,7 @@ function toggleWishlist(button, productId) {
 }
 </script>
 
-<!-- Hero Slider JavaScript -->
+<!-- JavaScript điều khiển Hero Slider -->
 <script>
 (function() {
     const slider = document.getElementById('qhHeroSlider');
@@ -669,12 +669,12 @@ function toggleWishlist(button, productId) {
 })();
 </script>
 
-<!-- Link to external hero slider JS -->
+<!-- Liên kết đến file JS hero slider ngoài -->
 {% block extra_js %}
 <script src="{% static 'js/home.js' %}"></script>
 {% endblock %}
 
-<!-- USP Section -->
+<!-- Phần USP -->
 <section class="qh-usp-section">
     <div class="qh-usp-container">
         <div class="qh-featured-title-wrap">

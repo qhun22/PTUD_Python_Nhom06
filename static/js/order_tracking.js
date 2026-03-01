@@ -91,7 +91,7 @@ function openOtDetail(code) {
     html += otInfoRow('Hình thức TT', otPayBadge(o.payment_method, o.payment_display));
     html += otInfoRow('Ngày đặt', escOtHtml(o.created_at));
 
-    // Voucher
+    // Mã giảm giá
     if (o.coupon_code) {
         html += otInfoRow('Voucher đã dùng', '<span style="background:#dbeafe; color:#1e40af; padding:2px 8px; border-radius:4px; font-weight:600; font-size:12px; letter-spacing:0.5px;">' + escOtHtml(o.coupon_code) + '</span>');
         html += otInfoRow('Chiết khấu', '<span style="color:#dc2626; font-weight:600;">-' + fmtOtVND(o.discount_amount) + '</span>');

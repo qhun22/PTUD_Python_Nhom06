@@ -14,7 +14,7 @@
     <div class="qh-auth-box">
         <h2 class="qh-auth-box-title">ĐĂNG NHẬP</h2>
         
-        <!-- Messages will be shown via JavaScript Toast -->
+        <!-- Thông báo sẽ hiển thị qua JavaScript Toast -->
         {% if messages %}
             {% for message in messages %}
                 <div class="qh-toast-message" data-type="{% if message.tags == 'error' %}error{% else %}success{% endif %}" data-message="{{ message|escapejs }}" style="display: none;"></div>
@@ -34,7 +34,7 @@
                 <input type="password" name="password" class="qh-input" placeholder="Nhập mật khẩu" required>
             </div>
             
-            <!-- Cloudflare Turnstile - Enable when deploying to production -->
+            <!-- Cloudflare Turnstile - Bật khi deploy lên production -->
             <!--
             <div class="qh-turnstile">
                 <div class="cf-turnstile" data-sitekey="{{ CLOUDFLARE_TURNSTILE_SITE_KEY }}"></div>
@@ -54,7 +54,7 @@
             </button>
         </form>
         
-        <!-- Google Login -->
+        <!-- Đăng nhập Google -->
         <div class="qh-divider">
             <span>hoặc</span>
         </div>
@@ -75,7 +75,7 @@
     </div>
 </div>
 
-<!-- Cloudflare Turnstile Script - Enable when deploying to production -->
+<!-- Cloudflare Turnstile Script - Bật khi deploy lên production -->
 <!--
 <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
 -->

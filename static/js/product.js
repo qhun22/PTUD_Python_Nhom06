@@ -1,11 +1,11 @@
 /**
- * Product Management JS
+ * JavaScript quản lý sản phẩm
  */
 
-// ==================== Add Modal Functions ====================
+// ==================== Các hàm Modal thêm sản phẩm ====================
 function openAddProductModal() {
     document.getElementById('addProductForm').reset();
-    // Reset image preview
+    // Đặt lại xem trước ảnh
     document.getElementById('addImagePreviewContainer').style.display = 'none';
     document.getElementById('addImagePlaceholder').style.display = 'block';
     document.getElementById('addProductModal').style.display = 'flex';
@@ -16,7 +16,7 @@ function closeAddProductModal() {
     document.getElementById('addProductForm').reset();
 }
 
-// ==================== Image Preview Functions ====================
+// ==================== Các hàm xem trước ảnh ====================
 function previewAddProductImage(event) {
     const file = event.target.files[0];
     if (file) {
@@ -43,13 +43,13 @@ function previewEditProductImage(event) {
     }
 }
 
-// ==================== Edit Modal Functions ====================
+// ==================== Các hàm Modal sửa sản phẩm ====================
 function openEditProductModal(id, brandId, name, imageUrl) {
     document.getElementById('editProductId').value = id;
     document.getElementById('editProductBrand').value = brandId || '';
     document.getElementById('editProductName').value = name;
     
-    // Show existing image
+    // Hiển thị ảnh hiện có
     const previewContainer = document.getElementById('editImagePreviewContainer');
     const placeholder = document.getElementById('editImagePlaceholder');
     const preview = document.getElementById('editImagePreview');
@@ -71,7 +71,7 @@ function closeEditProductModal() {
     document.getElementById('editProductForm').reset();
 }
 
-// ==================== Delete Product ====================
+// ==================== Xóa sản phẩm ====================
 function deleteProduct(id, name) {
     const message = 'Ban co chac muon xoa san pham "' + name + '"?';
     if (window.QHConfirm && window.QHConfirm.show) {
@@ -81,7 +81,7 @@ function deleteProduct(id, name) {
                 doDeleteProduct(id);
             },
             function() {
-                // User cancelled
+                // Người dùng đã hủy
             }
         );
     } else {
@@ -116,7 +116,7 @@ function doDeleteProduct(id) {
     });
 }
 
-// ==================== Search ====================
+// ==================== Tìm kiếm ====================
 function searchProducts(event) {
     if (event && event.key !== 'Enter') return;
     const searchTerm = document.getElementById('productSearchInput').value.trim();
@@ -135,9 +135,9 @@ function resetProductSearch() {
     window.location.href = url.toString();
 }
 
-// ==================== Event Listeners ====================
+// ==================== Trình lắng nghe sự kiện ====================
 document.addEventListener('DOMContentLoaded', function() {
-    // Add Product Form Submit
+    // Gửi form thêm sản phẩm
     const addProductForm = document.getElementById('addProductForm');
     if (addProductForm) {
         addProductForm.addEventListener('submit', function(e) {
@@ -167,7 +167,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Edit Product Form Submit
+    // Gửi form sửa sản phẩm
     const editProductForm = document.getElementById('editProductForm');
     if (editProductForm) {
         editProductForm.addEventListener('submit', function(e) {
@@ -197,7 +197,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
     
-    // Close modals on outside click
+    // Đóng modal khi click bên ngoài
     window.addEventListener('click', function(e) {
         if (e.target.id === 'addProductModal') closeAddProductModal();
         if (e.target.id === 'editProductModal') closeEditProductModal();

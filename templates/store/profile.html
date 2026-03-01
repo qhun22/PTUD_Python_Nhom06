@@ -11,9 +11,9 @@
 {% block content %}
 <div class="qh-profile-page">
 
-    <!-- ====== USER INFO CARD ====== -->
+    <!-- ====== THẺ THÔNG TIN NGƯỜI DÙNG ====== -->
     <div class="qh-pf-info-card">
-        <!-- Avatar + Info -->
+        <!-- Avatar + Thông tin -->
         <div class="qh-pf-user">
             <div class="qh-pf-avatar">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -31,7 +31,7 @@
             </div>
         </div>
 
-        <!-- Stats -->
+        <!-- Thống kê -->
         <div class="qh-pf-stats">
             <div class="qh-pf-stat">
                 <div class="qh-pf-stat-icon"><i class="ri-shopping-bag-3-line"></i></div>
@@ -64,7 +64,7 @@
             </div>
         </div>
 
-        <!-- Logout -->
+        <!-- Đăng xuất -->
         <div class="qh-pf-logout-section">
             <a href="{% url 'account_logout' %}" class="qh-pf-logout-btn">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,9 +75,9 @@
         </div>
     </div>
 
-    <!-- ====== TAB NAVIGATION ====== -->
+    <!-- ====== ĐIỀU HƯỚNG TAB ====== -->
     <div class="qh-pf-tabs">
-        <!-- Admin Dashboard -->
+        <!-- Trang quản trị -->
         {% if user.is_superuser %}
         <a href="{% url 'store:dashboard' %}" class="qh-pf-tab">
             <i class="ri-dashboard-line"></i>
@@ -111,13 +111,13 @@
         </a>
     </div>
 
-    <!-- ====== TAB CONTENT ====== -->
+    <!-- ====== NỘI DUNG TAB ====== -->
     <div class="qh-pf-content">
 
         <!-- Sổ địa chỉ -->
         <div class="qh-pf-tab-panel active" id="tab-address">
             <div class="qh-pf-addr-grid">
-                <!-- Left: Add new address -->
+                <!-- Trái: Thêm địa chỉ mới -->
                 <div class="qh-pf-addr-section">
                     <div class="qh-pf-addr-title">
                         <i class="ri-add-circle-line"></i> Thêm địa chỉ mới
@@ -168,7 +168,7 @@
                     </form>
                 </div>
 
-                <!-- Right: Address list -->
+                <!-- Phải: Danh sách địa chỉ -->
                 <div class="qh-pf-addr-section">
                     <div class="qh-pf-addr-title">
                         <i class="ri-map-pin-line"></i> Danh sách địa chỉ của bạn
@@ -224,14 +224,14 @@
             <div class="qh-pf-coupon-grid" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px;">
                 {% for cp in available_coupons %}
                 <div class="qh-pf-coupon-card" data-coupon-index="{{ forloop.counter }}" style="background: white; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.06); overflow: hidden; display: flex; border: 1px solid #e2e8f0;">
-                    <!-- Left accent -->
+                    <!-- Viền trái -->
                     <div style="width: 90px; background: linear-gradient(135deg, {% if cp.discount_type == 'percentage' %}#3b82f6, #2563eb{% else %}#10b981, #059669{% endif %}); display: flex; flex-direction: column; align-items: center; justify-content: center; color: white; flex-shrink: 0; position: relative;">
                         <div style="font-size: 28px; font-weight: 800; line-height: 1;">{% if cp.discount_type == 'percentage' %}{{ cp.discount_value|floatformat:0 }}%{% else %}{{ cp.discount_value|floatformat:0 }}đ{% endif %}</div>
                         <div style="font-size: 11px; font-weight: 500; opacity: 0.85; margin-top: 2px;">GIẢM</div>
-                        <!-- Serrated edge -->
+                        <!-- Cạnh răng cưa -->
                         <div style="position: absolute; right: -6px; top: 50%; transform: translateY(-50%); width: 12px; height: 12px; background: white; border-radius: 50%;"></div>
                     </div>
-                    <!-- Right content -->
+                    <!-- Nội dung bên phải -->
                     <div style="flex: 1; padding: 14px 16px; display: flex; flex-direction: column; justify-content: center; min-width: 0;">
                         <div style="font-size: 15px; font-weight: 600; color: #1e293b; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ cp.name }}</div>
                         <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
@@ -304,7 +304,7 @@
             {% endif %}
         </div>
 
-        <!-- Student - Teacher -->
+        <!-- Học sinh - Giáo viên -->
         <div class="qh-pf-tab-panel" id="tab-student">
             <!-- Layout chia 2 cột: Trái = Thông tin xác thực, Phải = Lịch sử -->
             <div class="qh-pf-pw-grid">
@@ -422,7 +422,7 @@
         <!-- Đổi mật khẩu -->
         <div class="qh-pf-tab-panel" id="tab-password">
             <div class="qh-pf-pw-grid">
-                <!-- Left: Change password form -->
+                <!-- Trái: Form đổi mật khẩu -->
                 <div class="qh-pf-pw-section">
                     <div class="qh-pf-pw-title">
                         <i class="ri-lock-password-line"></i> Đổi mật khẩu
@@ -448,7 +448,7 @@
                     </form>
                 </div>
 
-                <!-- Right: Password change history -->
+                <!-- Phải: Lịch sử đổi mật khẩu -->
                 <div class="qh-pf-pw-section">
                     <div class="qh-pf-pw-title">
                         <i class="ri-history-line"></i> Lịch sử đổi mật khẩu
@@ -517,7 +517,7 @@
     </div>
 </div>
 
-<!-- Tab Switching & All Profile JavaScript -->
+<!-- JavaScript chuyển tab & toàn bộ trang Profile -->
 {# ========================================================================= #}
 {# JS THUẦN: Đã tách ra file static/js/profile.js                     #}
 {# JS CÓ DJANGO TAGS: Giữ nguyên trong HTML (xem bên dưới)            #}

@@ -24,7 +24,7 @@ function copyVoucher(btn, code) {
     });
 }
 
-/* ==================== Token CSRF ==================== */
+/* ==================== Token CSRF (mã xác thực) ==================== */
 /**
  * Lấy CSRF token từ cookie
  * @returns {string|null} Giá trị CSRF token
@@ -184,7 +184,7 @@ function deleteAddress(id) {
             doDeleteAddress(id);
         });
     } else {
-        // Fallback to native confirm
+        // Phương án dự phòng khi không có thư viện xác nhận
         if (confirm('Bạn có chắc muốn xóa địa chỉ này?')) {
             doDeleteAddress(id);
         }

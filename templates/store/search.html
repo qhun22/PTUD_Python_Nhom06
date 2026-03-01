@@ -26,12 +26,12 @@
     {% endif %}
 
     {% if products %}
-    <!-- Product Grid: 5 products per row -->
+    <!-- Lưới sản phẩm: 5 sản phẩm mỗi hàng -->
     <div class="qh-product-grid">
         {% for product in products %}
         <a href="{% url 'store:product_detail' product.id %}" class="qh-product-card {% if product.stock == 0 %}out-of-stock{% endif %}">
 
-            <!-- Product Image -->
+            <!-- Ảnh sản phẩm -->
             <div class="qh-product-image">
                 {% if product.image %}
                 <img src="{{ product.image.url }}" alt="{{ product.name }}">
@@ -43,14 +43,14 @@
                 </div>
                 {% endif %}
 
-                <!-- Discount Badge -->
+                <!-- Huy hiệu giảm giá -->
                 {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
                 <div class="discount-badge">
                     -{{ product.detail.summary_discount_percent }}%
                 </div>
                 {% endif %}
 
-                <!-- Wishlist Heart Button -->
+                <!-- Nút tim danh sách yêu thích -->
                 {% if product.id in wishlist_product_ids %}
                 <button class="wishlist-btn liked" data-product-id="{{ product.id }}" onclick="toggleWishlist(this, {{ product.id }}); return false;">
                 {% else %}
@@ -61,20 +61,20 @@
                     </svg>
                 </button>
 
-                <!-- Out of Stock Overlay -->
+                <!-- Lớp phủ hết hàng -->
                 {% if product.stock == 0 %}
                 <div class="out-of-stock-overlay"></div>
                 {% endif %}
             </div>
 
-            <!-- Product Info -->
+            <!-- Thông tin sản phẩm -->
             <div class="qh-product-info">
-                <!-- Product Name -->
+                <!-- Tên sản phẩm -->
                 <h3 class="qh-product-name">
                     {{ product.name }}
                 </h3>
 
-                <!-- Price -->
+                <!-- Giá -->
                 <div class="qh-product-price">
                     {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
                     <span class="original-price">
@@ -90,7 +90,7 @@
                     {% endif %}
                 </div>
 
-                <!-- Status Row -->
+                <!-- Hàng hiển thị trạng thái sản phẩm -->
                 <div class="qh-product-status">
                     {% if product.stock > 0 %}
                     <span class="status-tag in-stock">Còn hàng</span>
@@ -100,7 +100,7 @@
                     {% endif %}
                 </div>
 
-                <!-- Action Buttons -->
+                <!-- Các nút hành động -->
                 <button class="qh-btn qh-btn-outline qh-compare-btn"
                         data-product-id="{{ product.id }}"
                         data-product-name="{{ product.name }}"
@@ -114,7 +114,7 @@
         {% endfor %}
     </div>
 
-    <!-- Pagination -->
+    <!-- Phân trang -->
     {% if products.has_other_pages %}
     <div class="qh-pagination">
         {% if products.has_previous %}
@@ -144,7 +144,7 @@
     {% endif %}
 
     {% else %}
-    <!-- No Results -->
+    <!-- Không có kết quả -->
     <div class="qh-no-results">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
@@ -165,7 +165,7 @@
     {% endif %}
 </div>
 
-<!-- Wishlist Toggle JavaScript -->
+<!-- JavaScript điều khiển Wishlist -->
 {# ========================================================================= #}
 {# NOTE: JS KHÔNG THỂ TÁCH RA FILE RIÊNG vì sử dụng Django template tags #}
 {# - {% url "store:wishlist_toggle" %} - URL từ Django #}
