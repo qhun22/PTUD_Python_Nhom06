@@ -126,7 +126,7 @@ Truy cập website tại: <http://127.0.0.1:8000/>
 
 ## Tài khoản mẫu
 
-Sau khi chạy `createsuperuser`, bạn có thể đăng nhập với tài khoản admin tại:
+Sau khi chạy `createsuperuser`, có thể đăng nhập với tài khoản admin tại:
 
 - URL: /admin/
 - Email: no data
