@@ -65,13 +65,13 @@ const QHChat = (() => {
         setSendDisabled(true);
         showTyping(true);
 
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value 
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value
             || document.cookie.match(/csrftoken=([^;]+)/)?.[1]
             || '';
 
         fetch(API_URL, {
             method: 'POST',
-            headers: { 
+            headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': csrfToken
             },

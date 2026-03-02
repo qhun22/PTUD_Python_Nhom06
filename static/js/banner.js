@@ -1,5 +1,5 @@
 // JavaScript Banner Slider - Vòng lặp vô hạn (Production)
-(function() {
+(function () {
     const requiredBannerIds = [23412, 74346, 87412, 76234];
     let bannerTimer = null;
     let isTransitioning = false;
@@ -101,7 +101,7 @@
     function handleInfiniteBoundary() {
         const cloneCount = slidesPerView;
         const maxValidIndex = totalRealSlides + cloneCount; // = 6
-        
+
         // TIẾP: vượt quá index max (ví dụ: 7, 8, ...)
         if (currentSlide > maxValidIndex) {
             // Reset về vị trí real đầu tiên (sau clones head)
@@ -249,10 +249,10 @@
         // Khởi tạo tại vị trí bắt đầu (sau clones đầu)
         // Index = cloneCount = 2 (tức là slide thực đầu tiên)
         currentSlide = cloneCount;
-        
+
         // Khởi tạo slider
         initBannerSlider();
-        
+
         // Di chuyển đến vị trí ban đầu (không animation)
         moveToSlide(currentSlide, false);
     }

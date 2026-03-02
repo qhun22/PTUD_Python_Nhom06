@@ -187,7 +187,7 @@ function updatePriceDisplay() {
     var cartBtn = document.querySelector('.pd-btn-cart');
     var buyBtn = document.querySelector('.pd-btn-buy');
     var stockBadge = document.getElementById('pdStockBadge');
-    
+
     if (variant.stock_quantity <= 0) {
         // Hết hàng - hiển thị badge và disable nút
         if (cartBtn) {

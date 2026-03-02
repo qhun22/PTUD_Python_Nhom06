@@ -1,5 +1,5 @@
 /* ==================== JavaScript điều khiển Hero Slider ==================== */
-(function() {
+(function () {
     const slider = document.getElementById('qhHeroSlider');
     if (!slider) return;
 
@@ -16,11 +16,11 @@
     // Hàm phát video
     function playVideo(video) {
         if (!video) return;
-        
+
         // Đảm bảo video được tắt tiếng để autoplay hoạt động
         video.muted = true;
         video.playsInline = true;
-        
+
         const playPromise = video.play();
         if (playPromise !== undefined) {
             playPromise.catch(error => {
@@ -34,7 +34,7 @@
         if (!video) return;
         try {
             video.pause();
-        } catch(e) {}
+        } catch (e) { }
     }
 
     function setActive(nextIdx) {
@@ -103,7 +103,7 @@
 
     // Khởi tạo - phát video đầu tiên ngay lập tức
     setActive(0);
-    
+
     // Trì hoãn việc tự động chuyển để video đầu tiên bắt đầu phát
     setTimeout(() => {
         const firstVideo = slides[0]?.querySelector('video');

@@ -21,7 +21,7 @@ function previewAddProductImage(event) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             document.getElementById('addImagePreview').src = e.target.result;
             document.getElementById('addImagePreviewContainer').style.display = 'block';
             document.getElementById('addImagePlaceholder').style.display = 'none';
@@ -34,7 +34,7 @@ function previewEditProductImage(event) {
     const file = event.target.files[0];
     if (file) {
         const reader = new FileReader();
-        reader.onload = function(e) {
+        reader.onload = function (e) {
             document.getElementById('editImagePreview').src = e.target.result;
             document.getElementById('editImagePreviewContainer').style.display = 'block';
             document.getElementById('editImagePlaceholder').style.display = 'none';
@@ -48,12 +48,12 @@ function openEditProductModal(id, brandId, name, imageUrl) {
     document.getElementById('editProductId').value = id;
     document.getElementById('editProductBrand').value = brandId || '';
     document.getElementById('editProductName').value = name;
-    
+
     // Hiển thị ảnh hiện có
     const previewContainer = document.getElementById('editImagePreviewContainer');
     const placeholder = document.getElementById('editImagePlaceholder');
     const preview = document.getElementById('editImagePreview');
-    
+
     if (imageUrl) {
         preview.src = imageUrl;
         previewContainer.style.display = 'block';
@@ -62,7 +62,7 @@ function openEditProductModal(id, brandId, name, imageUrl) {
         previewContainer.style.display = 'none';
         placeholder.style.display = 'block';
     }
-    
+
     document.getElementById('editProductModal').style.display = 'flex';
 }
 
@@ -77,10 +77,10 @@ function deleteProduct(id, name) {
     if (window.QHConfirm && window.QHConfirm.show) {
         window.QHConfirm.show(
             message,
-            function() {
+            function () {
                 doDeleteProduct(id);
             },
-            function() {
+            function () {
                 // Người dùng đã hủy
             }
         );
@@ -102,18 +102,18 @@ function doDeleteProduct(id) {
             'X-CSRFToken': window.csrfToken
         }
     })
-    .then(res => res.json())
-    .then(data => {
-        if (data.success) {
-            window.QHToast.show(data.message, 'success');
-            setTimeout(() => location.reload(), 1000);
-        } else {
-            window.QHToast.show(data.message, 'error');
-        }
-    })
-    .catch(err => {
-        window.QHToast.show('Co loi xay ra!', 'error');
-    });
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.QHToast.show(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                window.QHToast.show(data.message, 'error');
+            }
+        })
+        .catch(err => {
+            window.QHToast.show('Co loi xay ra!', 'error');
+        });
 }
 
 // ==================== Tìm kiếm ====================
@@ -136,11 +136,11 @@ function resetProductSearch() {
 }
 
 // ==================== Trình lắng nghe sự kiện ====================
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // Gửi form thêm sản phẩm
     const addProductForm = document.getElementById('addProductForm');
     if (addProductForm) {
-        addProductForm.addEventListener('submit', function(e) {
+        addProductForm.addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
 
@@ -151,26 +151,26 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-CSRFToken': window.csrfToken
                 }
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    window.QHToast.show(data.message, 'success');
-                    closeAddProductModal();
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    window.QHToast.show(data.message, 'error');
-                }
-            })
-            .catch(err => {
-                window.QHToast.show('Co loi xay ra!', 'error');
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.QHToast.show(data.message, 'success');
+                        closeAddProductModal();
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        window.QHToast.show(data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    window.QHToast.show('Co loi xay ra!', 'error');
+                });
         });
     }
-    
+
     // Gửi form sửa sản phẩm
     const editProductForm = document.getElementById('editProductForm');
     if (editProductForm) {
-        editProductForm.addEventListener('submit', function(e) {
+        editProductForm.addEventListener('submit', function (e) {
             e.preventDefault();
             const formData = new FormData(this);
 
@@ -181,24 +181,24 @@ document.addEventListener('DOMContentLoaded', function() {
                     'X-CSRFToken': window.csrfToken
                 }
             })
-            .then(res => res.json())
-            .then(data => {
-                if (data.success) {
-                    window.QHToast.show(data.message, 'success');
-                    closeEditProductModal();
-                    setTimeout(() => location.reload(), 1000);
-                } else {
-                    window.QHToast.show(data.message, 'error');
-                }
-            })
-            .catch(err => {
-                window.QHToast.show('Co loi xay ra!', 'error');
-            });
+                .then(res => res.json())
+                .then(data => {
+                    if (data.success) {
+                        window.QHToast.show(data.message, 'success');
+                        closeEditProductModal();
+                        setTimeout(() => location.reload(), 1000);
+                    } else {
+                        window.QHToast.show(data.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    window.QHToast.show('Co loi xay ra!', 'error');
+                });
         });
     }
-    
+
     // Đóng modal khi click bên ngoài
-    window.addEventListener('click', function(e) {
+    window.addEventListener('click', function (e) {
         if (e.target.id === 'addProductModal') closeAddProductModal();
         if (e.target.id === 'editProductModal') closeEditProductModal();
     });
