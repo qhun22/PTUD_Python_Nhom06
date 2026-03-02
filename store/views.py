@@ -1937,9 +1937,9 @@ def dashboard_view(request):
             models.Q(first_name__icontains=user_search)
         )
     
-    # Phân trang người dùng (8 người dùng/trang)
+    # Phân trang người dùng (15 người dùng/trang)
     user_page = request.GET.get('user_page', 1)
-    user_paginator = Paginator(users, 8)
+    user_paginator = Paginator(users, 15)
     try:
         users_paginated = user_paginator.page(user_page)
     except PageNotAnInteger:
@@ -1968,7 +1968,7 @@ def dashboard_view(request):
         all_brands = all_brands.filter(name__icontains=brand_search)
     
     brand_page = request.GET.get('brand_page', 1)
-    brand_paginator = Paginator(all_brands, 8)
+    brand_paginator = Paginator(all_brands, 15)
     try:
         brands_paginated = brand_paginator.page(brand_page)
     except PageNotAnInteger:
@@ -1984,7 +1984,7 @@ def dashboard_view(request):
         all_products = all_products.filter(name__icontains=product_search)
     
     product_page = request.GET.get('product_page', 1)
-    product_paginator = Paginator(all_products, 8)
+    product_paginator = Paginator(all_products, 15)
     try:
         products_paginated = product_paginator.page(product_page)
     except PageNotAnInteger:
@@ -1998,13 +1998,28 @@ def dashboard_view(request):
         created_at__date=today,
         status='delivered'
     ).aggregate(total=Sum('total_amount'))['total'] or 0
-    
-    # Doanh thu tháng này - chỉ tính khi đơn hàng đã giao thành công (delivered)
+
+    # Thống kê đơn hàng
     from datetime import datetime
     now = timezone.now()
     current_year = now.year
     current_month = now.month
-    
+
+    orders_today_count = Order.objects.filter(created_at__date=today).count()
+    orders_this_month_count = Order.objects.filter(created_at__year=current_year, created_at__month=current_month).count()
+    orders_this_year_count = Order.objects.filter(created_at__year=current_year).count()
+    orders_pending_count = Order.objects.filter(status='pending').count()
+    orders_processing_count = Order.objects.filter(status='processing').count()
+    orders_shipped_count = Order.objects.filter(status='shipped').count()
+    orders_delivered_count = Order.objects.filter(status='delivered').count()
+    orders_cancelled_count = Order.objects.filter(status='cancelled').count()
+
+    total_orders_all = Order.objects.count()
+    total_revenue_all = Order.objects.filter(status='delivered').aggregate(t=Sum('total_amount'))['t'] or 0
+    avg_order_value = int(total_revenue_all / total_orders_all) if total_orders_all > 0 else 0
+    conversion_rate = round(total_orders_all / total_visits * 100, 2) if total_visits > 0 else 0
+
+    # Doanh thu tháng này - chỉ tính khi đơn hàng đã giao thành công (delivered)
     # Sử dụng __month và __year để tránh vấn đề timezone
     revenue_this_month = Order.objects.filter(
         created_at__year=current_year,
@@ -2063,11 +2078,348 @@ def dashboard_view(request):
         'brands_paginated': brands_paginated,
         'products_paginated': products_paginated,
         'products': all_products[:50],  # For SKU dropdown
+        # Order stats
+        'orders_today': orders_today_count,
+        'orders_this_month': orders_this_month_count,
+        'orders_this_year': orders_this_year_count,
+        'orders_pending': orders_pending_count,
+        'orders_processing': orders_processing_count,
+        'orders_shipped': orders_shipped_count,
+        'orders_delivered': orders_delivered_count,
+        'orders_cancelled': orders_cancelled_count,
+        'avg_order_value': avg_order_value,
+        'conversion_rate': conversion_rate,
+        # Product stats
+        'total_products': Product.objects.count(),
+        'active_products': Product.objects.filter(stock__gt=0).count(),
+        'out_of_stock_products': Product.objects.filter(stock=0).count(),
+        'total_stock': Product.objects.aggregate(t=Sum('stock'))['t'] or 0,
     }
     return render(request, 'store/dashboard.html', context)
 
 
 import re
+
+@login_required
+@require_http_methods(["GET"])
+def dashboard_order_detail(request):
+    """API: Chi tiết đơn hàng theo filter cho dashboard stat boxes"""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Không có quyền!'}, status=403)
+
+    from store.models import Order, OrderItem
+    from django.db.models import Prefetch
+
+    filter_type = request.GET.get('filter', 'today')
+    page = max(1, int(request.GET.get('page', 1) or 1))
+    search = request.GET.get('search', '').strip()
+    status_sub = request.GET.get('status_sub', '').strip()  # lọc thêm theo status trong time-based filter
+    per_page = 10
+
+    now = timezone.now()
+    today = now.date()
+
+    TITLE_MAP = {
+        'today': f'Danh sách đơn hàng hôm nay (00:00 → 23:59 {today.strftime("%d/%m/%Y")})',
+        'month': f'Danh sách đơn hàng tháng {now.month}/{now.year}',
+        'year': f'Danh sách đơn hàng năm {now.year}',
+        'pending': 'Danh sách đơn chờ xử lý (Pending)',
+        'processing': 'Danh sách đơn đang xử lý (Processing)',
+        'shipped': 'Danh sách đơn đang giao (Shipped)',
+        'delivered': 'Danh sách đơn giao thành công (Delivered)',
+        'cancelled': 'Danh sách đơn đã hủy (Cancelled)',
+    }
+
+    STATUS_DISPLAY = {
+        'awaiting_payment': 'Chờ TT',
+        'pending': 'Đã đặt',
+        'processing': 'Xử lý',
+        'shipped': 'Đang giao',
+        'delivered': 'Đã giao',
+        'cancelled': 'Đã hủy',
+    }
+
+    # --- Base queryset theo filter_type ---
+    base_qs = Order.objects.select_related('user').prefetch_related('items').order_by('-created_at')
+    TIME_FILTERS = ('today', 'month', 'year')
+    is_time_filter = filter_type in TIME_FILTERS
+
+    if filter_type == 'today':
+        base_qs = base_qs.filter(created_at__date=today)
+    elif filter_type == 'month':
+        base_qs = base_qs.filter(created_at__year=now.year, created_at__month=now.month)
+    elif filter_type == 'year':
+        base_qs = base_qs.filter(created_at__year=now.year)
+    elif filter_type in ('pending', 'processing', 'shipped', 'delivered', 'cancelled'):
+        base_qs = base_qs.filter(status=filter_type)
+
+    # --- Stats từ base_qs (trước khi lọc thêm) ---
+    total_base = base_qs.count()
+    total_value_base = base_qs.aggregate(s=Sum('total_amount'))['s'] or 0
+    total_revenue_base = base_qs.filter(status='delivered').aggregate(s=Sum('total_amount'))['s'] or 0
+    total_cancelled_base = base_qs.filter(status='cancelled').count()
+
+    # Tổng SP bán (chỉ đơn delivered)
+    delivered_ids = base_qs.filter(status='delivered').values_list('id', flat=True)
+    items_sold_base = OrderItem.objects.filter(order_id__in=delivered_ids).aggregate(s=Sum('quantity'))['s'] or 0
+
+    # Tỷ lệ hủy %
+    cancel_rate = round(total_cancelled_base / total_base * 100, 1) if total_base > 0 else 0
+
+    # Growth so với cùng kỳ năm trước (chỉ cho filter year)
+    growth_label = '-'
+    if filter_type == 'year':
+        last_year_count = Order.objects.filter(created_at__year=now.year - 1).count()
+        if last_year_count > 0:
+            growth = round((total_base - last_year_count) / last_year_count * 100, 1)
+            growth_label = ('+' if growth >= 0 else '') + str(growth) + '%'
+        else:
+            growth_label = 'N/A (chưa có dữ liệu)'
+
+    # Build stats strip (4 cards)
+    def fmt_price(v): return f"{int(v):,}đ".replace(',', '.')
+    if filter_type == 'today':
+        stat_cards = [
+            {'label': 'Tổng đơn hôm nay', 'value': str(total_base)},
+            {'label': 'Doanh thu hôm nay', 'value': fmt_price(total_revenue_base)},
+            {'label': 'Tổng SP đã bán', 'value': str(items_sold_base) + ' SP'},
+            {'label': 'Đơn đã hủy', 'value': str(total_cancelled_base)},
+        ]
+    elif filter_type == 'month':
+        stat_cards = [
+            {'label': 'Tổng đơn tháng', 'value': str(total_base)},
+            {'label': 'Doanh thu tháng', 'value': fmt_price(total_revenue_base)},
+            {'label': 'Tổng SP đã bán', 'value': str(items_sold_base) + ' SP'},
+            {'label': 'Tỷ lệ hủy', 'value': str(cancel_rate) + '%'},
+        ]
+    elif filter_type == 'year':
+        stat_cards = [
+            {'label': 'Tổng đơn năm', 'value': str(total_base)},
+            {'label': 'Doanh thu năm', 'value': fmt_price(total_revenue_base)},
+            {'label': 'Tổng SP đã bán', 'value': str(items_sold_base) + ' SP'},
+            {'label': f'Tăng trưởng vs {now.year - 1}', 'value': growth_label},
+        ]
+    elif filter_type == 'pending':
+        stat_cards = [
+            {'label': 'Tổng đơn pending', 'value': str(total_base)},
+            {'label': 'Tổng giá trị', 'value': fmt_price(total_value_base)},
+            {'label': '', 'value': ''},
+            {'label': '', 'value': ''},
+        ]
+    elif filter_type == 'processing':
+        stat_cards = [
+            {'label': 'Tổng đơn xử lý', 'value': str(total_base)},
+            {'label': 'Tổng giá trị', 'value': fmt_price(total_value_base)},
+            {'label': '', 'value': ''},
+            {'label': '', 'value': ''},
+        ]
+    elif filter_type == 'shipped':
+        stat_cards = [
+            {'label': 'Tổng đơn đang giao', 'value': str(total_base)},
+            {'label': 'Tổng giá trị', 'value': fmt_price(total_value_base)},
+            {'label': '', 'value': ''},
+            {'label': '', 'value': ''},
+        ]
+    elif filter_type == 'delivered':
+        stat_cards = [
+            {'label': 'Tổng đơn hoàn thành', 'value': str(total_base)},
+            {'label': 'Tổng doanh thu', 'value': fmt_price(total_revenue_base)},
+            {'label': 'Tổng SP đã bán', 'value': str(items_sold_base) + ' SP'},
+            {'label': '', 'value': ''},
+        ]
+    elif filter_type == 'cancelled':
+        stat_cards = [
+            {'label': 'Tổng đơn hủy', 'value': str(total_base)},
+            {'label': 'Tổng giá trị bị hủy', 'value': fmt_price(total_value_base)},
+            {'label': 'Tỷ lệ hủy tổng thể', 'value': str(cancel_rate) + '%'},
+            {'label': '', 'value': ''},
+        ]
+    else:
+        stat_cards = []
+
+    # --- Áp dụng search + status sub-filter ---
+    filtered_qs = base_qs
+    if search:
+        filtered_qs = filtered_qs.filter(order_code__icontains=search)
+    if status_sub and is_time_filter:
+        filtered_qs = filtered_qs.filter(status=status_sub)
+
+    total = filtered_qs.count()
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    if page > total_pages:
+        page = total_pages
+
+    start = (page - 1) * per_page
+    paged_qs = list(filtered_qs[start: start + per_page])
+
+    orders = []
+    for idx, o in enumerate(paged_qs, start=start + 1):
+        item_count = o.items.aggregate(t=Sum('quantity'))['t'] or 0
+        orders.append({
+            'id': o.id,
+            'stt': idx,
+            'order_code': o.order_code,
+            'user_email': o.user.email if o.user else '-',
+            'user_phone': (o.user.phone or '-') if o.user else '-',
+            'total_amount': int(o.total_amount),
+            'item_count': item_count,
+            'status': o.status,
+            'status_display': STATUS_DISPLAY.get(o.status, o.status),
+            'payment_method': o.get_payment_method_display(),
+            'created_at': o.created_at.strftime('%d/%m/%Y %H:%M'),
+        })
+
+    return JsonResponse({
+        'success': True,
+        'filter': filter_type,
+        'is_time_filter': is_time_filter,
+        'title': TITLE_MAP.get(filter_type, filter_type),
+        'stat_cards': stat_cards,
+        'total': total,
+        'page': page,
+        'total_pages': total_pages,
+        'orders': orders,
+    })
+
+
+@login_required
+@require_http_methods(["GET"])
+def dashboard_product_detail(request):
+    """API: Chi tiết sản phẩm theo filter cho dashboard stat boxes"""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Không có quyền!'}, status=403)
+
+    from store.models import Product, OrderItem, Brand
+
+    filter_type = request.GET.get('filter', 'all')  # all|active|outofstock|bestseller|lowstock
+    page = max(1, int(request.GET.get('page', 1) or 1))
+    search = request.GET.get('search', '').strip()
+    per_page = 10
+
+    TITLE_MAP = {
+        'all': 'Tổng số sản phẩm',
+        'active': 'Sản phẩm đang bán',
+        'outofstock': 'Sản phẩm hết hàng',
+        'bestseller': 'Top 10 sản phẩm bán chạy',
+        'lowstock': 'Sản phẩm sắp hết hàng (tồn ≤ 5)',
+    }
+
+    def fmt_price(v): return f"{int(v):,}đ".replace(',', '.')
+
+    if filter_type == 'bestseller':
+        # Tổng SP bán ra theo order items
+        from django.db.models import F
+        top_qs = (
+            OrderItem.objects
+            .filter(product__isnull=False, order__status='delivered')
+            .values('product_id', 'product__name', 'product__price', 'product__stock')
+            .annotate(sold=Sum('quantity'), revenue=Sum(F('price') * F('quantity')))
+            .order_by('-sold')[:50]
+        )
+        if search:
+            top_qs = [r for r in top_qs if search.lower() in (r['product__name'] or '').lower()]
+
+        total = len(top_qs)
+        total_revenue_all = sum(r['revenue'] or 0 for r in top_qs)
+        total_pages = max(1, (total + per_page - 1) // per_page)
+        page = min(page, total_pages)
+        paged = top_qs[(page - 1) * per_page: page * per_page]
+
+        stat_cards = [
+            {'label': 'Tổng sản phẩm có đơn', 'value': str(total)},
+            {'label': 'Tổng doanh thu (tất cả)', 'value': fmt_price(total_revenue_all)},
+            {'label': '', 'value': ''},
+            {'label': '', 'value': ''},
+        ]
+        products = []
+        for idx, r in enumerate(paged, start=(page - 1) * per_page + 1):
+            pct = round(r['revenue'] / total_revenue_all * 100, 1) if total_revenue_all > 0 else 0
+            products.append({
+                'stt': idx,
+                'name': r['product__name'] or '-',
+                'price': int(r['product__price'] or 0),
+                'stock': r['product__stock'],
+                'sold': r['sold'],
+                'revenue': int(r['revenue'] or 0),
+                'pct_revenue': pct,
+                'is_active': (r['product__stock'] or 0) > 0,
+            })
+        return JsonResponse({
+            'success': True, 'filter': filter_type, 'title': TITLE_MAP[filter_type],
+            'stat_cards': stat_cards, 'total': total, 'page': page,
+            'total_pages': total_pages, 'products': products,
+        })
+
+    # Standard product queryset
+    qs = Product.objects.select_related('brand').order_by('-created_at')
+    if filter_type == 'active':
+        qs = qs.filter(stock__gt=0)
+    elif filter_type == 'outofstock':
+        qs = qs.filter(stock=0)
+    elif filter_type == 'lowstock':
+        qs = qs.filter(stock__gt=0, stock__lte=5)
+
+    if search:
+        qs = qs.filter(name__icontains=search)
+
+    total = qs.count()
+    total_stock = qs.aggregate(s=Sum('stock'))['s'] or 0
+    total_value = qs.aggregate(s=Sum('price'))['s'] or 0
+
+    if filter_type == 'all':
+        stat_cards = [
+            {'label': 'Tổng số sản phẩm', 'value': str(total)},
+            {'label': 'Tổng tồn kho', 'value': str(total_stock) + ' SP'},
+            {'label': 'Hết hàng', 'value': str(qs.filter(stock=0).count())},
+            {'label': 'Sắp hết (≤5)', 'value': str(qs.filter(stock__gt=0, stock__lte=5).count())},
+        ]
+    elif filter_type == 'active':
+        stat_cards = [
+            {'label': 'Đang bán', 'value': str(total)},
+            {'label': 'Tổng tồn kho', 'value': str(total_stock) + ' SP'},
+            {'label': '', 'value': ''},
+            {'label': '', 'value': ''},
+        ]
+    elif filter_type == 'outofstock':
+        stat_cards = [
+            {'label': 'Hết hàng', 'value': str(total)},
+            {'label': '', 'value': ''},
+            {'label': '', 'value': ''},
+            {'label': '', 'value': ''},
+        ]
+    elif filter_type == 'lowstock':
+        stat_cards = [
+            {'label': 'Sắp hết hàng', 'value': str(total)},
+            {'label': 'Tổng tồn kho còn lại', 'value': str(total_stock) + ' SP'},
+            {'label': '', 'value': ''},
+            {'label': '', 'value': ''},
+        ]
+    else:
+        stat_cards = []
+
+    total_pages = max(1, (total + per_page - 1) // per_page)
+    page = min(page, total_pages)
+    paged_qs = list(qs[(page - 1) * per_page: page * per_page])
+
+    products = []
+    for idx, p in enumerate(paged_qs, start=(page - 1) * per_page + 1):
+        products.append({
+            'id': p.id,
+            'stt': idx,
+            'name': p.name,
+            'brand': p.brand.name if p.brand else '-',
+            'price': int(p.price),
+            'original_price': int(p.original_price) if p.original_price else None,
+            'stock': p.stock,
+            'is_active': p.is_active,
+        })
+
+    return JsonResponse({
+        'success': True, 'filter': filter_type, 'title': TITLE_MAP.get(filter_type, filter_type),
+        'stat_cards': stat_cards, 'total': total, 'page': page,
+        'total_pages': total_pages, 'products': products,
+    })
+
 
 def generate_slug(text):
     """Tạo slug từ text tiếng Việt"""
@@ -2079,6 +2431,215 @@ def generate_slug(text):
     text = re.sub(r'[^\w\s-]', '', text)
     text = re.sub(r'[-\s]+', '-', text)
     return text.lower().strip('-')
+
+
+@login_required
+@require_http_methods(["GET"])
+def export_revenue_month(request):
+    """Xuất thống kê đơn hàng tháng hiện tại ra file .xlsx"""
+    if not request.user.is_superuser:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('Không có quyền!')
+
+    import openpyxl
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    from django.http import HttpResponse
+    from store.models import Order
+
+    now = timezone.now()
+    qs = Order.objects.select_related('user').filter(
+        created_at__year=now.year,
+        created_at__month=now.month
+    ).order_by('-created_at')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f'Tháng {now.month}-{now.year}'
+
+    # Header
+    headers = ['STT', 'Mã đơn', 'Email khách hàng', 'SĐT', 'Tổng tiền (đ)', 'PTTT', 'Trạng thái', 'Ngày tạo']
+    STATUS_VN = {
+        'awaiting_payment': 'Chờ TT', 'pending': 'Đã đặt', 'processing': 'Xử lý',
+        'shipped': 'Đang giao', 'delivered': 'Đã giao', 'cancelled': 'Đã hủy',
+    }
+    hdr_fill = PatternFill(start_color='1E293B', end_color='1E293B', fill_type='solid')
+    hdr_font = Font(color='FFFFFF', bold=True, size=11)
+    hdr_align = Alignment(horizontal='center', vertical='center')
+    thin = Side(style='thin', color='E2E8F0')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=h)
+        cell.fill = hdr_fill
+        cell.font = hdr_font
+        cell.alignment = hdr_align
+        cell.border = border
+
+    # Data rows
+    total_revenue = 0
+    for idx, order in enumerate(qs, 1):
+        row = [
+            idx,
+            order.order_code,
+            order.user.email if order.user else '',
+            order.user.phone if order.user and hasattr(order.user, 'phone') else '',
+            int(order.total_amount),
+            order.payment_method.upper(),
+            STATUS_VN.get(order.status, order.status),
+            order.created_at.strftime('%d/%m/%Y %H:%M'),
+        ]
+        if order.status == 'delivered':
+            total_revenue += int(order.total_amount)
+        for col, val in enumerate(row, 1):
+            cell = ws.cell(row=idx + 1, column=col, value=val)
+            cell.border = border
+            cell.alignment = Alignment(vertical='center', horizontal='center' if col in (1, 6, 7, 8) else 'left')
+            if col == 5:
+                cell.number_format = '#,##0'
+                cell.alignment = Alignment(vertical='center', horizontal='right')
+
+    # Summary row
+    sum_row = len(list(qs)) + 2
+    ws.cell(row=sum_row, column=1, value='TỔNG DOANH THU (đã giao)').font = Font(bold=True)
+    ws.merge_cells(start_row=sum_row, start_column=1, end_row=sum_row, end_column=4)
+    rev_cell = ws.cell(row=sum_row, column=5, value=total_revenue)
+    rev_cell.font = Font(bold=True, color='DC2626')
+    rev_cell.number_format = '#,##0'
+    rev_cell.alignment = Alignment(horizontal='right', vertical='center')
+
+    # Column widths
+    ws.column_dimensions['A'].width = 6
+    ws.column_dimensions['B'].width = 20
+    ws.column_dimensions['C'].width = 28
+    ws.column_dimensions['D'].width = 14
+    ws.column_dimensions['E'].width = 18
+    ws.column_dimensions['F'].width = 10
+    ws.column_dimensions['G'].width = 14
+    ws.column_dimensions['H'].width = 18
+    ws.row_dimensions[1].height = 24
+
+    filename = f'doanh-thu-thang-{now.month:02d}-{now.year}.xlsx'
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
+
+
+@login_required
+@require_http_methods(["GET"])
+def export_revenue_year(request):
+    """Xuất thống kê đơn hàng năm hiện tại ra file .xlsx"""
+    if not request.user.is_superuser:
+        from django.http import HttpResponseForbidden
+        return HttpResponseForbidden('Không có quyền!')
+
+    import openpyxl
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    from django.http import HttpResponse
+    from store.models import Order
+
+    now = timezone.now()
+    qs = Order.objects.select_related('user').filter(
+        created_at__year=now.year
+    ).order_by('-created_at')
+
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = f'Năm {now.year}'
+
+    headers = ['STT', 'Mã đơn', 'Email khách hàng', 'SĐT', 'Tổng tiền (đ)', 'PTTT', 'Trạng thái', 'Tháng', 'Ngày tạo']
+    STATUS_VN = {
+        'awaiting_payment': 'Chờ TT', 'pending': 'Đã đặt', 'processing': 'Xử lý',
+        'shipped': 'Đang giao', 'delivered': 'Đã giao', 'cancelled': 'Đã hủy',
+    }
+    hdr_fill = PatternFill(start_color='1E293B', end_color='1E293B', fill_type='solid')
+    hdr_font = Font(color='FFFFFF', bold=True, size=11)
+    hdr_align = Alignment(horizontal='center', vertical='center')
+    thin = Side(style='thin', color='E2E8F0')
+    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+
+    for col, h in enumerate(headers, 1):
+        cell = ws.cell(row=1, column=col, value=h)
+        cell.fill = hdr_fill
+        cell.font = hdr_font
+        cell.alignment = hdr_align
+        cell.border = border
+
+    total_revenue = 0
+    for idx, order in enumerate(qs, 1):
+        row = [
+            idx,
+            order.order_code,
+            order.user.email if order.user else '',
+            order.user.phone if order.user and hasattr(order.user, 'phone') else '',
+            int(order.total_amount),
+            order.payment_method.upper(),
+            STATUS_VN.get(order.status, order.status),
+            f'Tháng {order.created_at.month}',
+            order.created_at.strftime('%d/%m/%Y %H:%M'),
+        ]
+        if order.status == 'delivered':
+            total_revenue += int(order.total_amount)
+        for col, val in enumerate(row, 1):
+            cell = ws.cell(row=idx + 1, column=col, value=val)
+            cell.border = border
+            cell.alignment = Alignment(vertical='center', horizontal='center' if col in (1, 6, 7, 8, 9) else 'left')
+            if col == 5:
+                cell.number_format = '#,##0'
+                cell.alignment = Alignment(vertical='center', horizontal='right')
+
+    # Monthly summary sheet
+    ws2 = wb.create_sheet('Theo tháng')
+    ws2.cell(row=1, column=1, value='Tháng').font = Font(bold=True)
+    ws2.cell(row=1, column=2, value='Tổng đơn').font = Font(bold=True)
+    ws2.cell(row=1, column=3, value='Doanh thu (đã giao)').font = Font(bold=True)
+    monthly = {}
+    for order in qs:
+        m = order.created_at.month
+        if m not in monthly:
+            monthly[m] = {'count': 0, 'revenue': 0}
+        monthly[m]['count'] += 1
+        if order.status == 'delivered':
+            monthly[m]['revenue'] += int(order.total_amount)
+    for m in range(1, 13):
+        d = monthly.get(m, {'count': 0, 'revenue': 0})
+        ws2.cell(row=m + 1, column=1, value=f'Tháng {m}')
+        ws2.cell(row=m + 1, column=2, value=d['count'])
+        c = ws2.cell(row=m + 1, column=3, value=d['revenue'])
+        c.number_format = '#,##0'
+    ws2.column_dimensions['A'].width = 12
+    ws2.column_dimensions['B'].width = 12
+    ws2.column_dimensions['C'].width = 22
+
+    # Summary row on main sheet
+    sum_row = len(list(qs)) + 2
+    ws.cell(row=sum_row, column=1, value='TỔNG DOANH THU (đã giao)').font = Font(bold=True)
+    ws.merge_cells(start_row=sum_row, start_column=1, end_row=sum_row, end_column=4)
+    rev_cell = ws.cell(row=sum_row, column=5, value=total_revenue)
+    rev_cell.font = Font(bold=True, color='DC2626')
+    rev_cell.number_format = '#,##0'
+    rev_cell.alignment = Alignment(horizontal='right', vertical='center')
+
+    ws.column_dimensions['A'].width = 6
+    ws.column_dimensions['B'].width = 20
+    ws.column_dimensions['C'].width = 28
+    ws.column_dimensions['D'].width = 14
+    ws.column_dimensions['E'].width = 18
+    ws.column_dimensions['F'].width = 10
+    ws.column_dimensions['G'].width = 14
+    ws.column_dimensions['H'].width = 12
+    ws.column_dimensions['I'].width = 18
+    ws.row_dimensions[1].height = 24
+
+    filename = f'doanh-thu-nam-{now.year}.xlsx'
+    response = HttpResponse(
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    response['Content-Disposition'] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response
 
 
 @login_required
@@ -2211,6 +2772,78 @@ def brand_delete(request):
     brand.delete()
     
     return JsonResponse({'success': True, 'message': f'Đã xóa hãng "{brand_name}"!'})
+
+@login_required
+def user_detail_json(request):
+    """Trả về JSON thông tin chi tiết người dùng + sổ địa chỉ"""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Không có quyền!'}, status=403)
+    user_id = request.GET.get('user_id')
+    if not user_id:
+        return JsonResponse({'success': False, 'message': 'Thiếu user_id!'}, status=400)
+    from store.models import CustomUser, Address
+    try:
+        u = CustomUser.objects.get(id=user_id)
+    except CustomUser.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Người dùng không tồn tại!'}, status=404)
+    addresses = Address.objects.filter(user=u)
+    addr_list = [{
+        'full_name': a.full_name,
+        'phone': a.phone,
+        'detail': a.detail,
+        'ward_name': a.ward_name,
+        'district_name': a.district_name,
+        'province_name': a.province_name,
+        'is_default': a.is_default,
+    } for a in addresses]
+    return JsonResponse({
+        'success': True,
+        'user': {
+            'id': u.id,
+            'email': u.email,
+            'last_name': u.last_name or '',
+            'first_name': u.first_name or '',
+            'phone': u.phone or '',
+            'verified_student_email': u.verified_student_email or '',
+            'verified_teacher_email': u.verified_teacher_email or '',
+        },
+        'addresses': addr_list,
+    })
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def user_add(request):
+    """Thêm người dùng mới"""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Không có quyền!'}, status=403)
+
+    from store.models import CustomUser
+    email = request.POST.get('email', '').strip().lower()
+    phone = request.POST.get('phone', '').strip()
+    last_name = request.POST.get('last_name', '').strip()
+    first_name = request.POST.get('first_name', '').strip()
+    password = request.POST.get('password', '').strip()
+
+    if not email or not password:
+        return JsonResponse({'success': False, 'message': 'Email và mật khẩu không được để trống!'}, status=400)
+
+    if CustomUser.objects.filter(email=email).exists():
+        return JsonResponse({'success': False, 'message': 'Email này đã tồn tại!'}, status=400)
+
+    user = CustomUser.objects.create_user(
+        username=email,
+        email=email,
+        password=password,
+        last_name=last_name,
+        first_name=first_name,
+    )
+    if phone:
+        user.phone = phone
+        user.save()
+
+    return JsonResponse({'success': True, 'message': f'Tạo tài khoản "{email}" thành công!'})
+
 
 @login_required
 @require_http_methods(["POST"])
@@ -2836,6 +3469,31 @@ def image_folder_create(request):
                 'product_name': folder.product.name if folder.product else None
             }
         })
+    except Exception as e:
+        return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@login_required
+@require_http_methods(["POST"])
+@csrf_exempt
+def image_folder_delete(request):
+    """Xóa thư mục ảnh (và toàn bộ FolderColorImage bên trong)"""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'message': 'Không có quyền!'}, status=403)
+
+    from store.models import ImageFolder
+
+    folder_id = request.POST.get('folder_id', '').strip()
+    if not folder_id:
+        return JsonResponse({'success': False, 'message': 'Thiếu folder_id!'}, status=400)
+
+    try:
+        folder = ImageFolder.objects.get(id=folder_id)
+        folder_name = folder.name
+        folder.delete()  # cascade xóa FolderColorImage
+        return JsonResponse({'success': True, 'message': f'Đã xóa thư mục "{folder_name}"!'})
+    except ImageFolder.DoesNotExist:
+        return JsonResponse({'success': False, 'message': 'Thư mục không tồn tại!'}, status=404)
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
 
@@ -3960,9 +4618,8 @@ def place_order(request):
     # Xóa cart items
     cart.items.filter(id__in=item_ids).delete()
     
-    # Nếu VietQR, xóa pending QR
-    if payment_method == 'vietqr' and transfer_code:
-        PendingQRPayment.objects.filter(transfer_code=transfer_code, user=request.user).delete()
+    # Nếu VietQR, giữ lại PendingQRPayment (status='approved') để hiển thị lịch sử duyệt
+    # Không xóa record — admin có thể xem lại trong tab Lịch sử
     
     if payment_method == 'cod':
         from store.telegram_utils import notify_order_success
@@ -4121,8 +4778,7 @@ def vietqr_payment_page(request):
     if timeout_seconds <= 0 and order.status == 'awaiting_payment':
         order.status = 'cancelled'
         order.save()
-        if qr:
-            qr.delete()
+        # Không xóa PendingQRPayment — giữ lại lịch sử
     
     context = {
         'order': order,
@@ -4158,10 +4814,8 @@ def vietqr_page_status(request):
         return JsonResponse({'success': True, 'status': 'expired'})
     
     if qr.is_expired:
-        qr.delete()
+        # Không xóa trực tiếp, để cleanup_expired() xử lý theo lịt
         return JsonResponse({'success': True, 'status': 'expired'})
-    
-    if qr.status == 'approved':
         try:
             order = Order.objects.get(order_code=order_code, user=request.user)
             if order.status == 'awaiting_payment':
@@ -4173,7 +4827,7 @@ def vietqr_page_status(request):
                 notify_order_success(order_code, 'vietqr', vqr_items)
         except Order.DoesNotExist:
             pass
-        qr.delete()
+        # Giữ lại record để lưu lịch sử duyệt QR
         return JsonResponse({'success': True, 'status': 'approved'})
     
     if qr.status == 'cancelled':
@@ -4210,8 +4864,9 @@ def vietqr_expire(request):
             pass
     
     if transfer_code:
+        # Chỉ xóa nếu vẫn còn pending — không xóa approved/cancelled để giữ lịch sử
         PendingQRPayment.objects.filter(
-            transfer_code=transfer_code, user=request.user
+            transfer_code=transfer_code, user=request.user, status='pending'
         ).delete()
     
     return JsonResponse({'success': True})
@@ -4540,16 +5195,23 @@ def admin_order_update_status(request):
 @login_required
 def qr_payment_list(request):
     """
-    Admin: lấy danh sách QR đang pending (auto-cleanup expired).
+    Admin: lấy danh sách QR.
+    ?filter=pending (default): chờ duyệt, tự cleanup expired.
+    ?filter=history: approved + cancelled.
     """
     if not request.user.is_superuser:
         return JsonResponse({'success': False, 'message': 'Không có quyền'}, status=403)
 
     from store.models import PendingQRPayment
-    # Xoá hết QR pending quá 15 phút
-    PendingQRPayment.cleanup_expired()
+    filter_type = request.GET.get('filter', 'pending')
 
-    qrs = PendingQRPayment.objects.filter(status='pending').order_by('-created_at')
+    if filter_type == 'history':
+        qrs = PendingQRPayment.objects.filter(status__in=['approved', 'cancelled']).order_by('-created_at')
+    else:
+        # Xoá hết QR pending quá 15 phút
+        PendingQRPayment.cleanup_expired()
+        qrs = PendingQRPayment.objects.filter(status='pending').order_by('-created_at')
+
     items = []
     for idx, qr in enumerate(qrs, 1):
         items.append({
@@ -4560,6 +5222,7 @@ def qr_payment_list(request):
             'created_at': qr.created_at.strftime('%d/%m/%Y %H:%M:%S'),
             'user_email': qr.user.email,
             'qr_url': qr.qr_url(),
+            'status': qr.status,
         })
     return JsonResponse({'success': True, 'items': items})
 

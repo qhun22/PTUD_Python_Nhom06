@@ -1,559 +1,379 @@
-
-{% extends 'base.html' %}
 {% load static %}
 {% load custom_filters %}
-
-{% block title %}DASHBOARD - QHUN22 Admin{% endblock %}
-
-{% block extra_css %}
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DASHBOARD - QHUN22 Admin</title>
+    <link rel="icon" type="image/jpeg" href="{% static 'logos/seanfavi.jpg' %}">
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Signika:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+    <script src="{% static 'js/toast.js' %}"></script>
+    <script src="{% static 'js/confirm.js' %}"></script>
 <style>
-    /* Main Dashboard Layout */
-    .qh-dashboard {
-        display: flex;
-        min-height: calc(100vh - 140px);
-        background: var(--qh-bg);
-        padding: 20px;
-        gap: 20px;
-    }
-    
-    /* Container Box */
-    .qh-dashboard-container {
-        display: flex;
-        background: var(--qh-white);
-        border-radius: 14px;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.06);
-        overflow: hidden;
-        width: 100%;
-    }
-    
-    /* Sidebar */
-    .qh-dashboard-sidebar {
-        width: 240px;
-        border-right: 1px solid var(--qh-border);
-        display: flex;
-        flex-direction: column;
-        flex-shrink: 0;
-    }
-    
-    .qh-sidebar-header {
-        padding: 20px;
-        border-bottom: 1px solid var(--qh-border);
-    }
-    
-    .qh-sidebar-title {
-        font-size: 18px;
-        font-weight: 700;
-        color: #666666;
-    }
-    
-    .qh-sidebar-menu {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        flex: 1;
-        overflow: hidden;
-        display: flex;
-        flex-direction: column;
-    }
-    
-    .qh-sidebar-item {
-        padding: 14px 20px;
-        display: flex;
-        align-items: center;
-        cursor: pointer;
-        transition: all 0.2s;
-        color: var(--qh-text);
-        border-left: 4px solid transparent;
-        font-size: 16px;
-    }
-    
-    .qh-sidebar-item:hover {
-        background: #e2e8f0;
-    }
-    
-    .qh-sidebar-item.active {
-        background: #eff6ff;
-        border-left-color: var(--qh-primary);
-        color: #666666;
-        font-weight: 600;
-    }
-    
-    .qh-sidebar-item svg {
-        width: 18px;
-        height: 18px;
-        margin-right: 10px;
-        flex-shrink: 0;
-    }
-    
-    .qh-sidebar-pagination {
-        padding: 12px 16px;
-        border-top: 1px solid var(--qh-border);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    .qh-sidebar-pagination button {
-        min-width: 32px;
-        padding: 6px 10px;
-        border: 1px solid var(--qh-border);
-        background: var(--qh-white);
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 13px;
-        font-family: 'Signika', sans-serif;
-        color: var(--qh-text);
-    }
-    .qh-sidebar-pagination button:hover:not(:disabled) {
-        background: #e2e8f0;
-    }
-    .qh-sidebar-pagination button:disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-    }
-    .qh-sidebar-pagination button.active-page {
-        background: var(--qh-primary);
-        color: white;
-        border-color: var(--qh-primary);
-    }
-    
-    .qh-sidebar-footer {
-        padding: 16px 20px;
-        border-top: 1px solid var(--qh-border);
-        margin-top: auto;
-    }
-    
-    /* Main Content Area */
-    .qh-dashboard-content {
-        flex: 1;
-        padding: 24px;
-        overflow-y: auto;
-        scrollbar-width: thin;
-        scrollbar-color: #c1c1c1 #f8fafc;
-    }
-    
-    .qh-content-header {
-        margin-bottom: 24px;
-    }
-    
-    .qh-content-title {
-        font-size: 22px;
-        font-weight: 600;
-        color: var(--qh-text);
-    }
-    
-    /* Stats Grid - 4 columns, 2 rows */
-    .qh-stats-grid {
-        display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 16px;
-        margin-bottom: 24px;
-    }
-    
-    .qh-stat-card {
-        background: var(--qh-white);
-        padding: 16px;
-        border-radius: 10px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-        display: flex;
-        align-items: center;
-        position: relative;
-    }
-    
-    .qh-stat-icon {
-        width: 44px;
-        height: 44px;
-        border-radius: 10px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-right: 14px;
-        flex-shrink: 0;
-    }
-    
-    .qh-stat-icon svg {
-        width: 20px;
-        height: 20px;
-    }
-    
-    .qh-stat-icon.blue { background: #dbeafe; color: #2563eb; }
-    .qh-stat-icon.green { background: #d1fae5; color: #059669; }
-    .qh-stat-icon.orange { background: #fef3c7; color: #d97706; }
-    .qh-stat-icon.red { background: #fee2e2; color: #dc2626; }
-    .qh-stat-icon.purple { background: #ede9fe; color: #7c3aed; }
-    .qh-stat-icon.cyan { background: #cffafe; color: #0891b2; }
-    .qh-stat-icon.pink { background: #fce7f3; color: #db2777; }
-    .qh-stat-icon.yellow { background: #fef9c3; color: #ca8a04; }
-    
-    .qh-stat-info h4 {
-        font-size: 14px;
-        color: var(--qh-text-light);
-        margin: 0 0 4px;
-        font-weight: 500;
-    }
-    
-    .qh-stat-info .value {
-        font-size: 20px;
-        font-weight: 700;
-        color: var(--qh-text);
-    }
-    
-    /* Chart Section */
-    .qh-chart-section {
-        background: var(--qh-white);
-        border-radius: 10px;
-        padding: 20px;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
-    }
-    
-    .qh-chart-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-    }
-    
-    .qh-chart-title {
-        font-size: 16px;
-        font-weight: 600;
-        color: var(--qh-text);
-    }
-    
-    .qh-chart-year {
-        font-size: 13px;
-        color: var(--qh-text-light);
-        background: var(--qh-bg);
-        padding: 5px 10px;
-        border-radius: 20px;
-    }
-    
-    .qh-chart-container {
-        display: flex;
-        align-items: flex-end;
-        justify-content: space-between;
-        height: 280px;
-        padding: 10px 0;
-        border-bottom: 2px solid var(--qh-border);
-    }
-    
-    .qh-chart-bar-wrapper {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        height: 100%;
-        justify-content: flex-end;
-        padding: 0 4px;
-    }
-    
-    .qh-chart-bar {
-        width: 100%;
-        max-width: 32px;
-        background: #A9CCF0;
-        border-radius: 4px 4px 0 0;
-        min-height: 4px;
-        transition: height 0.5s ease;
-        position: relative;
-    }
-    
-    .qh-chart-bar:hover {
-        background: #8BB8E0;
-    }
-    
-    .qh-chart-bar-label {
-        font-size: 11px;
-        color: var(--qh-text-light);
-        margin-top: 6px;
-        text-align: center;
-    }
-    
-    /* Responsive */
-    @media (max-width: 1200px) {
-        .qh-stats-grid {
-            grid-template-columns: repeat(2, 1fr);
-        }
-    }
-    
-    @media (max-width: 768px) {
-        .qh-dashboard {
-            flex-direction: column;
-            padding: 10px;
-        }
-        
-        .qh-dashboard-sidebar {
-            width: 100%;
-        }
-        
-        .qh-stats-grid {
-            grid-template-columns: 1fr;
-        }
-    }
-</style>
-{% endblock %}
+    /* ======== RESET ======== */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; margin: 0; padding: 0; font-family: 'Signika', sans-serif; background: #f8fafc; }
 
-{% block content %}
-<!-- Hộp container chính -->
-<div class="qh-dashboard-container">
-    <!-- Thanh sidebar -->
-    <div class="qh-dashboard-sidebar">
-        <div class="qh-sidebar-header">
-            <div class="qh-sidebar-title">TRANG QUẢN TRỊ</div>
-        </div>
-        <ul class="qh-sidebar-menu" id="qhSidebarMenu">
-            <li class="qh-sidebar-item active" data-section="stats" onclick="window.location.href='?section=stats'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                </svg>
-                Thống kê
-            </li>
-            <li class="qh-sidebar-item" data-section="users" onclick="window.location.href='?section=users'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                </svg>
-                Người dùng
-            </li>
-            <li class="qh-sidebar-item" data-section="brands" onclick="window.location.href='?section=brands'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/>
-                </svg>
-                Hãng sản phẩm
-            </li>
-            <li class="qh-sidebar-item" data-section="products" onclick="window.location.href='?section=products'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"/>
-                </svg>
-                Treo sản phẩm
-            </li>
-            <li class="qh-sidebar-item" data-section="product-images" onclick="window.location.href='?section=product-images'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                Ảnh sản phẩm
-            </li>
-            <li class="qh-sidebar-item" data-section="sku" onclick="window.location.href='?section=sku'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                </svg>
-                SKU
-            </li>
-            <li class="qh-sidebar-item" data-section="banner-images" onclick="window.location.href='?section=banner-images'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
-                </svg>
-                Ảnh banner
-            </li>
-            <li class="qh-sidebar-item" data-section="product-content" onclick="window.location.href='?section=product-content'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
-                </svg>
-                Nội dung SP
-            </li>
-            <li class="qh-sidebar-item" data-section="qr-approval" onclick="window.location.href='?section=qr-approval'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                </svg>
-                Duyệt QR
-            </li>
-            <li class="qh-sidebar-item" data-section="admin-orders" onclick="window.location.href='?section=admin-orders'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"/>
-                </svg>
-                Đơn hàng
-            </li>
-            <li class="qh-sidebar-item" data-section="coupons" onclick="window.location.href='?section=coupons'">
-                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"/>
-                </svg>
-                Mã giảm giá
-            </li>
-        </ul>
-        <div class="qh-sidebar-pagination" id="qhSidebarPagination" style="display: none;"></div>
+    /* ======== TOPBAR ======== */
+    .da-topbar {
+        position: fixed; top: 0; left: 0; right: 0; height: 50px;
+        background: #fff; border-bottom: 1px solid #e2e8f0;
+        display: flex; align-items: center; justify-content: space-between;
+        padding: 0 20px; z-index: 200;
+    }
+    .da-topbar-brand { font-size: 14px; font-weight: 700; color: #1e293b; letter-spacing: 1.5px; }
+    .da-topbar-actions { display: flex; align-items: center; gap: 2px; }
+    .da-topbar-link {
+        padding: 7px 14px; font-size: 13px; color: #475569;
+        text-decoration: none; border-radius: 6px; transition: background 0.15s;
+        font-family: 'Signika', sans-serif; font-weight: 500;
+    }
+    .da-topbar-link:hover { background: #f1f5f9; color: #1e293b; }
+    .da-topbar-link.logout { color: #dc2626; }
+    .da-topbar-link.logout:hover { background: #fee2e2; }
+
+    /* ======== SIDEBAR ======== */
+    .da-sidebar {
+        position: fixed; top: 50px; left: 0; bottom: 0; width: 175px;
+        background: #fff; border-right: 1px solid #e2e8f0;
+        display: flex; flex-direction: column;
+        overflow: hidden; z-index: 100;
+    }
+    .da-nav-item {
+        flex: 1; display: flex; align-items: center;
+        padding: 0 16px; font-size: 14px; color: #475569;
+        cursor: pointer; border-left: 3px solid transparent;
+        transition: all 0.15s; text-decoration: none;
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        min-height: 0;
+    }
+    .da-nav-item:hover { background: #f8fafc; color: #1e293b; }
+    .da-nav-item.active { background: #eff6ff; border-left-color: #3b82f6; color: #1d4ed8; font-weight: 600; }
+
+    /* ======== MAIN CONTENT ======== */
+    .da-main {
+        position: fixed; top: 50px; left: 175px; right: 0; bottom: 0;
+        overflow-y: auto; background: #f8fafc; padding: 24px;
+        scrollbar-width: thin; scrollbar-color: #c1c1c1 #f8fafc;
+        z-index: 201;
+    }
+
+    /* ======== STATS GROUPS ======== */
+    .da-group-title {
+        font-size: 12px; font-weight: 700; color: #334155;
+        letter-spacing: 0.8px; margin: 20px 0 8px;
+        padding-bottom: 7px; border-bottom: 2px solid #e2e8f0;
+    }
+    .da-group-title:first-of-type { margin-top: 0; }
+    .da-group-hd {
+        display: flex; justify-content: space-between; align-items: center;
+        margin: 20px 0 8px; padding-bottom: 7px; border-bottom: 2px solid #e2e8f0;
+    }
+    .da-group-hd:first-child { margin-top: 0; }
+    .da-group-hd .da-group-title { margin: 0; padding: 0; border: none; }
+    .da-export-btn {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: 4px 10px; font-size: 11px; font-weight: 600;
+        font-family: 'Signika', sans-serif; color: #1e40af;
+        background: #eff6ff; border: 1px solid #bfdbfe;
+        border-radius: 5px; cursor: pointer; text-decoration: none;
+        transition: background 0.15s;
+    }
+    .da-export-btn:hover { background: #dbeafe; }
+    .da-row { display: grid; gap: 10px; margin-bottom: 10px; }
+    .da-c5 { grid-template-columns: repeat(5, 1fr); }
+    .da-c3 { grid-template-columns: repeat(3, 1fr); }
+    .da-c2 { grid-template-columns: repeat(2, 1fr); }
+    .da-stat {
+        background: #fff; border: 1px solid #e8ecf0; border-radius: 7px;
+        padding: 12px 13px 10px; display: flex; flex-direction: column; min-width: 0;
+    }
+    .da-stat-label { font-size: 11px; color: #64748b; font-weight: 500; margin-bottom: 5px; line-height: 1.4; }
+    .da-stat-val { font-size: 18px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+    .da-stat-btn {
+        align-self: flex-start; padding: 3px 10px;
+        background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0;
+        border-radius: 4px; font-size: 11px; cursor: pointer; font-family: inherit;
+        transition: background 0.15s;
+    }
+    .da-stat-btn:hover { background: #e2e8f0; }
+
+    /* ======== CHART ======== */
+    .da-chart-wrap { background: #fff; border: 1px solid #e8ecf0; border-radius: 7px; padding: 18px 20px; margin-top: 6px; }
+    .da-chart-hd { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .da-chart-tit { font-size: 13px; font-weight: 700; color: #1e293b; letter-spacing: 0.5px; }
+    .da-chart-yr { font-size: 11px; color: #94a3b8; background: #f8fafc; padding: 3px 10px; border-radius: 20px; }
+    .da-chart-bars {
+        display: flex; align-items: flex-end; justify-content: space-between;
+        height: 180px; border-bottom: 2px solid #e2e8f0;
+    }
+    .da-bar-w { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; height: 100%; padding: 0 3px; }
+    .da-bar { width: 100%; max-width: 26px; background: #A9CCF0; border-radius: 3px 3px 0 0; min-height: 4px; transition: height 0.4s ease; }
+    .da-bar:hover { background: #8BB8E0; }
+    .da-bar-lbl { font-size: 10px; color: #94a3b8; margin-top: 5px; }
+
+    /* ======== TABLES & SECTIONS ======== */
+    .da-toolbar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; gap: 8px; flex-wrap: wrap; }
+    .da-toolbar-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .da-search-wrap { position: relative; }
+    .da-search-input {
+        padding: 8px 14px 8px 34px; border: 1px solid #e2e8f0; border-radius: 6px;
+        font-size: 13px; font-family: 'Signika', sans-serif; color: #1e293b;
+        background: #fff; outline: none; transition: border-color 0.15s; width: 280px;
+    }
+    .da-search-input:focus { border-color: #3b82f6; }
+    .da-search-icon {
+        position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+        width: 15px; height: 15px; color: #94a3b8; pointer-events: none;
+    }
+    .da-btn {
+        display: inline-flex; align-items: center; gap: 5px;
+        cursor: pointer; border: none; font-family: 'Signika', sans-serif;
+        font-weight: 500; border-radius: 6px; transition: all 0.15s;
+        text-decoration: none; white-space: nowrap;
+    }
+    .da-btn-md { padding: 8px 14px; font-size: 13px; }
+    .da-btn-sm { padding: 4px 10px; font-size: 12px; }
+    .da-btn-primary { background: #3b82f6; color: #fff; }
+    .da-btn-primary:hover { background: #2563eb; }
+    .da-btn-ghost { background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0 !important; }
+    .da-btn-ghost:hover { background: #e2e8f0; }
+    .da-btn-edit { background: #fef3c7; color: #b45309; }
+    .da-btn-edit:hover { background: #fde68a; }
+    .da-btn-del { background: #fee2e2; color: #dc2626; }
+    .da-btn-del:hover { background: #fecaca; }
+    .da-btn-info { background: #dbeafe; color: #1e40af; }
+    .da-btn-info:hover { background: #bfdbfe; }
+    .da-table-wrap { overflow-x: auto; }
+    .da-table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 7px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
+    .da-table thead tr { background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+    .da-table th { padding: 11px 14px; text-align: left; font-size: 12px; font-weight: 600; color: #64748b; white-space: nowrap; }
+    .da-table td { padding: 10px 14px; font-size: 13px; color: #334155; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+    .da-table tbody tr:last-child td { border-bottom: none; }
+    .da-table tbody tr:hover td { background: #f8fafc; }
+    .da-table-empty td { padding: 36px !important; text-align: center; color: #94a3b8; font-size: 13px; }
+    .da-pagination { display: flex; justify-content: center; align-items: center; gap: 6px; margin-top: 18px; flex-wrap: wrap; }
+    .da-page-link {
+        padding: 6px 12px; background: #f1f5f9; color: #334155;
+        border-radius: 6px; text-decoration: none; font-size: 12px;
+        font-family: 'Signika', sans-serif; transition: background 0.15s;
+    }
+    .da-page-link:hover { background: #e2e8f0; }
+    .da-page-link.active { background: #3b82f6; color: #fff; pointer-events: none; }
+
+    /* ======== ORDER TABS ======== */
+    .da-order-tabs { display: flex; background: #fff; border-radius: 7px; border: 1px solid #e2e8f0; overflow: hidden; margin-bottom: 16px; }
+    .da-order-tab { flex: 1; padding: 11px 4px; border: none; background: transparent; font-size: 12.5px; font-weight: 500; color: #64748b; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid transparent; transition: all 0.15s; white-space: nowrap; }
+    .da-order-tab:hover { background: #f8fafc; color: #334155; }
+    .da-order-tab.active { color: #3b82f6; font-weight: 600; border-bottom-color: #3b82f6; background: #eff6ff; }
+    .da-order-tab.active:hover { background: #dbeafe; color: #1d4ed8; }
+    .da-order-tab.refund-tab { background: #fef3c7; color: #92400e; border-bottom-color: #f59e0b; font-weight: 600; }
+    .da-order-tab.refund-tab:hover { background: #fde68a; color: #92400e; }
+    .da-order-tab.refund-tab.active { background: #fde68a; color: #92400e; }
+    .da-btn-success { background: #22c55e; color: #fff; }
+    .da-btn-success:hover { background: #16a34a; }
+
+    /* ======== LEGACY COMPATIBILITY ======== */
+    .qh-content-title { font-size: 20px; font-weight: 600; color: #1e293b; }
+    .qh-dashboard { }
+
+    /* ======== RESPONSIVE ======== */
+    @media (max-width: 1200px) { .da-c5 { grid-template-columns: repeat(3, 1fr); } }
+    @media (max-width: 900px) {
+        .da-sidebar { width: 140px; }
+        .da-main { left: 140px; }
+        .da-c5 { grid-template-columns: repeat(2, 1fr); }
+        .da-c3 { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 600px) {
+        .da-sidebar { display: none; }
+        .da-main { left: 0; padding: 12px; }
+    }
+
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="da-topbar">
+    <span class="da-topbar-brand">PANEL</span>
+    <div class="da-topbar-actions">
+        <a href="{% url 'store:home' %}" class="da-topbar-link">Trang chủ</a>
+        <a href="{% url 'account_logout' %}" class="da-topbar-link logout">Đăng xuất</a>
     </div>
-    
-    <!-- Nội dung chính -->
-    <div class="qh-dashboard-content">
-        
+</header>
+
+<!-- SIDEBAR -->
+<nav class="da-sidebar">
+    <a class="da-nav-item{% if request.GET.section == 'stats' or not request.GET.section %} active{% endif %}" onclick="window.location.href='?section=stats'" data-section="stats">Thống kê</a>
+    <a class="da-nav-item{% if request.GET.section == 'users' %} active{% endif %}" onclick="window.location.href='?section=users'" data-section="users">Người dùng</a>
+    <a class="da-nav-item{% if request.GET.section == 'admin-orders' %} active{% endif %}" onclick="window.location.href='?section=admin-orders'" data-section="admin-orders">Đơn hàng</a>
+    <a class="da-nav-item{% if request.GET.section == 'qr-approval' %} active{% endif %}" onclick="window.location.href='?section=qr-approval'" data-section="qr-approval">Duyệt QR</a>
+    <a class="da-nav-item{% if request.GET.section == 'coupons' %} active{% endif %}" onclick="window.location.href='?section=coupons'" data-section="coupons">Mã giảm giá</a>
+    <a class="da-nav-item{% if request.GET.section == 'brands' %} active{% endif %}" onclick="window.location.href='?section=brands'" data-section="brands">Hãng sản phẩm</a>
+    <a class="da-nav-item{% if request.GET.section == 'products' %} active{% endif %}" onclick="window.location.href='?section=products'" data-section="products">Treo sản phẩm</a>
+    <a class="da-nav-item{% if request.GET.section == 'sku' %} active{% endif %}" onclick="window.location.href='?section=sku'" data-section="sku">Sku</a>
+    <a class="da-nav-item{% if request.GET.section == 'banner-images' %} active{% endif %}" onclick="window.location.href='?section=banner-images'" data-section="banner-images">Ảnh banner</a>
+    <a class="da-nav-item{% if request.GET.section == 'product-images' %} active{% endif %}" onclick="window.location.href='?section=product-images'" data-section="product-images">Ảnh SP</a>
+    <a class="da-nav-item{% if request.GET.section == 'product-content' %} active{% endif %}" onclick="window.location.href='?section=product-content'" data-section="product-content">Nội dung SP</a>
+    <!-- hidden compat elements for dashboard.js -->
+    <ul id="qhSidebarMenu" style="display:none;"></ul>
+    <div id="qhSidebarPagination" style="display:none;"></div>
+</nav>
+
+<!-- MAIN -->
+<main class="da-main">
+
         <!-- Phần thống kê -->
         <div id="stats-section">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h1 class="qh-content-title">Thống kê tổng quan</h1>
-            </div>
-            <!-- Lưới thống kê - 8 thẻ (4 thẻ/hàng) -->
-            <div class="qh-stats-grid">
-                <!-- Hàng 1 -->
-                <div class="qh-stat-card">
-                    <div class="qh-stat-icon blue">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div class="qh-stat-info">
-                        <h4>Doanh thu hôm nay</h4>
-                        <div class="value">{{ revenue_today|format_price_with_unit }}</div>
-                    </div>
-                </div>
-                <div class="qh-stat-card">
-                    <div class="qh-stat-icon green">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
-                        </svg>
-                    </div>
-                    <div class="qh-stat-info">
-                        <h4>Doanh thu tháng này</h4>
-                        <div class="value">{{ revenue_this_month|format_price_with_unit }}</div>
-                    </div>
-                </div>
-                <div class="qh-stat-card">
-                    <div class="qh-stat-icon purple">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/>
-                        </svg>
-                    </div>
-                    <div class="qh-stat-info">
-                        <h4>Tổng khách hàng</h4>
-                        <div class="value">{{ total_users }}</div>
-                    </div>
-                </div>
-                <div class="qh-stat-card">
-                    <div class="qh-stat-icon red">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
-                        </svg>
-                    </div>
-                    <div class="qh-stat-info">
-                        <h4>Sắp hết hàng</h4>
-                        <div class="value">{{ low_stock_products_count }}</div>
-                    </div>
-                </div>
-                
-                <!-- Hàng 2 -->
-                <div class="qh-stat-card">
-                    <div class="qh-stat-icon cyan">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
-                        </svg>
-                    </div>
-                    <div class="qh-stat-info">
-                        <h4>Khách Login User</h4>
-                        <div class="value">{{ regular_users }}</div>
-                    </div>
-                </div>
-                <div class="qh-stat-card">
-                    <div class="qh-stat-icon orange">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
-                        </svg>
-                    </div>
-                    <div class="qh-stat-info">
-                        <h4>Khách Login Google</h4>
-                        <div class="value">{{ oauth_users }}</div>
-                    </div>
-                </div>
-                <div class="qh-stat-card">
-                    <div class="qh-stat-icon yellow">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
-                        </svg>
-                    </div>
-                    <div class="qh-stat-info">
-                        <h4>Tổng lượt truy cập</h4>
-                        <div class="value">{{ total_visits }}</div>
-                    </div>
-                </div>
-                <div class="qh-stat-card" style="flex: 1;">
-                    <div class="qh-stat-icon pink">
-                        <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"/>
-                        </svg>
-                    </div>
-                    <div class="qh-stat-info" style="flex: 1;">
-                        <h4>Best Seller</h4>
-                        <div class="value" style="font-size: 20px;">0</div>
-                    </div>
-                    <button type="button" onclick="openBestSellersModal()" style="padding: 8px 16px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; border: none; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3); white-space: nowrap;">
-                        Chi tiết
-                    </button>
+
+            <!-- DOANH THU & ĐƠN HÀNG -->
+            <div class="da-group-hd">
+                <span class="da-group-title">DOANH THU &amp; ĐƠN HÀNG</span>
+                <div style="display:flex;gap:6px;">
+                    <a href="/export/month/" class="da-export-btn" title="Xuất thống kê tháng này">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Xuất tháng
+                    </a>
+                    <a href="/export/year/" class="da-export-btn" title="Xuất thống kê năm này">
+                        <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                        Xuất năm
+                    </a>
                 </div>
             </div>
-            
-            <!-- Phần biểu đồ - 2026 -->
-            <div class="qh-chart-section">
-                <div class="qh-chart-header">
-                    <h3 class="qh-chart-title">BIỂU ĐỒ DOANH THU NĂM {{ chart_year }}</h3>
-                    <span class="qh-chart-year">Năm {{ chart_year }}</span>
-                </div>
-                <div class="qh-chart-container">
-                    {% for month in months %}
-                    <div class="qh-chart-bar-wrapper" title="{{ month.value|floatformat:0 }}₫">
-                        <div class="qh-chart-bar" style="height: {{ month.height }}px;"></div>
-                        <div class="qh-chart-bar-label">{{ month.name }}</div>
+            <div class="da-row da-c5">
+                <div class="da-stat"><div class="da-stat-label">Tổng số đơn hàng hôm nay</div><div class="da-stat-val">{{ orders_today|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('order','today')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Tổng số đơn hàng tháng này</div><div class="da-stat-val">{{ orders_this_month|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('order','month')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Tổng số đơn hàng năm này</div><div class="da-stat-val">{{ orders_this_year|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('order','year')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Giá trị đơn trung bình (AOV)</div><div class="da-stat-val">{{ avg_order_value|format_price_with_unit }}</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">Doanh thu ÷ Tổng đơn</div></div>
+                <div class="da-stat"><div class="da-stat-label">Tỷ lệ chuyển đổi</div><div class="da-stat-val">{{ conversion_rate|default:0 }}%</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">Đơn hàng ÷ Lượt truy cập</div></div>
+            </div>
+            <div class="da-row da-c5">
+                <div class="da-stat"><div class="da-stat-label">Đơn đã đặt hàng</div><div class="da-stat-val">{{ orders_pending|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('order','pending')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Đơn đang xử lý</div><div class="da-stat-val">{{ orders_processing|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('order','processing')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Đơn hàng đang giao</div><div class="da-stat-val">{{ orders_shipped|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('order','shipped')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Đã giao hàng</div><div class="da-stat-val">{{ orders_delivered|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('order','delivered')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Đơn đã hủy</div><div class="da-stat-val">{{ orders_cancelled|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('order','cancelled')">Chi tiết</button></div>
+            </div>
+
+            <!-- Modal chi tiết thống kê (đơn hàng + sản phẩm) -->
+            <div id="statDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.5);z-index:9000;align-items:center;justify-content:center;" onclick="if(event.target===this)closeStatDetailModal()">
+                <div style="background:#fff;border-radius:12px;width:1060px;max-width:97vw;max-height:94vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,0.2);">
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:14px 20px;border-bottom:1px solid #e2e8f0;flex-shrink:0;gap:12px;">
+                        <h3 id="sdm-title" style="font-size:14px;font-weight:700;color:#1e293b;font-family:'Signika',sans-serif;margin:0;flex:1;line-height:1.4;"></h3>
+                        <div id="sdm-controls" style="display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap;"></div>
+                        <button onclick="closeStatDetailModal()" style="padding:6px 14px;background:#f1f5f9;color:#334155;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-family:'Signika',sans-serif;white-space:nowrap;flex-shrink:0;">Đóng</button>
                     </div>
-                    {% endfor %}
+                    <div id="sdm-stats" style="display:grid;grid-template-columns:repeat(4,1fr);gap:10px;padding:12px 20px;background:#f8fafc;border-bottom:1px solid #e2e8f0;flex-shrink:0;"></div>
+                    <div id="sdm-body" style="overflow-y:auto;flex:1;min-height:0;"></div>
+                    <div id="sdm-pagination" style="display:flex;justify-content:center;align-items:center;gap:5px;padding:10px 20px;border-top:1px solid #f1f5f9;flex-shrink:0;flex-wrap:wrap;"></div>
                 </div>
             </div>
+
+            <!-- SẢN PHẨM -->
+            <div class="da-group-title">SẢN PHẨM</div>
+            <div class="da-row da-c3">
+                <div class="da-stat"><div class="da-stat-label">Tổng số sản phẩm</div><div class="da-stat-val">{{ total_products|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('product','all')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Sản phẩm đang bán</div><div class="da-stat-val">{{ active_products|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('product','active')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Sản phẩm hết hàng</div><div class="da-stat-val">{{ out_of_stock_products|default:0 }}</div><button class="da-stat-btn" onclick="openStatDetailBox('product','outofstock')">Chi tiết</button></div>
+            </div>
+            <div class="da-row da-c3">
+                <div class="da-stat"><div class="da-stat-label">Sản phẩm bán chạy</div><div class="da-stat-val">Top 10</div><button class="da-stat-btn" onclick="openStatDetailBox('product','bestseller')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Sắp hết hàng</div><div class="da-stat-val">{{ low_stock_products_count }}</div><button class="da-stat-btn" onclick="openStatDetailBox('product','lowstock')">Chi tiết</button></div>
+                <div class="da-stat"><div class="da-stat-label">Tổng số tồn kho</div><div class="da-stat-val">{{ total_stock|default:0 }} SP</div><button class="da-stat-btn" onclick="openStatDetailBox('product','all')">Chi tiết</button></div>
+            </div>
+
+            <!-- LỢI NHUẬN -->
+            <div class="da-group-title">LỢI NHUẬN</div>
+            <div class="da-row da-c3">
+                <div class="da-stat"><div class="da-stat-label">Tổng chi phí nhập hàng</div><div class="da-stat-val">Chưa có</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">Chưa có dữ liệu giá vốn</div></div>
+                <div class="da-stat"><div class="da-stat-label">Doanh thu hôm nay</div><div class="da-stat-val">{{ revenue_today|format_price_with_unit }}</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">Đơn đã giao hôm nay</div></div>
+                <div class="da-stat"><div class="da-stat-label">Doanh thu tháng này</div><div class="da-stat-val">{{ revenue_this_month|format_price_with_unit }}</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">Đơn đã giao trong tháng</div></div>
+            </div>
+
+            <!-- MARKETING -->
+            <div class="da-group-title">MARKETING</div>
+            <div class="da-row da-c2">
+                <div class="da-stat"><div class="da-stat-label">Tổng lượt truy cập</div><div class="da-stat-val">{{ total_visits }}</div><div style="font-size:11px;color:#94a3b8;margin-top:2px;">Tổng lượt ghé thăm trang</div></div>
+                <div class="da-stat"><div class="da-stat-label">Sản phẩm bán chạy nhất</div><div class="da-stat-val">Top 10</div><button class="da-stat-btn" onclick="openStatDetailBox('product','bestseller')">Chi tiết</button></div>
+            </div>
+
+            <!-- BIỂU ĐỒ DOANH THU NĂM -->
+            <div class="da-group-title">BIỂU ĐỒ DOANH THU NĂM</div>
+            <div class="da-chart-wrap">
+                <div class="da-chart-hd">
+                    <div class="da-chart-tit">DOANH THU NĂM {{ chart_year }}</div>
+                    <span class="da-chart-yr">Năm {{ chart_year }}</span>
+                </div>
+                <div class="da-chart-bars" id="revenueChartWrap" data-months='[{% for month in months %}{"label":"{{ month.name }}","value":{{ month.value }}}{% if not forloop.last %},{% endif %}{% endfor %}]'>
+                    <canvas id="revenueChartCanvas"></canvas>
+                </div>
+            </div>
+
         </div>
-        
         <!-- Phần người dùng -->
-        <div id="users-section" class="qh-users-section" style="display: none;">
-            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 16px;">
-                <div style="position: relative; flex: 1; max-width: 400px;">
-                    <input type="text" id="userSearchInput" placeholder="Nhập email để tìm kiếm ..." value="{{ request.GET.user_search|default:'' }}" onkeyup="searchUsers(event)" onkeydown="if(event.key==='Enter')searchUsers(event)" style="width: 100%; padding: 10px 16px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box;">
-                    <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+        <div id="users-section" style="display: none;">
+            <div class="da-toolbar">
+                <span style="font-size:15px;font-weight:700;color:#1e293b;">Người dùng</span>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <div style="position:relative;">
+                        <input type="text" id="userSearchInput" placeholder="Tìm theo email, họ tên..." value="{{ request.GET.user_search|default:'' }}" onkeyup="searchUsers(event)" onkeydown="if(event.key==='Enter')searchUsers(event)" style="width:230px;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <button onclick="resetUserSearch()" class="da-btn da-btn-md da-btn-ghost">Reset</button>
+                    <button type="button" onclick="openAddUserModal()" class="da-btn da-btn-md da-btn-primary">+ Thêm người dùng</button>
                 </div>
-                <button onclick="resetUserSearch()" style="padding: 10px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit;">Reset</button>
             </div>
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="da-table-wrap">
+                <table class="da-table">
                     <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">STT</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Email</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Họ tên</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Ngày đăng ký</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Hành động</th>
+                        <tr>
+                            <th>STT</th>
+                            <th>Email</th>
+                            <th>Họ tên</th>
+                            <th>Ngày đăng ký</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for user in users_paginated %}
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 12px 16px; font-size: 14px;">{{ forloop.counter0|add:users_paginated.start_index }}</td>
-                            <td style="padding: 12px 16px; font-size: 14px;">{{ user.email }}</td>
-                            <td style="padding: 12px 16px; font-size: 14px;">{{ user.last_name|default:"" }} {{ user.first_name|default:"" }}</td>
-                            <td style="padding: 12px 16px; font-size: 14px;">{{ user.date_joined|date:"d/m/Y" }}</td>
-                            <td style="padding: 12px 16px;">
-                                <div style="display: flex; gap: 6px;">
-                                    <button type="button" onclick="openEditUserModal('{{ user.id }}', '{{ user.email }}', '{{ user.last_name|default:"" }}', '{{ user.first_name|default:"" }}', '{{ user.phone|default:"" }}'); return false;" style="background: #fef3c7; color: #b45309; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Sửa</button>
-                                    <button onclick="deleteUser('{{ user.id }}', '{{ user.email }}')" style="background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Xóa</button>
+                        <tr>
+                            <td>{{ forloop.counter0|add:users_paginated.start_index }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>{{ user.last_name|default:"" }} {{ user.first_name|default:"" }}</td>
+                            <td>{{ user.date_joined|date:"d/m/Y" }}</td>
+                            <td>
+                                <div style="display:flex;gap:5px;">
+                                    <button type="button" onclick="openEditUserModal('{{ user.id }}'); return false;" class="da-btn da-btn-sm da-btn-edit">Sửa</button>
+                                    <button onclick="deleteUser('{{ user.id }}', '{{ user.email }}')" class="da-btn da-btn-sm da-btn-del">Xóa</button>
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="5" style="padding: 40px; text-align: center; color: #64748b; font-size: 14px;">
-                                Chưa có người dùng nào.
-                            </td>
-                        </tr>
+                        <tr class="da-table-empty"><td colspan="5">Chưa có người dùng nào.</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            
             {% if users_paginated.has_other_pages %}
-            <div style="display: flex; justify-content: center; gap: 8px; margin-top: 24px; flex-wrap: wrap;">
+            <div class="da-pagination">
                 {% if users_paginated.has_previous %}
-                <a href="?section=users&amp;user_page={{ users_paginated.previous_page_number }}{% if request.GET.user_search %}&amp;user_search={{ request.GET.user_search|urlencode }}{% endif %}" style="padding: 8px 14px; background: #f1f5f9; color: #334155; border-radius: 6px; text-decoration: none; font-size: 13px;">&laquo; Trước</a>
+                <a class="da-page-link" href="?section=users&amp;user_page={{ users_paginated.previous_page_number }}{% if request.GET.user_search %}&amp;user_search={{ request.GET.user_search|urlencode }}{% endif %}">&laquo; Trước</a>
                 {% endif %}
                 {% for num in users_paginated.paginator.page_range %}
                     {% if users_paginated.number == num %}
-                    <span style="padding: 8px 14px; background: #3b82f6; color: white; border-radius: 6px; text-decoration: none; font-size: 13px;">{{ num }}</span>
+                    <span class="da-page-link active">{{ num }}</span>
                     {% elif num > users_paginated.number|add:'-2' and num < users_paginated.number|add:'2' %}
-                    <a href="?section=users&amp;user_page={{ num }}{% if request.GET.user_search %}&amp;user_search={{ request.GET.user_search|urlencode }}{% endif %}" style="padding: 8px 14px; background: #f1f5f9; color: #334155; border-radius: 6px; text-decoration: none; font-size: 13px;">{{ num }}</a>
+                    <a class="da-page-link" href="?section=users&amp;user_page={{ num }}{% if request.GET.user_search %}&amp;user_search={{ request.GET.user_search|urlencode }}{% endif %}">{{ num }}</a>
                     {% endif %}
                 {% endfor %}
                 {% if users_paginated.has_next %}
-                <a href="?section=users&amp;user_page={{ users_paginated.next_page_number }}{% if request.GET.user_search %}&amp;user_search={{ request.GET.user_search|urlencode }}{% endif %}" style="padding: 8px 14px; background: #f1f5f9; color: #334155; border-radius: 6px; text-decoration: none; font-size: 13px;">Sau &raquo;</a>
+                <a class="da-page-link" href="?section=users&amp;user_page={{ users_paginated.next_page_number }}{% if request.GET.user_search %}&amp;user_search={{ request.GET.user_search|urlencode }}{% endif %}">Sau &raquo;</a>
                 {% endif %}
             </div>
             {% endif %}
@@ -561,249 +381,255 @@
         
         <!-- Phần hãng sản phẩm -->
         <div id="brands-section" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <div style="position: relative;">
-                        <input type="text" id="brandSearchInput" placeholder="Nhập tên hãng để tìm kiếm..." value="{{ request.GET.brand_search|default:'' }}" onkeyup="searchBrands(event)" onkeydown="if(event.key==='Enter')searchBrands(event)" style="width: 250px; padding: 10px 16px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: inherit; box-sizing: border-box;">
-                        <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <div class="da-toolbar">
+                <span style="font-size:15px;font-weight:700;color:#1e293b;">Hãng sản phẩm</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <div style="position:relative;">
+                        <input type="text" id="brandSearchInput" placeholder="Tìm kiếm hãng..." value="{{ request.GET.brand_search|default:'' }}" onkeyup="searchBrands(event)" onkeydown="if(event.key==='Enter')searchBrands(event)" style="width:220px;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <button onclick="resetBrandSearch()" style="padding: 10px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit;">Reset</button>
+                    <button onclick="resetBrandSearch()" class="da-btn da-btn-md da-btn-ghost">Reset</button>
+                    <button type="button" onclick="openAddBrandModal(); return false;" class="da-btn da-btn-md da-btn-primary">+ Thêm hãng</button>
                 </div>
-                <button type="button" onclick="openAddBrandModal(); return false;" style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit;">
-                    Thêm hãng
-                </button>
             </div>
-            
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="da-table-wrap">
+                <table class="da-table">
                     <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                            <th style="padding: 15px 16px; text-align: left; font-size: 15px; font-weight: 600; color: #64748b;">STT</th>
-                            <th style="padding: 15px 16px; text-align: left; font-size: 15px; font-weight: 600; color: #64748b;">Hãng</th>
-                            <th style="padding: 15px 16px; text-align: left; font-size: 15px; font-weight: 600; color: #64748b;">Số lượng sản phẩm</th>
-                            <th style="padding: 15px 16px; text-align: left; font-size: 15px; font-weight: 600; color: #64748b;">Ngày thêm</th>
-                            <th style="padding: 15px 16px; text-align: left; font-size: 15px; font-weight: 600; color: #64748b;">Hành động</th>
+                        <tr>
+                            <th>STT</th>
+                            <th>Hãng</th>
+                            <th>Số SP</th>
+                            <th>Ngày thêm</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for brand in brands_paginated %}
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 15px 16px; font-size: 15px;">{{ forloop.counter0|add:brands_paginated.start_index }}</td>
-                            <td style="padding: 15px 16px; font-size: 15px; font-weight: 500;">{{ brand.name }}</td>
-                            <td style="padding: 15px 16px; font-size: 15px;">
-                                <span style="{% if brand.product_count > 0 %}; {% else %}#f1f5f9; color: #64748b{% endif %}; padding: 4px 10px; font-size: 15px; font-weight: 500;">{{ brand.product_count }}</span>
-                            </td>
-                            <td style="padding: 12px 16px; font-size: 15px;">{{ brand.created_at|date:"d/m/Y" }}</td>
-                            <td style="padding: 12px 16px;">
-                                <div style="display: flex; gap: 6px;">
-                                    <button type="button" onclick="openEditBrandModal({{ brand.id }}, '{{ brand.name|escapejs }}', ''); return false;" style="background: #fef3c7; color: #b45309; border: none; border-radius: 6px; padding: 6px 12px; font-size: 15px; cursor: pointer; font-family: inherit;">Sửa</button>
-                                    <button onclick="deleteBrand({{ brand.id }}, '{{ brand.name|escapejs }}')" style="background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 6px 12px; font-size: 15px; cursor: pointer; font-family: inherit;">Xóa</button>
-                                </div>
+                        <tr>
+                            <td>{{ forloop.counter0|add:brands_paginated.start_index }}</td>
+                            <td style="font-weight:500;">{{ brand.name }}</td>
+                            <td>{{ brand.product_count }}</td>
+                            <td>{{ brand.created_at|date:"d/m/Y" }}</td>
+                            <td>
+                                <button type="button" onclick="openEditBrandModal({{ brand.id }}, '{{ brand.name|escapejs }}', ''); return false;" class="da-btn da-btn-sm" style="background:#fef3c7;color:#b45309;">Sửa</button>
+                                <button onclick="deleteBrand({{ brand.id }}, '{{ brand.name|escapejs }}')" class="da-btn da-btn-sm da-btn-del">Xóa</button>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="5" style="padding: 40px; text-align: center; color: #64748b; font-size: 14px;">
-                                CHƯA CÓ HÃNG NÀO THƯA THƯỢNG ĐẾ !
-                            </td>
+                        <tr class="da-table-empty">
+                            <td colspan="5">Chưa có hãng nào.</td>
                         </tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            
             {% if brands_paginated.has_other_pages %}
-            <div style="display: flex; justify-content: center; gap: 8px; margin-top: 24px; flex-wrap: wrap;">
+            <div class="da-pagination">
                 {% if brands_paginated.has_previous %}
-                <a href="?section=brands&amp;brand_page={{ brands_paginated.previous_page_number }}{% if request.GET.brand_search %}&amp;brand_search={{ request.GET.brand_search|urlencode }}{% endif %}" style="padding: 8px 14px; background: #f1f5f9; color: #334155; border-radius: 6px; text-decoration: none; font-size: 13px;">&laquo; Trước</a>
+                <a href="?section=brands&amp;brand_page={{ brands_paginated.previous_page_number }}{% if request.GET.brand_search %}&amp;brand_search={{ request.GET.brand_search|urlencode }}{% endif %}" class="da-page-link">&laquo; Trước</a>
                 {% endif %}
                 {% for num in brands_paginated.paginator.page_range %}
                     {% if brands_paginated.number == num %}
-                    <span style="padding: 8px 14px; background: #3b82f6; color: white; border-radius: 6px; text-decoration: none; font-size: 13px;">{{ num }}</span>
-                    {% elif num > brands_paginated.number|add:'-2' and num < brands_paginated.number|add:'2' %}
-                    <a href="?section=brands&amp;brand_page={{ num }}{% if request.GET.brand_search %}&amp;brand_search={{ request.GET.brand_search|urlencode }}{% endif %}" style="padding: 8px 14px; background: #f1f5f9; color: #334155; border-radius: 6px; text-decoration: none; font-size: 13px;">{{ num }}</a>
+                    <span class="da-page-link active">{{ num }}</span>
+                    {% elif num > brands_paginated.number|add:'-3' and num < brands_paginated.number|add:'3' %}
+                    <a href="?section=brands&amp;brand_page={{ num }}{% if request.GET.brand_search %}&amp;brand_search={{ request.GET.brand_search|urlencode }}{% endif %}" class="da-page-link">{{ num }}</a>
                     {% endif %}
                 {% endfor %}
                 {% if brands_paginated.has_next %}
-                <a href="?section=brands&amp;brand_page={{ brands_paginated.next_page_number }}{% if request.GET.brand_search %}&amp;brand_search={{ request.GET.brand_search|urlencode }}{% endif %}" style="padding: 8px 14px; background: #f1f5f9; color: #334155; border-radius: 6px; text-decoration: none; font-size: 13px;">Sau &raquo;</a>
+                <a href="?section=brands&amp;brand_page={{ brands_paginated.next_page_number }}{% if request.GET.brand_search %}&amp;brand_search={{ request.GET.brand_search|urlencode }}{% endif %}" class="da-page-link">Sau &raquo;</a>
                 {% endif %}
             </div>
             {% endif %}
         </div>
         
-        <!-- Phần sản phẩm -->
         <div id="products-section" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <div style="display: flex; gap: 10px; align-items: center;">
-                    <div style="position: relative;">
-                        <input type="text" id="productSearchInput" placeholder="Nhập tên sản phẩm để tìm kiếm..." value="{{ request.GET.product_search|default:'' }}" onkeydown="if(event.key==='Enter')searchProducts(event)" style="width: 280px; padding: 10px 16px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Signika', sans-serif; box-sizing: border-box;">
-                        <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <div class="da-toolbar">
+                <span style="font-size:15px;font-weight:700;color:#1e293b;">Treo sản phẩm</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <div style="position:relative;">
+                        <input type="text" id="productSearchInput" placeholder="Tìm kiếm sản phẩm..." value="{{ request.GET.product_search|default:'' }}" onkeydown="if(event.key==='Enter')searchProducts(event)" style="width:240px;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <button onclick="resetProductSearch()" style="padding: 10px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Reset</button>
+                    <button onclick="resetProductSearch()" class="da-btn da-btn-md da-btn-ghost">Reset</button>
+                    <button type="button" onclick="openAddProductModal(); return false;" class="da-btn da-btn-md da-btn-primary">+ Thêm sản phẩm</button>
                 </div>
-                <button type="button" onclick="openAddProductModal(); return false;" style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
-                    Thêm sản phẩm
-                </button>
             </div>
-            
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="da-table-wrap">
+                <table class="da-table">
                     <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">STT</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Ảnh</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Tên sản phẩm</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Hãng</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Tồn kho</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Giá gốc</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Giảm</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Giá treo</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Hành động</th>
+                        <tr>
+                            <th style="text-align:center;width:50px;">STT</th>
+                            <th style="text-align:center;width:60px;">Ảnh</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Hãng</th>
+                            <th style="text-align:center;">Tồn kho</th>
+                            <th style="text-align:right;">Giá gốc</th>
+                            <th style="text-align:center;">Giảm</th>
+                            <th style="text-align:right;">Giá treo</th>
+                            <th style="text-align:center;">Hành động</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for product in products_paginated %}
-                        <tr style="border-bottom: 1px solid #f1f5f9;">
-                            <td style="padding: 12px 16px; font-size: 14px;">{{ forloop.counter0|add:products_paginated.start_index }}</td>
-                            <td style="padding: 12px 16px; font-size: 14px;">
+                        <tr style="border-bottom:1px solid #f1f5f9;">
+                            <td style="padding:10px 14px;text-align:center;font-size:13px;color:#64748b;">{{ forloop.counter0|add:products_paginated.start_index }}</td>
+                            <td style="padding:10px 14px;text-align:center;">
                                 {% if product.image %}
-                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 50px; height: 50px; object-fit: cover; border-radius: 6px;">
+                                <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid #e2e8f0;">
                                 {% else %}
-                                <div style="width: 50px; height: 50px; background: #f1f5f9; border-radius: 6px; display: flex; align-items: center; justify-content: center;">
-                                    <svg style="width: 24px; height: 24px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                                <div style="width:44px;height:44px;background:#f1f5f9;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;">
+                                    <svg style="width:20px;height:20px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
                                 </div>
                                 {% endif %}
                             </td>
-                            <td style="padding: 12px 16px; font-size: 14px; font-weight: 500;">{{ product.name }}</td>
-                            <td style="padding: 12px 16px; font-size: 14px;">{% if product.brand %}{{ product.brand.name }}{% else %}-{% endif %}</td>
-                            <td style="padding: 12px 16px; font-size: 14px;">{% if product.stock > 0 %}{{ product.stock }}{% else %}<span style="color: #dc2626;">Hết hàng</span>{% endif %}</td>
-                            <td style="padding: 12px 16px; font-size: 14px;">{% if product.detail.summary_original_price %}{{ product.detail.summary_original_price|format_price }}đ{% else %}-{% endif %}</td>
-                            <td style="padding: 12px 16px; font-size: 14px;">{% if product.detail.summary_discount_percent > 0 %}{{ product.detail.summary_discount_percent }}%{% else %}-{% endif %}</td>
-                            <td style="padding: 12px 16px; font-size: 14px; color: #dc2626; font-weight: 600;">{% if product.detail.discounted_price %}{{ product.detail.discounted_price|format_price }}đ{% else %}-{% endif %}</td>
-                            <td style="padding: 12px 16px;">
-                                <div style="display: flex; gap: 6px;">
-                                    <button type="button" onclick="openProductDetailModal('{{ product.id }}', '{{ product.name|escapejs }}'); return false;" style="background: #dbeafe; color: #1e40af; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Chi tiết</button>
-                                    <button type="button" onclick="openEditProductModal('{{ product.id }}', '{% if product.brand %}{{ product.brand.id }}{% endif %}', '{{ product.name|escapejs }}', '{% if product.image %}{{ product.image.url }}{% endif %}'); return false;" style="background: #fef3c7; color: #b45309; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Sửa</button>
-                                    <button onclick="deleteProduct('{{ product.id }}', '{{ product.name|escapejs }}')" style="background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Xóa</button>
+                            <td style="padding:10px 14px;font-size:13px;font-weight:600;color:#1e293b;">{{ product.name }}</td>
+                            <td style="padding:10px 14px;font-size:13px;color:#64748b;">{% if product.brand %}{{ product.brand.name }}{% else %}-{% endif %}</td>
+                            <td style="padding:10px 14px;text-align:center;font-size:13px;">{% if product.stock > 0 %}{{ product.stock }}{% else %}<span style="color:#dc2626;">Hết</span>{% endif %}</td>
+                            <td style="padding:10px 14px;text-align:right;font-size:13px;color:#64748b;">{% if product.detail.summary_original_price %}{{ product.detail.summary_original_price|format_price }}đ{% else %}-{% endif %}</td>
+                            <td style="padding:10px 14px;text-align:center;font-size:13px;color:#f59e0b;font-weight:500;">{% if product.detail.summary_discount_percent > 0 %}{{ product.detail.summary_discount_percent }}%{% else %}-{% endif %}</td>
+                            <td style="padding:10px 14px;text-align:right;font-size:13px;color:#dc2626;font-weight:600;">{% if product.detail.discounted_price %}{{ product.detail.discounted_price|format_price }}đ{% else %}-{% endif %}</td>
+                            <td style="padding:10px 14px;text-align:center;">
+                                <div style="display:flex;gap:5px;justify-content:center;">
+                                    <button type="button" onclick="openProductDetailModal('{{ product.id }}', '{{ product.name|escapejs }}'); return false;" class="da-btn da-btn-sm da-btn-info">Chi tiết</button>
+                                    <button type="button" onclick="openEditProductModal('{{ product.id }}', '{% if product.brand %}{{ product.brand.id }}{% endif %}', '{{ product.name|escapejs }}', '{% if product.image %}{{ product.image.url }}{% endif %}'); return false;" class="da-btn da-btn-sm" style="background:#fef3c7;color:#b45309;">Sửa</button>
+                                    <button onclick="deleteProduct('{{ product.id }}', '{{ product.name|escapejs }}')" class="da-btn da-btn-sm da-btn-del">Xóa</button>
                                 </div>
                             </td>
                         </tr>
                         {% empty %}
-                        <tr>
-                            <td colspan="9" style="padding: 40px; text-align: center; color: #64748b; font-size: 14px;">
-                                Chưa có sản phẩm nào !
-                            </td>
-                        </tr>
+                        <tr class="da-table-empty"><td colspan="9">Chưa có sản phẩm nào</td></tr>
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
-            
             {% if products_paginated.has_other_pages %}
-            <div style="display: flex; justify-content: center; gap: 8px; margin-top: 24px; flex-wrap: wrap;">
+            <div class="da-pagination">
                 {% if products_paginated.has_previous %}
-                <a href="?section=products&amp;product_page={{ products_paginated.previous_page_number }}{% if request.GET.product_search %}&amp;product_search={{ request.GET.product_search|urlencode }}{% endif %}" style="padding: 8px 14px; background: #f1f5f9; color: #334155; border-radius: 6px; text-decoration: none; font-size: 13px;">&laquo; Trước</a>
+                <a href="?section=products&amp;product_page={{ products_paginated.previous_page_number }}{% if request.GET.product_search %}&amp;product_search={{ request.GET.product_search|urlencode }}{% endif %}" class="da-page-link">&laquo; Trước</a>
                 {% endif %}
                 {% for num in products_paginated.paginator.page_range %}
                     {% if products_paginated.number == num %}
-                    <span style="padding: 8px 14px; background: #3b82f6; color: white; border-radius: 6px; text-decoration: none; font-size: 13px;">{{ num }}</span>
-                    {% elif num > products_paginated.number|add:'-2' and num < products_paginated.number|add:'2' %}
-                    <a href="?section=products&amp;product_page={{ num }}{% if request.GET.product_search %}&amp;product_search={{ request.GET.product_search|urlencode }}{% endif %}" style="padding: 8px 14px; background: #f1f5f9; color: #334155; border-radius: 6px; text-decoration: none; font-size: 13px;">{{ num }}</a>
+                    <span class="da-page-link active">{{ num }}</span>
+                    {% elif num > products_paginated.number|add:'-3' and num < products_paginated.number|add:'3' %}
+                    <a href="?section=products&amp;product_page={{ num }}{% if request.GET.product_search %}&amp;product_search={{ request.GET.product_search|urlencode }}{% endif %}" class="da-page-link">{{ num }}</a>
                     {% endif %}
                 {% endfor %}
                 {% if products_paginated.has_next %}
-                <a href="?section=products&amp;product_page={{ products_paginated.next_page_number }}{% if request.GET.product_search %}&amp;product_search={{ request.GET.product_search|urlencode }}{% endif %}" style="padding: 8px 14px; background: #f1f5f9; color: #334155; border-radius: 6px; text-decoration: none; font-size: 13px;">Sau &raquo;</a>
+                <a href="?section=products&amp;product_page={{ products_paginated.next_page_number }}{% if request.GET.product_search %}&amp;product_search={{ request.GET.product_search|urlencode }}{% endif %}" class="da-page-link">Sau &raquo;</a>
                 {% endif %}
             </div>
             {% endif %}
         </div>
 
 <!-- Modal thêm hãng -->
-<div id="addBrandModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 12px; padding: 32px; width: 500px; max-width: 90%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h3 style="font-size: 20px; font-weight: 600; font-family: inherit;">Thêm hãng mới</h3>
+<div id="addBrandModal" onclick="closeAddBrandModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div onclick="event.stopPropagation()" style="background: white; border-radius: 12px; width: 460px; max-width: 92%; display: flex; flex-direction: column; overflow: hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #e2e8f0;">
+            <h3 style="font-size:16px;font-weight:700;color:#1e293b;margin:0;font-family:'Signika',sans-serif;">Thêm hãng mới</h3>
+            <button type="button" onclick="closeAddBrandModal()" class="da-btn da-btn-md da-btn-ghost">Đóng</button>
         </div>
+        <div style="padding:20px 22px;">
         <form id="addBrandForm">
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: inherit;">Tên hãng</label>
-                <input type="text" name="name" required placeholder="Nhập tên hãng..." style="width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: inherit;">
+            <div style="margin-bottom:16px;">
+                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:500;color:#334155;font-family:'Signika',sans-serif;">Tên hãng *</label>
+                <input type="text" name="name" required placeholder="Nhập tên hãng..." style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;box-sizing:border-box;">
             </div>
             <input type="hidden" name="description" value="">
-            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-                <button type="button" onclick="closeAddBrandModal()" style="padding: 12px 24px; background: #f1f5f9; color: #334155; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit;">Hủy</button>
-                <button type="submit" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: inherit; font-weight: 500;">Thêm</button>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" onclick="closeAddBrandModal()" class="da-btn da-btn-md da-btn-ghost">Hủy</button>
+                <button type="submit" class="da-btn da-btn-md da-btn-primary">Thêm</button>
             </div>
         </form>
+        </div>
     </div>
 </div>
 
 <!-- Modal sửa hãng -->
-<div id="editBrandModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 12px; padding: 32px; width: 500px; max-width: 90%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h3 style="font-size: 20px; font-weight: 600; font-family: 'Signika', sans-serif;">Chỉnh sửa hãng</h3>
+<div id="editBrandModal" onclick="closeEditBrandModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div onclick="event.stopPropagation()" style="background: white; border-radius: 12px; width: 460px; max-width: 92%; display: flex; flex-direction: column; overflow: hidden;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #e2e8f0;">
+            <h3 style="font-size:16px;font-weight:700;color:#1e293b;margin:0;font-family:'Signika',sans-serif;">Chỉnh sửa hãng</h3>
+            <button type="button" onclick="closeEditBrandModal()" class="da-btn da-btn-md da-btn-ghost">Đóng</button>
         </div>
+        <div style="padding:20px 22px;">
         <form id="editBrandForm">
             <input type="hidden" name="brand_id" id="editBrandId">
             <input type="hidden" name="description" value="">
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Tên hãng</label>
-                <input type="text" name="name" id="editBrandName" required placeholder="Nhập tên hãng..." style="width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+            <div style="margin-bottom:16px;">
+                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:500;color:#334155;font-family:'Signika',sans-serif;">Tên hãng *</label>
+                <input type="text" name="name" id="editBrandName" required placeholder="Nhập tên hãng..." style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;box-sizing:border-box;">
             </div>
-            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-                <button type="button" onclick="closeEditBrandModal()" style="padding: 12px 24px; background: #f1f5f9; color: #334155; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Hủy</button>
-                <button type="submit" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">Lưu</button>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:20px;">
+                <button type="button" onclick="closeEditBrandModal()" class="da-btn da-btn-md da-btn-ghost">Hủy</button>
+                <button type="submit" class="da-btn da-btn-md da-btn-primary">Lưu</button>
             </div>
         </form>
+        </div>
     </div>
 </div>
 
         <!-- Phần ảnh sản phẩm -->
         <div id="product-images-section" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <div style="position: relative;">
-                        <input type="text" id="imageFolderSearchInput" placeholder="Tìm theo tên thư mục ảnh..." onkeydown="if(event.key==='Enter')searchImageFolders()" style="width: 260px; padding: 10px 16px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Signika', sans-serif; box-sizing: border-box;">
-                        <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <div class="da-toolbar">
+                <span style="font-size:15px;font-weight:700;color:#1e293b;">Ảnh sản phẩm</span>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <div style="position:relative;">
+                        <input type="text" id="imageFolderSearchInput" placeholder="Tìm thư mục ảnh..." onkeydown="if(event.key==='Enter')searchImageFolders()" style="width:220px;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <button type="button" onclick="resetImageFolderSearch()" style="padding: 10px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Reset</button>
-                </div>
-                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
-                    <button type="button" onclick="openAddImageFolderModal(); return false;" style="background: #0f172a; color: #e5e7eb; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4h16v4H4zM4 12h8v8H4zM16 12h4v8h-4z"/></svg>
-                        Thêm thư mục chứa ảnh
-                    </button>
-                    <button type="button" onclick="openAddColorImageModal(); return false;" style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                        Thêm màu - Ảnh sản phẩm
-                    </button>
+                    <button type="button" onclick="resetImageFolderSearch()" class="da-btn da-btn-md da-btn-ghost">Reset</button>
+                    <button type="button" onclick="openAddImageFolderModal(); return false;" class="da-btn da-btn-md" style="background:#0f172a;color:#e5e7eb;">+ Thêm thư mục</button>
+                    <button type="button" onclick="openAddColorImageModal(); return false;" class="da-btn da-btn-md da-btn-primary">+ Thêm màu - Ảnh</button>
                 </div>
             </div>
-
-            <!-- Table: STT | Thư mục ảnh | Màu sản phẩm | SKU | Hành động -->
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-                    <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">STT</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Thư mục ảnh</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Màu sản phẩm</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">SKU</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Hành động</th>
-                        </tr>
-                    </thead>
-                    <tbody id="imageFolderTableBody">
-                        <tr>
-                            <td colspan="5" style="padding: 40px; text-align: center; color: #64748b; font-size: 14px; font-family: 'Signika', sans-serif;">
-                                Chưa có màu ảnh nào.
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div style="display:grid;grid-template-columns:3fr 2fr;gap:16px;align-items:start;">
+                <!-- Left: Ảnh SP theo màu - SKU -->
+                <div>
+                    <div style="padding:6px 2px 8px;font-size:13px;font-weight:600;color:#475569;">Ảnh sản phẩm (màu – SKU)</div>
+                    <div class="da-table-wrap">
+                        <table class="da-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Thư mục ảnh</th>
+                                    <th>Màu sản phẩm</th>
+                                    <th>SKU</th>
+                                    <th>Hành động</th>
+                                </tr>
+                            </thead>
+                            <tbody id="imageFolderTableBody">
+                                <tr class="da-table-empty">
+                                    <td colspan="5">Chưa có màu ảnh nào.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="imageFolderPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:12px;padding:8px;"></div>
+                </div>
+                <!-- Right: Thư mục đã tạo -->
+                <div>
+                    <div style="padding:6px 2px 8px;font-size:13px;font-weight:600;color:#475569;">Thư mục đã tạo</div>
+                    <div class="da-table-wrap">
+                        <table class="da-table">
+                            <thead>
+                                <tr>
+                                    <th>STT</th>
+                                    <th>Tên thư mục</th>
+                                    <th>Hãng</th>
+                                    <th>Sản phẩm</th>
+                                    <th>Xóa</th>
+                                </tr>
+                            </thead>
+                            <tbody id="imageFolderDirBody">
+                                <tr class="da-table-empty">
+                                    <td colspan="5">Chưa có thư mục nào.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="imageFolderDirPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:12px;padding:8px;"></div>
+                </div>
             </div>
-
-            <!-- Preview grid cho ảnh của 1 màu (trong modal) sẽ render bằng JS -->
         </div>
         
         <!-- Modal: Thêm thư mục chứa ảnh -->
@@ -906,160 +732,149 @@
 
         <!-- Phần SKU -->
         <div id="sku-section" style="display: none;">
-            <!-- Tìm kiếm & Lọc -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <!-- Tìm kiếm theo SKU -->
-                    <div style="position: relative;">
-                        <input type="text" id="skuSearchInput" placeholder="Tìm theo tên SKU..." onkeydown="if(event.key==='Enter')searchSku()" style="width: 220px; padding: 10px 16px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Signika', sans-serif; box-sizing: border-box;">
-                        <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <div class="da-toolbar">
+                <span style="font-size:15px;font-weight:700;color:#1e293b;">Quản lý SKU</span>
+                <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+                    <div style="position:relative;">
+                        <input type="text" id="skuSearchInput" placeholder="Tìm theo SKU..." onkeydown="if(event.key==='Enter')searchSku()" style="width:200px;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <!-- Lọc theo hãng -->
-                    <select id="skuBrandFilter" onchange="filterSkuByBrand()" style="padding: 10px 16px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Signika', sans-serif; min-width: 150px; cursor: pointer;">
+                    <select id="skuBrandFilter" onchange="filterSkuByBrand()" style="padding:8px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#334155;background:#fff;cursor:pointer;outline:none;">
                         <option value="">Tất cả hãng</option>
                         {% for brand in brands %}
                         <option value="{{ brand.id }}">{{ brand.name }}</option>
                         {% endfor %}
                     </select>
-                    <button onclick="resetSkuSearch()" style="padding: 10px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Reset</button>
+                    <button onclick="resetSkuSearch()" class="da-btn da-btn-md da-btn-ghost">Reset</button>
+                    <button type="button" onclick="openAddSkuModal()" class="da-btn da-btn-md da-btn-primary">+ Thêm SKU</button>
                 </div>
-                <button type="button" onclick="openAddSkuModal()" style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Thêm SKU
-                </button>
             </div>
-            
-            <!-- Bảng SKU -->
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="da-table-wrap">
+                <table class="da-table">
                     <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">STT</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">SKU</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Sản phẩm</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Hãng</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Ngày thêm</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Hành động</th>
+                        <tr>
+                            <th>STT</th>
+                            <th>SKU</th>
+                            <th>Sản phẩm</th>
+                            <th>Hãng</th>
+                            <th>Ngày thêm</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody id="skuTableBody">
-                        <tr>
-                            <td colspan="6" style="padding: 40px; text-align: center; color: #64748b; font-size: 14px;">
-                                CHƯA CÓ SKU NÀO !
-                            </td>
+                        <tr class="da-table-empty">
+                            <td colspan="6">Chưa có SKU nào.</td>
                         </tr>
                     </tbody>
                 </table>
             </div>
+            <div id="skuPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px;padding:16px;"></div>
         </div>
 
         <!-- Phần ảnh Banner -->
         <div id="banner-images-section" style="display: none;">
-            <!-- Tìm kiếm & Lọc -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <div style="position: relative;">
-                        <input type="text" id="bannerSearchInput" placeholder="Nhập ID banner..." onkeydown="if(event.key==='Enter')searchBanners()" style="width: 180px; padding: 10px 16px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Signika', sans-serif; box-sizing: border-box;">
-                        <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <div class="da-toolbar">
+                <span style="font-size:15px;font-weight:700;color:#1e293b;">Ảnh banner</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <div style="position:relative;">
+                        <input type="text" id="bannerSearchInput" placeholder="Nhập ID banner..." onkeydown="if(event.key==='Enter')searchBanners()" style="width:180px;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <button onclick="resetBannerSearch()" style="padding: 10px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Reset</button>
+                    <button onclick="resetBannerSearch()" class="da-btn da-btn-md da-btn-ghost">Reset</button>
+                    <button type="button" onclick="openAddBannerModal()" class="da-btn da-btn-md da-btn-primary">+ Thêm ảnh banner</button>
                 </div>
-                <button type="button" onclick="openAddBannerModal()" style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Thêm ảnh banner
-                </button>
             </div>
 
             <!-- Lưới Banner -->
             <div id="bannerGrid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
                 <!-- Các banner sẽ được hiển thị bởi JS -->
             </div>
+            <div id="bannersPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px;padding:16px;"></div>
         </div>
 
         <!-- Phần nội dung sản phẩm -->
         <div id="product-content-section" style="display: none;">
-            <!-- Tìm kiếm & Lọc -->
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
-                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
-                    <div style="position: relative;">
-                        <input type="text" id="productContentSearchInput" placeholder="Tìm kiếm nội dung..." onkeydown="if(event.key==='Enter')searchProductContent()" style="width: 220px; padding: 10px 16px 10px 40px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; font-family: 'Signika', sans-serif; box-sizing: border-box;">
-                        <svg style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); width: 18px; height: 18px; color: #94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+            <div class="da-toolbar">
+                <span style="font-size:15px;font-weight:700;color:#1e293b;">Nội dung sản phẩm</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <div style="position:relative;">
+                        <input type="text" id="productContentSearchInput" placeholder="Tìm kiếm nội dung..." onkeydown="if(event.key==='Enter')searchProductContent()" style="width:220px;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
                     </div>
-                    <button onclick="resetProductContentSearch()" style="padding: 10px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Reset</button>
+                    <button onclick="resetProductContentSearch()" class="da-btn da-btn-md da-btn-ghost">Reset</button>
+                    <button type="button" onclick="openAddProductContentModal()" class="da-btn da-btn-md da-btn-primary">+ Thêm nội dung</button>
                 </div>
-                <button type="button" onclick="openAddProductContentModal()" style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
-                    Thêm nội dung
-                </button>
             </div>
-
-            <!-- Bảng nội dung sản phẩm -->
-            <div id="productContentTableContainer" style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div id="productContentTableContainer" class="da-table-wrap">
+                <table class="da-table">
                     <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">STT</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Hãng</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Tên sản phẩm</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Ngày</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Hành động</th>
+                        <tr>
+                            <th>STT</th>
+                            <th>Hãng</th>
+                            <th>Tên sản phẩm</th>
+                            <th>Ngày</th>
+                            <th>Hành động</th>
                         </tr>
                     </thead>
                     <tbody id="productContentTableBody">
-                        <!-- Các hàng nội dung sản phẩm sẽ được hiển thị bởi JS -->
                     </tbody>
                 </table>
             </div>
-
-            <!-- Lưới nội dung sản phẩm (Ẩn - giữ lại để tương thích) -->
-            <div id="productContentGrid" style="display: none; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 20px;">
-                <!-- Các mục nội dung sản phẩm sẽ được hiển thị bởi JS -->
-            </div>
+            <div id="productContentPagination" style="display:flex;justify-content:center;align-items:center;gap:8px;margin-top:20px;padding:16px;"></div>
+            <div id="productContentGrid" style="display:none;"></div>
         </div>
 
         <!-- ==================== Phần duyệt thanh toán QR ==================== -->
         <div id="qr-approval-section" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h1 class="qh-content-title">Duyệt đơn hàng (VietQR)</h1>
-                <button type="button" onclick="loadQrApprovalList()" style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    Làm mới
-                </button>
+            <div class="da-toolbar">
+                <span style="font-size:15px;font-weight:700;color:#1e293b;">Duyệt đơn hàng (VietQR)</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <div style="position:relative;">
+                        <input type="text" id="qrSearchInput" placeholder="Tìm nội dung CK..." oninput="searchQrList()" style="width:200px;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <button onclick="resetQrSearch()" class="da-btn da-btn-md da-btn-ghost">Reset</button>
+                    <button type="button" onclick="loadQrApprovalList()" class="da-btn da-btn-md da-btn-primary">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Làm mới
+                    </button>
+                </div>
             </div>
-
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="da-order-tabs" style="margin-bottom:12px;">
+                <button id="qrTab_pending" class="da-order-tab active" onclick="switchQrTab('pending')">Chờ duyệt</button>
+                <button id="qrTab_history" class="da-order-tab" onclick="switchQrTab('history')">Lịch sử</button>
+            </div>
+            <div class="da-table-wrap">
+                <table class="da-table">
                     <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                            <th style="padding: 12px 16px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b;">STT</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Khách hàng</th>
-                            <th style="padding: 12px 16px; text-align: right; font-size: 13px; font-weight: 600; color: #64748b;">Số tiền</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Nội dung CK</th>
-                            <th style="padding: 12px 16px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b;">Thời gian</th>
-                            <th style="padding: 12px 16px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b;">Hành động</th>
+                        <tr>
+                            <th style="text-align:center;">STT</th>
+                            <th>Khách hàng</th>
+                            <th style="text-align:right;">Số tiền</th>
+                            <th>Nội dung CK</th>
+                            <th>Thời gian</th>
+                            <th style="text-align:center;">Trạng thái</th>
+                            <th style="text-align:center;">Hành động</th>
                         </tr>
                     </thead>
                     <tbody id="qrApprovalTableBody">
-                        <tr>
-                            <td colspan="6" style="padding: 40px 16px; text-align: center; color: #94a3b8; font-size: 14px;">
-                                Đang tải dữ liệu...
-                            </td>
-                        </tr>
+                        <tr class="da-table-empty"><td colspan="7">Đang tải dữ liệu...</td></tr>
                     </tbody>
                 </table>
             </div>
-            <p style="margin-top: 12px; font-size: 12px; color: #94a3b8; font-style: italic;">
+            <div id="qrApprovalPagination" class="da-pagination"></div>
+            <p style="margin-top:12px;font-size:12px;color:#94a3b8;font-style:italic;font-family:'Signika',sans-serif;">
                 * QR quá 15 phút chưa được duyệt sẽ tự động bị xoá khỏi hệ thống.
                 Danh sách tự làm mới mỗi 30 giây.
             </p>
         </div>
 
         <!-- Modal chi tiết QR -->
-        <div id="qrDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-            <div style="background: white; border-radius: 12px; width: 480px; max-width: 94%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
+        <div id="qrDetailModal" onclick="closeQrDetailModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div onclick="event.stopPropagation()" style="background: white; border-radius: 12px; width: 480px; max-width: 94%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
                     <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0; color: #1e293b;">Chi tiết QR chuyển khoản</h3>
-                    <button type="button" onclick="closeQrDetailModal()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
+                    <button type="button" onclick="closeQrDetailModal()" class="da-btn da-btn-md da-btn-ghost">Đóng</button>
                 </div>
                 <div style="padding: 20px 24px; overflow-y: auto; flex: 1;">
                     <div style="text-align: center; margin-bottom: 20px;">
@@ -1097,103 +912,105 @@
 
         <!-- ==================== Phần quản lý đơn hàng (Admin) ==================== -->
         <div id="admin-orders-section" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h1 class="qh-content-title">Đơn hàng</h1>
-                <button type="button" onclick="loadAdminOrders()" style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
-                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
-                    Làm mới
-                </button>
+            <div class="da-toolbar">
+                <span style="font-size:15px;font-weight:700;color:#1e293b;">Đơn hàng</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <div style="position:relative;">
+                        <input type="text" id="orderSearchInput" placeholder="Tìm mã đơn hàng..." oninput="searchAdminOrders()" style="width:200px;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <button onclick="resetOrderSearch()" class="da-btn da-btn-md da-btn-ghost">Reset</button>
+                    <button type="button" onclick="loadAdminOrders()" class="da-btn da-btn-md da-btn-primary">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+                        Làm mới
+                    </button>
+                </div>
             </div>
-
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="da-order-tabs">
+                <button type="button" data-filter="all" onclick="filterAdminOrders('all')" class="da-order-tab active">Tất cả</button>
+                <button type="button" data-filter="awaiting_payment" onclick="filterAdminOrders('awaiting_payment')" class="da-order-tab">Chờ TT</button>
+                <button type="button" data-filter="pending" onclick="filterAdminOrders('pending')" class="da-order-tab">Đã đặt</button>
+                <button type="button" data-filter="processing" onclick="filterAdminOrders('processing')" class="da-order-tab">Xử lý</button>
+                <button type="button" data-filter="shipped" onclick="filterAdminOrders('shipped')" class="da-order-tab">Đang giao</button>
+                <button type="button" data-filter="delivered" onclick="filterAdminOrders('delivered')" class="da-order-tab">Đã giao</button>
+                <button type="button" data-filter="cancelled" onclick="filterAdminOrders('cancelled')" class="da-order-tab">Hủy đơn</button>
+                <button type="button" data-filter="refund" onclick="filterAdminOrders('refund')" class="da-order-tab refund-tab">Hoàn tiền</button>
+            </div>
+            <div class="da-table-wrap">
+                <table class="da-table">
                     <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">STT</th>
-                            <th style="padding: 12px 14px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Tên sản phẩm</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Số lượng</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Màu sắc</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Dung lượng</th>
-                            <th style="padding: 12px 14px; text-align: right; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Giá</th>
-                            <th style="padding: 12px 14px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Ngày đặt hàng</th>
-                            <th style="padding: 12px 14px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Mã đơn hàng</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Trạng thái</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Chi tiết</th>
+                        <tr>
+                            <th style="text-align:center;">STT</th>
+                            <th>Tên sản phẩm</th>
+                            <th style="text-align:center;">SL</th>
+                            <th style="text-align:center;">Màu sắc</th>
+                            <th style="text-align:center;">Dung lượng</th>
+                            <th style="text-align:right;">Giá</th>
+                            <th>Ngày đặt</th>
+                            <th>Mã đơn hàng</th>
+                            <th style="text-align:center;">Trạng thái</th>
+                            <th style="text-align:center;">Chi tiết</th>
                         </tr>
                     </thead>
                     <tbody id="adminOrderTableBody">
-                        <tr>
-                            <td colspan="10" style="padding: 40px 16px; text-align: center; color: #94a3b8; font-size: 14px;">
-                                Đang tải dữ liệu...
-                            </td>
-                        </tr>
+                        <tr class="da-table-empty"><td colspan="10">Đang tải dữ liệu...</td></tr>
                     </tbody>
                 </table>
             </div>
-
-            <!-- Nút lọc theo trạng thái -->
-            <div id="adminOrderFilterBar" style="display: flex; align-items: center; gap: 0; margin-top: 20px; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
-                <button type="button" data-filter="all" onclick="filterAdminOrders('all')" class="admin-order-filter-btn active" style="flex: 1; padding: 14px 8px; border: none; background: white; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid transparent; transition: all 0.2s;">Tất cả</button>
-                <button type="button" data-filter="awaiting_payment" onclick="filterAdminOrders('awaiting_payment')" class="admin-order-filter-btn" style="flex: 1; padding: 14px 8px; border: none; background: white; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid transparent; transition: all 0.2s;">Chờ TT</button>
-                <button type="button" data-filter="pending" onclick="filterAdminOrders('pending')" class="admin-order-filter-btn" style="flex: 1; padding: 14px 8px; border: none; background: white; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid transparent; transition: all 0.2s;">Đã đặt hàng</button>
-                <button type="button" data-filter="processing" onclick="filterAdminOrders('processing')" class="admin-order-filter-btn" style="flex: 1; padding: 14px 8px; border: none; background: white; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid transparent; transition: all 0.2s;">Đang xử lý</button>
-                <button type="button" data-filter="shipped" onclick="filterAdminOrders('shipped')" class="admin-order-filter-btn" style="flex: 1; padding: 14px 8px; border: none; background: white; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid transparent; transition: all 0.2s;">Đang giao</button>
-                <button type="button" data-filter="delivered" onclick="filterAdminOrders('delivered')" class="admin-order-filter-btn" style="flex: 1; padding: 14px 8px; border: none; background: white; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid transparent; transition: all 0.2s;">Đã giao hàng</button>
-                <button type="button" data-filter="cancelled" onclick="filterAdminOrders('cancelled')" class="admin-order-filter-btn" style="flex: 1; padding: 14px 8px; border: none; background: white; font-size: 14px; font-weight: 500; color: #64748b; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid transparent; transition: all 0.2s;">Hủy đơn</button>
-                <button type="button" data-filter="refund" onclick="filterAdminOrders('refund')" class="admin-order-filter-btn" style="flex: 1; padding: 14px 8px; border: none; background: #fef3c7; font-size: 14px; font-weight: 600; color: #92400e; cursor: pointer; font-family: 'Signika', sans-serif; border-bottom: 2px solid #f59e0b; transition: all 0.2s;"><i class="ri-refund-line"></i> Hoàn tiền</button>
-            </div>
+            <div id="adminOrdersPagination" class="da-pagination"></div>
         </div>
 
         <!-- ==================== Phần mã giảm giá ==================== -->
         <div id="coupons-section" style="display: none;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                <h1 class="qh-content-title">Mã giảm giá</h1>
-                <div style="display: flex; gap: 10px;">
-                    <button type="button" onclick="loadCouponList()" style="background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <div class="da-toolbar">
+                <span style="font-size:15px;font-weight:700;color:#1e293b;">Mã giảm giá</span>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <div style="position:relative;">
+                        <input type="text" id="couponSearchInput" placeholder="Tìm mã giảm giá..." oninput="searchCoupons()" style="width:200px;padding:8px 12px 8px 34px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                        <svg style="position:absolute;left:10px;top:50%;transform:translateY(-50%);width:15px;height:15px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+                    </div>
+                    <button onclick="resetCouponSearch()" class="da-btn da-btn-md da-btn-ghost">Reset</button>
+                    <button type="button" onclick="loadCouponList()" class="da-btn da-btn-md da-btn-ghost">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                         Làm mới
                     </button>
-                    <button type="button" onclick="openAddCouponModal()" style="background: #22c55e; color: white; border: none; border-radius: 8px; padding: 10px 16px; font-size: 14px; font-weight: 500; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: 'Signika', sans-serif;">
-                        <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+                    <button type="button" onclick="openAddCouponModal()" class="da-btn da-btn-md da-btn-success">
+                        <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
                         Thêm mã
                     </button>
                 </div>
             </div>
-
-            <div style="overflow-x: auto;">
-                <table style="width: 100%; border-collapse: collapse; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.08);">
+            <div class="da-table-wrap">
+                <table class="da-table">
                     <thead>
-                        <tr style="background: #f8fafc; border-bottom: 1px solid #e2e8f0;">
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">STT</th>
-                            <th style="padding: 12px 14px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Mã</th>
-                            <th style="padding: 12px 14px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Chương trình</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Giảm</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Đối tượng</th>
-                            <th style="padding: 12px 14px; text-align: right; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Đơn tối thiểu</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">SP tối đa</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Đã dùng</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Trạng thái</th>
-                            <th style="padding: 12px 14px; text-align: left; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Hết hạn</th>
-                            <th style="padding: 12px 14px; text-align: center; font-size: 13px; font-weight: 600; color: #64748b; white-space: nowrap;">Hành động</th>
+                        <tr>
+                            <th style="text-align:center;">STT</th>
+                            <th>Mã</th>
+                            <th>Chương trình</th>
+                            <th style="text-align:center;">Giảm</th>
+                            <th style="text-align:center;">Đối tượng</th>
+                            <th style="text-align:right;">Đơn tối thiểu</th>
+                            <th style="text-align:center;">SP tối đa</th>
+                            <th style="text-align:center;">Đã dùng</th>
+                            <th style="text-align:center;">Trạng thái</th>
+                            <th>Hết hạn</th>
+                            <th style="text-align:center;">Hành động</th>
                         </tr>
                     </thead>
                     <tbody id="couponTableBody">
-                        <tr>
-                            <td colspan="11" style="padding: 40px 16px; text-align: center; color: #94a3b8; font-size: 14px;">
-                                Đang tải dữ liệu...
-                            </td>
-                        </tr>
+                        <tr class="da-table-empty"><td colspan="11">Đang tải dữ liệu...</td></tr>
                     </tbody>
                 </table>
             </div>
+            <div id="couponsPagination" class="da-pagination"></div>
         </div>
 
         <!-- Modal thêm/sửa mã giảm giá -->
-        <div id="couponModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-            <div style="background: white; border-radius: 12px; width: 580px; max-width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
+        <div id="couponModal" onclick="closeCouponModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div onclick="event.stopPropagation()" style="background: white; border-radius: 12px; width: 580px; max-width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
                     <h3 id="couponModalTitle" style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0; color: #1e293b;">Thêm mã giảm giá</h3>
-                    <button type="button" onclick="closeCouponModal()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
+                    <button type="button" onclick="closeCouponModal()" class="da-btn da-btn-md da-btn-ghost">Đóng</button>
                 </div>
                 <div style="padding: 20px 24px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c1c1c1 #f8fafc;">
                     <form id="couponForm">
@@ -1299,12 +1116,12 @@
         </div>
 
         <!-- Modal chi tiết đơn hàng (Admin) -->
-        <div id="adminOrderDetailModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-            <div style="background: white; border-radius: 12px; width: 700px; max-width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
+        <div id="adminOrderDetailModal" onclick="closeAdminOrderDetail()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+            <div onclick="event.stopPropagation()" style="background: white; border-radius: 12px; width: 700px; max-width: 95%; max-height: 90vh; display: flex; flex-direction: column; overflow: hidden;">
                 <!-- Tiêu đề -->
                 <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
                     <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0; color: #1e293b;">Chi tiết đơn hàng</h3>
-                    <button type="button" onclick="closeAdminOrderDetail()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
+                    <button type="button" onclick="closeAdminOrderDetail()" class="da-btn da-btn-md da-btn-ghost">Đóng</button>
                 </div>
                 <!-- Nội dung -->
                 <div id="adminOrderDetailBody" style="padding: 20px 24px; overflow-y: auto; flex: 1;">
@@ -1389,131 +1206,187 @@
         </div>
 
 <!-- Modal thêm sản phẩm -->
-<div id="addProductModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 12px; width: 520px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
-        <!-- Tiêu đề cố định -->
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
-            <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0;">Thêm sản phẩm</h3>
-            <button type="button" onclick="closeAddProductModal()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
+<div id="addProductModal" onclick="closeAddProductModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div onclick="event.stopPropagation()" style="background: white; border-radius: 12px; width: 520px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+            <h3 style="font-size:16px;font-weight:700;color:#1e293b;margin:0;font-family:'Signika',sans-serif;">Thêm sản phẩm</h3>
+            <button type="button" onclick="closeAddProductModal()" class="da-btn da-btn-md da-btn-ghost">Đóng</button>
         </div>
-        <!-- Vùng nội dung có thể cuộn -->
-        <div style="padding: 20px 24px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c1c1c1 #f8fafc;">
+        <div style="padding:20px 22px;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:#c1c1c1 #f8fafc;">
         <form id="addProductForm">
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn hãng </label>
-                <select name="brand" id="addProductBrand" required style="width: 100%; padding: 10px 12px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+            <div style="margin-bottom:14px;">
+                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:500;color:#334155;font-family:'Signika',sans-serif;">Chọn hãng</label>
+                <select name="brand" id="addProductBrand" required style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;box-sizing:border-box;">
                     <option value="">-- Danh sách hãng --</option>
                     {% for brand in brands %}
                     <option value="{{ brand.id }}">{{ brand.name }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Tên sản phẩm *</label>
-                <input type="text" name="name" id="addProductName" required placeholder="Nhập tên sản phẩm..." style="width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+            <div style="margin-bottom:14px;">
+                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:500;color:#334155;font-family:'Signika',sans-serif;">Tên sản phẩm *</label>
+                <input type="text" name="name" id="addProductName" required placeholder="Nhập tên sản phẩm..." style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;box-sizing:border-box;">
             </div>
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Ảnh sản phẩm</label>
-                <div style="border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer;" onclick="document.getElementById('addProductImage').click()">
-                    <input type="file" name="image" id="addProductImage" accept="image/*" style="display: none;" onchange="previewAddProductImage(event)">
-                    <div id="addImagePreviewContainer" style="display: none;">
-                        <img id="addImagePreview" style="max-width: 200px; max-height: 150px; border-radius: 8px;">
-                        <p style="margin-top: 10px; color: #64748b; font-size: 13px;">Click để thay đổi ảnh</p>
+            <div style="margin-bottom:14px;">
+                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:500;color:#334155;font-family:'Signika',sans-serif;">Ảnh sản phẩm</label>
+                <div style="border:2px dashed #e2e8f0;border-radius:8px;padding:20px;text-align:center;cursor:pointer;" onclick="document.getElementById('addProductImage').click()">
+                    <input type="file" name="image" id="addProductImage" accept="image/*" style="display:none;" onchange="previewAddProductImage(event)">
+                    <div id="addImagePreviewContainer" style="display:none;">
+                        <img id="addImagePreview" style="max-width:200px;max-height:150px;border-radius:8px;">
+                        <p style="margin-top:10px;color:#64748b;font-size:13px;">Click để thay đổi ảnh</p>
                     </div>
                     <div id="addImagePlaceholder">
-                        <svg style="width: 48px; height: 48px; color: #94a3b8; margin-bottom: 10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        <p style="color: #64748b; font-size: 14px;">Click để tải ảnh lên</p>
+                        <svg style="width:40px;height:40px;color:#94a3b8;margin-bottom:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p style="color:#94a3b8;font-size:13px;">Click để tải ảnh lên</p>
                     </div>
                 </div>
             </div>
         </form>
         </div>
-        <!-- Chân trang cố định -->
-        <div style="padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px; flex-shrink: 0;">
-            <button type="submit" form="addProductForm" style="padding: 12px 32px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">Thêm</button>
+        <div style="padding:14px 22px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;">
+            <button type="button" onclick="closeAddProductModal()" class="da-btn da-btn-md da-btn-ghost">Hủy</button>
+            <button type="submit" form="addProductForm" class="da-btn da-btn-md da-btn-primary">Thêm</button>
         </div>
     </div>
 </div>
 
 <!-- Modal sửa sản phẩm -->
-<div id="editProductModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 12px; width: 520px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
-        <!-- Tiêu đề cố định -->
-        <div style="display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid #e2e8f0; flex-shrink: 0;">
-            <h3 style="font-size: 18px; font-weight: 600; font-family: 'Signika', sans-serif; margin: 0;">Chỉnh sửa sản phẩm</h3>
-            <button type="button" onclick="closeEditProductModal()" style="padding: 8px 16px; background: #f1f5f9; color: #334155; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Đóng</button>
+<div id="editProductModal" onclick="closeEditProductModal()" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div onclick="event.stopPropagation()" style="background: white; border-radius: 12px; width: 520px; max-width: 90%; max-height: 90vh; display: flex; flex-direction: column;">
+        <div style="display:flex;justify-content:space-between;align-items:center;padding:18px 22px;border-bottom:1px solid #e2e8f0;flex-shrink:0;">
+            <h3 style="font-size:16px;font-weight:700;color:#1e293b;margin:0;font-family:'Signika',sans-serif;">Chỉnh sửa sản phẩm</h3>
+            <button type="button" onclick="closeEditProductModal()" class="da-btn da-btn-md da-btn-ghost">Đóng</button>
         </div>
-        <!-- Vùng nội dung có thể cuộn -->
-        <div style="padding: 20px 24px; overflow-y: auto; flex: 1; scrollbar-width: thin; scrollbar-color: #c1c1c1 #f8fafc;">
+        <div style="padding:20px 22px;overflow-y:auto;flex:1;scrollbar-width:thin;scrollbar-color:#c1c1c1 #f8fafc;">
         <form id="editProductForm">
             <input type="hidden" name="product_id" id="editProductId">
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Chọn hãng *</label>
-                <select name="brand" id="editProductBrand" required style="width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+            <div style="margin-bottom:14px;">
+                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:500;color:#334155;font-family:'Signika',sans-serif;">Chọn hãng *</label>
+                <select name="brand" id="editProductBrand" required style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;box-sizing:border-box;">
                     <option value="">-- Chọn hãng --</option>
                     {% for brand in brands %}
                     <option value="{{ brand.id }}">{{ brand.name }}</option>
                     {% endfor %}
                 </select>
             </div>
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Tên sản phẩm *</label>
-                <input type="text" name="name" id="editProductName" required placeholder="Nhập tên sản phẩm..." style="width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
+            <div style="margin-bottom:14px;">
+                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:500;color:#334155;font-family:'Signika',sans-serif;">Tên sản phẩm *</label>
+                <input type="text" name="name" id="editProductName" required placeholder="Nhập tên sản phẩm..." style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;box-sizing:border-box;">
             </div>
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Ảnh sản phẩm</label>
-                <div style="border: 2px dashed #ddd; border-radius: 8px; padding: 20px; text-align: center; cursor: pointer;" onclick="document.getElementById('editProductImage').click()">
-                    <input type="file" name="image" id="editProductImage" accept="image/*" style="display: none;" onchange="previewEditProductImage(event)">
-                    <div id="editImagePreviewContainer" style="display: none;">
-                        <img id="editImagePreview" style="max-width: 200px; max-height: 150px; border-radius: 8px;">
-                        <p style="margin-top: 10px; color: #64748b; font-size: 13px;">Click để thay đổi ảnh</p>
+            <div style="margin-bottom:14px;">
+                <label style="display:block;margin-bottom:6px;font-size:13px;font-weight:500;color:#334155;font-family:'Signika',sans-serif;">Ảnh sản phẩm</label>
+                <div style="border:2px dashed #e2e8f0;border-radius:8px;padding:20px;text-align:center;cursor:pointer;" onclick="document.getElementById('editProductImage').click()">
+                    <input type="file" name="image" id="editProductImage" accept="image/*" style="display:none;" onchange="previewEditProductImage(event)">
+                    <div id="editImagePreviewContainer" style="display:none;">
+                        <img id="editImagePreview" style="max-width:200px;max-height:150px;border-radius:8px;">
+                        <p style="margin-top:10px;color:#64748b;font-size:13px;">Click để thay đổi ảnh</p>
                     </div>
                     <div id="editImagePlaceholder">
-                        <svg style="width: 48px; height: 48px; color: #94a3b8; margin-bottom: 10px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-                        <p style="color: #64748b; font-size: 14px;">Click để tải ảnh lên</p>
+                        <svg style="width:40px;height:40px;color:#94a3b8;margin-bottom:8px;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                        <p style="color:#94a3b8;font-size:13px;">Click để tải ảnh lên</p>
                     </div>
                 </div>
             </div>
         </form>
         </div>
-        <!-- Chân trang cố định -->
-        <div style="padding: 16px 24px; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 12px; flex-shrink: 0;">
-            <button type="submit" form="editProductForm" style="padding: 12px 32px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">Lưu</button>
+        <div style="padding:14px 22px;border-top:1px solid #e2e8f0;display:flex;justify-content:flex-end;gap:10px;flex-shrink:0;">
+            <button type="button" onclick="closeEditProductModal()" class="da-btn da-btn-md da-btn-ghost">Hủy</button>
+            <button type="submit" form="editProductForm" class="da-btn da-btn-md da-btn-primary">Lưu</button>
         </div>
     </div>
 </div>
 
 <!-- Modal sửa người dùng -->
-<div id="editUserModal" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 1000; align-items: center; justify-content: center;">
-    <div style="background: white; border-radius: 12px; padding: 32px; width: 500px; max-width: 90%;">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h3 style="font-size: 20px; font-weight: 600; font-family: 'Signika', sans-serif;">Chỉnh sửa người dùng</h3>
+<!-- Modal thêm người dùng -->
+<div id="addUserModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:10px;padding:28px 28px 24px;width:520px;max-width:95%;font-family:'Signika',sans-serif;">
+        <div style="margin-bottom:18px;">
+            <span style="font-size:16px;font-weight:700;color:#1e293b;">Thêm người dùng</span>
         </div>
-        <form id="editUserForm">
-            <input type="hidden" name="user_id" id="editUserId">
-            <div style="margin-bottom: 16px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Email</label>
-                <input type="email" id="editUserEmail" disabled style="width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif; background: #f5f5f5;">
+        <form id="addUserForm" autocomplete="off">
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+                <input type="email" id="addUserEmail" name="email" placeholder="Nhập email" required
+                    style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                <input type="text" id="addUserPhone" name="phone" placeholder="Nhập SDT"
+                    style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                <input type="text" id="addUserLastName" name="last_name" placeholder="Họ tên"
+                    style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                <input type="text" id="addUserFirstName" name="first_name" placeholder="Tên phụ"
+                    style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                <input type="password" id="addUserPassword" name="password" placeholder="Nhập mật khẩu" required
+                    style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
+                <input type="password" id="addUserPasswordConfirm" placeholder="Nhập lại mật khẩu" required
+                    style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;">
             </div>
-            <div style="display: flex; gap: 12px; margin-bottom: 16px;">
-                <div style="flex: 1;">
-                    <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Họ Tên</label>
-                    <input type="text" name="last_name" id="editUserLastName" placeholder="Họ ..." style="width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
-                </div>
-                <div style="flex: 1;">
-                    <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Tên phụ (Nếu có)</label>
-                    <input type="text" name="first_name" id="editUserFirstName" placeholder="Tên phụ ..." style="width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
-                </div>
-            </div>
-            <div style="margin-bottom: 20px;">
-                <label style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 500; color: #333; font-family: 'Signika', sans-serif;">Số điện thoại</label>
-                <input type="text" name="phone" id="editUserPhone" placeholder="Số điện thoại ..." style="width: 100%; padding: 12px 16px; border: 1px solid #ddd; border-radius: 8px; font-size: 15px; box-sizing: border-box; font-family: 'Signika', sans-serif;">
-            </div>
-            <div style="display: flex; gap: 12px; justify-content: flex-end; margin-top: 24px;">
-                <button type="button" onclick="closeEditUserModal()" style="padding: 12px 24px; background: #f1f5f9; color: #334155; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif;">Hủy</button>
-                <button type="submit" style="padding: 12px 24px; background: #3b82f6; color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">Lưu</button>
+            <div id="addUserError" style="display:none;margin-bottom:10px;font-size:12px;color:#dc2626;"></div>
+            <div style="display:flex;justify-content:flex-end;gap:8px;">
+                <button type="button" onclick="closeAddUserModal()" class="da-btn da-btn-md da-btn-ghost">Đóng</button>
+                <button type="submit" class="da-btn da-btn-md da-btn-primary">Lưu</button>
             </div>
         </form>
+    </div>
+</div>
+
+<div id="editUserModal" style="display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.45);z-index:1000;align-items:center;justify-content:center;">
+    <div style="background:#fff;border-radius:10px;width:560px;max-width:95%;max-height:88vh;display:flex;flex-direction:column;font-family:'Signika',sans-serif;">
+        <!-- Header -->
+        <div style="padding:18px 24px 14px;border-bottom:1px solid #e2e8f0;flex-shrink:0;display:flex;justify-content:space-between;align-items:center;">
+            <span style="font-size:15px;font-weight:700;color:#1e293b;">Chỉnh sửa người dùng</span>
+            <button type="button" onclick="closeEditUserModal()" class="da-btn da-btn-md da-btn-ghost">Đóng</button>
+        </div>
+        <!-- Body scrollable -->
+        <div style="padding:20px 24px;overflow-y:auto;flex:1;">
+            <form id="editUserForm">
+                <input type="hidden" name="user_id" id="editUserId">
+                <!-- Email -->
+                <div style="margin-bottom:12px;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#64748b;letter-spacing:.05em;margin-bottom:5px;">EMAIL</label>
+                    <input type="email" id="editUserEmail" disabled
+                        style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;background:#f8fafc;color:#94a3b8;box-sizing:border-box;">
+                </div>
+                <!-- Họ tên + Tên phụ -->
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+                    <div>
+                        <label style="display:block;font-size:11px;font-weight:600;color:#64748b;letter-spacing:.05em;margin-bottom:5px;">HỌ TÊN</label>
+                        <input type="text" name="last_name" id="editUserLastName" placeholder="Họ ..."
+                            style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;box-sizing:border-box;">
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:11px;font-weight:600;color:#64748b;letter-spacing:.05em;margin-bottom:5px;">TÊN PHỤ</label>
+                        <input type="text" name="first_name" id="editUserFirstName" placeholder="Tên phụ ..."
+                            style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;box-sizing:border-box;">
+                    </div>
+                </div>
+                <!-- SĐT -->
+                <div style="margin-bottom:18px;">
+                    <label style="display:block;font-size:11px;font-weight:600;color:#64748b;letter-spacing:.05em;margin-bottom:5px;">SỐ ĐIỆN THOẠI</label>
+                    <input type="text" name="phone" id="editUserPhone" placeholder="Số điện thoại ..."
+                        style="width:100%;padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:'Signika',sans-serif;color:#1e293b;outline:none;box-sizing:border-box;">
+                </div>
+                <!-- Edu emails -->
+                <div class="da-group-title" style="margin-bottom:10px;">EMAIL EDU ĐÃ XÁC THỰC</div>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:18px;">
+                    <div>
+                        <label style="display:block;font-size:11px;font-weight:600;color:#64748b;letter-spacing:.05em;margin-bottom:5px;">SINH VIÊN</label>
+                        <div id="editUserStudentEmail" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;background:#f8fafc;color:#475569;min-height:36px;word-break:break-all;">—</div>
+                    </div>
+                    <div>
+                        <label style="display:block;font-size:11px;font-weight:600;color:#64748b;letter-spacing:.05em;margin-bottom:5px;">GIẢNG VIÊN</label>
+                        <div id="editUserTeacherEmail" style="padding:9px 12px;border:1px solid #e2e8f0;border-radius:6px;font-size:12px;background:#f8fafc;color:#475569;min-height:36px;word-break:break-all;">—</div>
+                    </div>
+                </div>
+                <!-- Sổ địa chỉ -->
+                <div class="da-group-title" style="margin-bottom:10px;">SỔ ĐỊA CHỈ</div>
+                <div id="editUserAddresses" style="display:flex;flex-direction:column;gap:6px;">
+                    <div style="color:#94a3b8;font-size:12px;">Đang tải...</div>
+                </div>
+            </form>
+        </div>
+        <!-- Footer -->
+        <div style="padding:14px 24px;border-top:1px solid #e2e8f0;flex-shrink:0;display:flex;justify-content:flex-end;gap:8px;">
+            <button type="button" onclick="closeEditUserModal()" class="da-btn da-btn-md da-btn-ghost">Đóng</button>
+            <button type="button" onclick="document.getElementById('editUserForm').dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}))" class="da-btn da-btn-md da-btn-primary">Lưu</button>
+        </div>
     </div>
 </div>
 
@@ -1523,8 +1396,51 @@
     window.brandAddUrl = '{% url "store:brand_add" %}';
     window.brandEditUrl = '{% url "store:brand_edit" %}';
     window.brandDeleteUrl = '{% url "store:brand_delete" %}';
-    window.userEditUrl = '{% url "store:user_edit" %}';
-    window.userDeleteUrl = '{% url "store:user_delete" %}';
+    window.userDetailUrl  = '{% url "store:user_detail" %}';
+    window.userAddUrl      = '{% url "store:user_add" %}';
+    window.userEditUrl     = '{% url "store:user_edit" %}';
+    window.userDeleteUrl   = '{% url "store:user_delete" %}';
+</script>
+<script>
+    function openAddUserModal() {
+        document.getElementById('addUserForm').reset();
+        document.getElementById('addUserError').style.display = 'none';
+        const m = document.getElementById('addUserModal');
+        m.style.display = 'flex';
+    }
+    function closeAddUserModal() {
+        document.getElementById('addUserModal').style.display = 'none';
+    }
+    document.getElementById('addUserModal').addEventListener('click', function(e) {
+        if (e.target === this) closeAddUserModal();
+    });
+    document.getElementById('addUserForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        const errEl = document.getElementById('addUserError');
+        errEl.style.display = 'none';
+        const pw = document.getElementById('addUserPassword').value;
+        const pwc = document.getElementById('addUserPasswordConfirm').value;
+        if (pw !== pwc) {
+            errEl.textContent = 'Mật khẩu nhập lại không khớp!';
+            errEl.style.display = 'block';
+            return;
+        }
+        const fd = new FormData(this);
+        fd.append('csrfmiddlewaretoken', window.csrfToken);
+        fetch(window.userAddUrl, { method: 'POST', body: fd })
+            .then(r => r.json())
+            .then(data => {
+                if (data.success) {
+                    closeAddUserModal();
+                    window.QHToast.success(data.message);
+                    setTimeout(() => window.location.reload(), 1200);
+                } else {
+                    errEl.textContent = data.message || 'Lỗi không xác định.';
+                    errEl.style.display = 'block';
+                }
+            })
+            .catch(() => { errEl.textContent = 'Lỗi kết nối.'; errEl.style.display = 'block'; });
+    });
     window.productAddUrl = '{% url "store:product_add" %}';
     window.productEditUrl = '{% url "store:product_edit" %}';
     window.productDeleteUrl = '{% url "store:product_delete" %}';
@@ -1542,6 +1458,7 @@
     window.couponEditUrl = '{% url "store:coupon_edit" %}';
     window.couponDeleteUrl = '{% url "store:coupon_delete" %}';
 </script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script src="https://cdn.ckeditor.com/ckeditor5/41.0.0/classic/ckeditor.js"></script>
 <script src="https://cdn.ckeditor.com/ckeditor5/41.0.0/classic/translations/vi.js"></script>
 <script src="{% static 'js/dashboard.js' %}"></script>
@@ -1857,9 +1774,9 @@ function loadBestSellersData() {
             
             // Rank badge
             let rankBadge = '';
-            if (index === 0) rankBadge = '🥇';
-            else if (index === 1) rankBadge = '🥈';
-            else if (index === 2) rankBadge = '🥉';
+            if (index === 0) rankBadge = '1';
+            else if (index === 1) rankBadge = '2';
+            else if (index === 2) rankBadge = '3';
             else rankBadge = index + 1;
             
             // Price display
@@ -1905,4 +1822,6 @@ function loadBestSellersData() {
 }
 </script>
 
-{% endblock %}
+</main>
+</body>
+</html>

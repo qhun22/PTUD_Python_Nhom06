@@ -37,12 +37,19 @@ urlpatterns = [
     path('profile/', views.profile, name='profile'),
     # Dashboard
     path('dashboard/', views.dashboard_view, name='dashboard'),
+    path('dashboard/order-detail/', views.dashboard_order_detail, name='dashboard_order_detail'),
+    path('dashboard/product-detail/', views.dashboard_product_detail, name='dashboard_product_detail'),
+    # Export
+    path('export/month/', views.export_revenue_month, name='export_revenue_month'),
+    path('export/year/', views.export_revenue_year, name='export_revenue_year'),
     # Quản lý hãng
     path('brands/', views.brand_list, name='brand_list'),
     path('brands/add/', views.brand_add, name='brand_add'),
     path('brands/edit/', views.brand_edit, name='brand_edit'),
     path('brands/delete/', views.brand_delete, name='brand_delete'),
     # Quản lý người dùng
+    path('users/detail/', views.user_detail_json, name='user_detail'),
+    path('users/add/', views.user_add, name='user_add'),
     path('users/edit/', views.user_edit, name='user_edit'),
     path('users/delete/', views.user_delete, name='user_delete'),
     # Quan ly san pham
@@ -62,6 +69,7 @@ urlpatterns = [
     # Product image folders management
     path('product-images/folders/list/', views.image_folder_list, name='image_folder_list'),
     path('product-images/folders/create/', views.image_folder_create, name='image_folder_create'),
+    path('product-images/folders/delete/', views.image_folder_delete, name='image_folder_delete'),
     path('product-images/color/list/', views.folder_color_image_list, name='folder_color_image_list'),
     path('product-images/color/upload/', views.folder_color_image_upload, name='folder_color_image_upload'),
     path('product-images/color/delete/', views.folder_color_image_delete, name='folder_color_image_delete'),

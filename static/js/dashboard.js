@@ -1,5 +1,263 @@
 // JavaScript cho trang Dashboard
 
+// ==================== Stat Detail Box (Dashboard) ====================
+var _sdm = {
+    domain: 'order',
+    filter: 'today',
+    page: 1,
+    search: '',
+    statusSub: '',
+    _searchTimer: null
+};
+
+function openStatDetailBox(domain, filter) {
+    _sdm.domain = domain; _sdm.filter = filter; _sdm.page = 1;
+    _sdm.search = ''; _sdm.statusSub = '';
+    var modal = document.getElementById('statDetailModal');
+    if (modal) modal.style.display = 'flex';
+    _fetchStatDetail();
+}
+
+function closeStatDetailModal() {
+    var modal = document.getElementById('statDetailModal');
+    if (modal) modal.style.display = 'none';
+}
+
+function _fetchStatDetail() {
+    var bodyEl = document.getElementById('sdm-body');
+    var pagEl = document.getElementById('sdm-pagination');
+    var statsEl = document.getElementById('sdm-stats');
+    var titleEl = document.getElementById('sdm-title');
+    var ctrlEl = document.getElementById('sdm-controls');
+    if (!bodyEl) return;
+    bodyEl.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;font-family:\'Signika\',sans-serif;">Đang tải...</div>';
+    if (pagEl) pagEl.innerHTML = '';
+    var url;
+    if (_sdm.domain === 'order') {
+        url = '/dashboard/order-detail/?filter=' + _sdm.filter
+            + '&page=' + _sdm.page
+            + '&search=' + encodeURIComponent(_sdm.search)
+            + '&status_sub=' + encodeURIComponent(_sdm.statusSub);
+    } else {
+        url = '/dashboard/product-detail/?filter=' + _sdm.filter
+            + '&page=' + _sdm.page
+            + '&search=' + encodeURIComponent(_sdm.search);
+    }
+    fetch(url)
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data.success) {
+                bodyEl.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;font-size:14px;">Lỗi: ' + (data.message || 'Không thể tải') + '</div>';
+                return;
+            }
+            if (titleEl) titleEl.textContent = data.title;
+            _renderSdmStats(data.stat_cards || [], statsEl);
+            _renderSdmControls(data, ctrlEl);
+            if (_sdm.domain === 'order') {
+                _renderSdmOrderTable(data, bodyEl);
+            } else {
+                _renderSdmProductTable(data, bodyEl);
+            }
+            _renderSdmPagination(data.total_pages, data.page, data.total);
+        })
+        .catch(function () {
+            bodyEl.innerHTML = '<div style="padding:40px;text-align:center;color:#ef4444;font-size:14px;">Lỗi kết nối!</div>';
+        });
+}
+
+function _renderSdmStats(cards, el) {
+    if (!el) return;
+    var visible = cards.filter(function (c) { return c.label; });
+    if (!visible.length) { el.innerHTML = ''; el.style.display = 'none'; return; }
+    el.style.display = 'grid';
+    el.style.gridTemplateColumns = 'repeat(' + Math.min(visible.length, 4) + ',1fr)';
+    var html = '';
+    visible.forEach(function (c) {
+        html += '<div style="background:#fff;border-radius:8px;padding:12px 14px;border:1px solid #e2e8f0;">'
+            + '<div style="font-size:12px;color:#64748b;font-family:\'Signika\',sans-serif;margin-bottom:4px;">' + c.label + '</div>'
+            + '<div style="font-size:18px;font-weight:700;color:#1e293b;font-family:\'Signika\',sans-serif;">' + c.value + '</div>'
+            + '</div>';
+    });
+    el.innerHTML = html;
+}
+
+function _renderSdmControls(data, el) {
+    if (!el) return;
+    var placeholder = _sdm.domain === 'order' ? 'Tìm mã đơn...' : 'Tìm tên sản phẩm...';
+    var html = '<div style="position:relative;">'
+        + '<input type="text" id="sdm-search-input" value="' + _escSdm(_sdm.search) + '" placeholder="' + placeholder + '" oninput="_sdmSearch()" style="width:180px;padding:7px 12px 7px 32px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:\'Signika\',sans-serif;color:#1e293b;outline:none;">'
+        + '<svg style="position:absolute;left:9px;top:50%;transform:translateY(-50%);width:14px;height:14px;color:#94a3b8;" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>'
+        + '</div>';
+    if (_sdm.domain === 'order' && data.is_time_filter) {
+        html += '<select id="sdm-status-select" onchange="_sdmStatusFilter()" style="padding:7px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:13px;font-family:\'Signika\',sans-serif;color:#334155;background:#fff;outline:none;">'
+            + '<option value="">Tất cả trạng thái</option>'
+            + ['pending', 'processing', 'shipped', 'delivered', 'cancelled'].map(function (s) {
+                var labels = { pending: 'Đã đặt', processing: 'Xử lý', shipped: 'Đang giao', delivered: 'Đã giao', cancelled: 'Đã hủy' };
+                return '<option value="' + s + '"' + (_sdm.statusSub === s ? ' selected' : '') + '>' + labels[s] + '</option>';
+            }).join('')
+            + '</select>';
+    }
+    el.innerHTML = html;
+}
+
+function _sdmSearch() {
+    var inp = document.getElementById('sdm-search-input');
+    _sdm.search = inp ? inp.value : '';
+    _sdm.page = 1;
+    clearTimeout(_sdm._searchTimer);
+    _sdm._searchTimer = setTimeout(_fetchStatDetail, 350);
+}
+
+function _sdmStatusFilter() {
+    var sel = document.getElementById('sdm-status-select');
+    _sdm.statusSub = sel ? sel.value : '';
+    _sdm.page = 1;
+    _fetchStatDetail();
+}
+
+function _escSdm(str) {
+    return (str || '').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
+var _sdmStatusColor = {
+    'awaiting_payment': { bg: '#fef9c3', color: '#854d0e' },
+    'pending': { bg: '#dbeafe', color: '#1e40af' },
+    'processing': { bg: '#fef3c7', color: '#92400e' },
+    'shipped': { bg: '#e0f2fe', color: '#0369a1' },
+    'delivered': { bg: '#dcfce7', color: '#166534' },
+    'cancelled': { bg: '#fee2e2', color: '#991b1b' },
+};
+
+function _renderSdmOrderTable(data, el) {
+    if (!data.orders || !data.orders.length) {
+        el.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;font-family:\'Signika\',sans-serif;">Không có đơn hàng nào.</div>';
+        return;
+    }
+    var thS = 'padding:10px 12px;text-align:left;color:#64748b;font-size:12px;font-weight:600;white-space:nowrap;background:#f8fafc;';
+    var thC = thS + 'text-align:center;'; var thR = thS + 'text-align:right;';
+    var html = '<table style="width:100%;border-collapse:collapse;font-family:\'Signika\',sans-serif;font-size:13px;">'
+        + '<thead><tr style="border-bottom:2px solid #e2e8f0;">'
+        + '<th style="' + thC + '">STT</th><th style="' + thS + '">Mã đơn</th>'
+        + '<th style="' + thS + '">Khách hàng</th><th style="' + thS + '">SĐT</th>'
+        + '<th style="' + thR + '">Tổng tiền</th><th style="' + thC + '">Số SP</th>'
+        + '<th style="' + thC + '">Thanh toán</th><th style="' + thC + '">Trạng thái</th>'
+        + '<th style="' + thC + '">Ngày tạo</th><th style="' + thC + '">Hành động</th>'
+        + '</tr></thead><tbody>';
+    data.orders.forEach(function (o) {
+        var sc = _sdmStatusColor[o.status] || { bg: '#f1f5f9', color: '#475569' };
+        var act = '';
+        if (o.status === 'pending') {
+            act += '<button onclick="_sdmChangeStatus(' + o.id + ',\'processing\')" style="padding:3px 8px;border:none;border-radius:4px;background:#fef3c7;color:#92400e;cursor:pointer;font-size:11px;margin-right:3px;font-family:\'Signika\',sans-serif;">Xử lý</button>';
+            act += '<button onclick="_sdmChangeStatus(' + o.id + ',\'cancelled\')" style="padding:3px 8px;border:none;border-radius:4px;background:#fee2e2;color:#991b1b;cursor:pointer;font-size:11px;font-family:\'Signika\',sans-serif;">Hủy</button>';
+        } else if (o.status === 'processing') {
+            act = '<button onclick="_sdmChangeStatus(' + o.id + ',\'shipped\')" style="padding:3px 8px;border:none;border-radius:4px;background:#e0f2fe;color:#0369a1;cursor:pointer;font-size:11px;font-family:\'Signika\',sans-serif;">Giao hàng</button>';
+        } else if (o.status === 'shipped') {
+            act = '<button onclick="_sdmChangeStatus(' + o.id + ',\'delivered\')" style="padding:3px 8px;border:none;border-radius:4px;background:#dcfce7;color:#166534;cursor:pointer;font-size:11px;font-family:\'Signika\',sans-serif;">Đã giao</button>';
+        }
+        html += '<tr style="border-bottom:1px solid #f1f5f9;">'
+            + '<td style="padding:10px 12px;text-align:center;color:#94a3b8;">' + o.stt + '</td>'
+            + '<td style="padding:10px 12px;font-weight:600;color:#1e293b;white-space:nowrap;">' + o.order_code + '</td>'
+            + '<td style="padding:10px 12px;color:#334155;max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + o.user_email + '</td>'
+            + '<td style="padding:10px 12px;color:#64748b;white-space:nowrap;">' + (o.user_phone || '-') + '</td>'
+            + '<td style="padding:10px 12px;text-align:right;font-weight:600;color:#dc2626;white-space:nowrap;">' + Number(o.total_amount).toLocaleString('vi-VN') + 'đ</td>'
+            + '<td style="padding:10px 12px;text-align:center;color:#475569;">' + o.item_count + '</td>'
+            + '<td style="padding:10px 12px;text-align:center;color:#64748b;white-space:nowrap;">' + o.payment_method + '</td>'
+            + '<td style="padding:10px 12px;text-align:center;white-space:nowrap;"><span style="padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;background:' + sc.bg + ';color:' + sc.color + ';">' + o.status_display + '</span></td>'
+            + '<td style="padding:10px 12px;text-align:center;color:#64748b;font-size:12px;white-space:nowrap;">' + o.created_at + '</td>'
+            + '<td style="padding:10px 12px;text-align:center;white-space:nowrap;">' + act + '</td>'
+            + '</tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+function _renderSdmProductTable(data, el) {
+    if (!data.products || !data.products.length) {
+        el.innerHTML = '<div style="padding:40px;text-align:center;color:#94a3b8;font-size:14px;font-family:\'Signika\',sans-serif;">Không có sản phẩm nào.</div>';
+        return;
+    }
+    var ft = data.filter;
+    var thS = 'padding:10px 12px;text-align:left;color:#64748b;font-size:12px;font-weight:600;white-space:nowrap;background:#f8fafc;';
+    var thC = thS + 'text-align:center;'; var thR = thS + 'text-align:right;';
+    var html = '<table style="width:100%;border-collapse:collapse;font-family:\'Signika\',sans-serif;font-size:13px;">'
+        + '<thead><tr style="border-bottom:2px solid #e2e8f0;">'
+        + '<th style="' + thC + '">STT</th><th style="' + thS + '">Tên sản phẩm</th><th style="' + thS + '">Hãng</th>';
+    if (ft === 'bestseller') {
+        html += '<th style="' + thC + '">Đã bán</th><th style="' + thR + '">Giá bán</th><th style="' + thR + '">Doanh thu</th><th style="' + thC + '">% DT</th><th style="' + thC + '">Tồn kho</th>';
+    } else {
+        html += '<th style="' + thR + '">Giá bán</th><th style="' + thR + '">Giá gốc</th><th style="' + thC + '">Tồn kho</th><th style="' + thC + '">Trạng thái</th>';
+    }
+    html += '<th style="' + thC + '">Hành động</th></tr></thead><tbody>';
+    data.products.forEach(function (p) {
+        var stockColor = p.stock === 0 ? '#dc2626' : (p.stock <= 5 ? '#d97706' : '#1e293b');
+        var sBg = p.stock === 0 ? '#fee2e2' : (p.stock <= 5 ? '#fef3c7' : '#dcfce7');
+        var sColor = p.stock === 0 ? '#991b1b' : (p.stock <= 5 ? '#92400e' : '#166534');
+        var stockLabel = p.stock === 0 ? 'Hết hàng' : (p.stock <= 5 ? 'Sắp hết' : 'Còn hàng');
+        var act = '<button onclick="window.location.href=\'?section=products\'" style="padding:3px 8px;border:none;border-radius:4px;background:#e0e7ff;color:#3730a3;cursor:pointer;font-size:11px;font-family:\'Signika\',sans-serif;">Xem SP</button>';
+        html += '<tr style="border-bottom:1px solid #f1f5f9;">'
+            + '<td style="padding:10px 12px;text-align:center;color:#94a3b8;">' + p.stt + '</td>'
+            + '<td style="padding:10px 12px;font-weight:500;color:#1e293b;max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + p.name + '</td>'
+            + '<td style="padding:10px 12px;color:#64748b;">' + p.brand + '</td>';
+        if (ft === 'bestseller') {
+            html += '<td style="padding:10px 12px;text-align:center;font-weight:600;color:#1e293b;">' + p.sold + '</td>'
+                + '<td style="padding:10px 12px;text-align:right;color:#1e293b;">' + Number(p.price).toLocaleString('vi-VN') + 'đ</td>'
+                + '<td style="padding:10px 12px;text-align:right;font-weight:600;color:#dc2626;">' + Number(p.revenue).toLocaleString('vi-VN') + 'đ</td>'
+                + '<td style="padding:10px 12px;text-align:center;color:#64748b;">' + p.pct_revenue + '%</td>'
+                + '<td style="padding:10px 12px;text-align:center;color:' + stockColor + ';font-weight:600;">' + p.stock + '</td>';
+        } else {
+            html += '<td style="padding:10px 12px;text-align:right;color:#1e293b;">' + Number(p.price).toLocaleString('vi-VN') + 'đ</td>'
+                + '<td style="padding:10px 12px;text-align:right;color:#64748b;">' + (p.original_price ? Number(p.original_price).toLocaleString('vi-VN') + 'đ' : '-') + '</td>'
+                + '<td style="padding:10px 12px;text-align:center;font-weight:600;color:' + stockColor + ';">' + p.stock + '</td>'
+                + '<td style="padding:10px 12px;text-align:center;"><span style="padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600;background:' + sBg + ';color:' + sColor + ';">' + stockLabel + '</span></td>';
+        }
+        html += '<td style="padding:10px 12px;text-align:center;">' + act + '</td></tr>';
+    });
+    html += '</tbody></table>';
+    el.innerHTML = html;
+}
+
+function _sdmChangeStatus(orderId, newStatus) {
+    fetch('/api/admin/order-update-status/', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'X-CSRFToken': window.csrfToken },
+        body: JSON.stringify({ id: orderId, status: newStatus })
+    })
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                window.QHToast && window.QHToast.show('Đã cập nhật trạng thái!', 'success');
+                _fetchStatDetail();
+            } else {
+                window.QHToast && window.QHToast.show(data.message || 'Lỗi!', 'error');
+            }
+        })
+        .catch(function () { window.QHToast && window.QHToast.show('Lỗi kết nối!', 'error'); });
+}
+
+function _renderSdmPagination(totalPages, currentPage, total) {
+    var pagEl = document.getElementById('sdm-pagination');
+    if (!pagEl) return;
+    var bS = 'padding:5px 10px;border:1px solid #e2e8f0;background:#fff;border-radius:5px;cursor:pointer;font-size:12px;font-family:\'Signika\',sans-serif;';
+    var aS = 'padding:5px 10px;border:1px solid #3b82f6;background:#3b82f6;color:#fff;border-radius:5px;font-size:12px;font-family:\'Signika\',sans-serif;';
+    var html = '<span style="font-size:12px;color:#64748b;margin-right:8px;">Tổng: ' + total + ' mục</span>';
+    if (totalPages <= 1) { pagEl.innerHTML = html; return; }
+    if (currentPage > 1) html += '<button style="' + bS + '" onclick="_sdmGoPage(' + (currentPage - 1) + ')">‹</button>';
+    var s = Math.max(1, currentPage - 2), e = Math.min(totalPages, currentPage + 2);
+    if (s > 1) { html += '<button style="' + bS + '" onclick="_sdmGoPage(1)">1</button>'; if (s > 2) html += '<span style="color:#94a3b8;padding:0 4px;">…</span>'; }
+    for (var i = s; i <= e; i++) {
+        html += '<button style="' + (i === currentPage ? aS : bS) + '"' + (i !== currentPage ? ' onclick="_sdmGoPage(' + i + ')"' : '') + '>' + i + '</button>';
+    }
+    if (e < totalPages) { if (e < totalPages - 1) html += '<span style="color:#94a3b8;padding:0 4px;">…</span>'; html += '<button style="' + bS + '" onclick="_sdmGoPage(' + totalPages + ')">' + totalPages + '</button>'; }
+    if (currentPage < totalPages) html += '<button style="' + bS + '" onclick="_sdmGoPage(' + (currentPage + 1) + ')">›</button>';
+    html += '<span style="font-size:12px;color:#64748b;margin-left:8px;">Trang ' + currentPage + '/' + totalPages + '</span>';
+    pagEl.innerHTML = html;
+}
+
+function _sdmGoPage(page) {
+    _sdm.page = page;
+    _fetchStatDetail();
+}
+
 // Các hàm Modal
 function openAddBrandModal() {
     document.getElementById('addBrandModal').style.display = 'flex';
@@ -22,13 +280,50 @@ function closeEditBrandModal() {
 }
 
 // Các hàm Modal người dùng
-function openEditUserModal(id, email, lastName, firstName, phone) {
+function openEditUserModal(id) {
+    // Hiện modal ngay, rồi fetch dữ liệu
     document.getElementById('editUserId').value = id;
-    document.getElementById('editUserEmail').value = email;
-    document.getElementById('editUserLastName').value = lastName;
-    document.getElementById('editUserFirstName').value = firstName;
-    document.getElementById('editUserPhone').value = phone || '';
+    document.getElementById('editUserEmail').value = '';
+    document.getElementById('editUserLastName').value = '';
+    document.getElementById('editUserFirstName').value = '';
+    document.getElementById('editUserPhone').value = '';
+    const studEl = document.getElementById('editUserStudentEmail');
+    const teachEl = document.getElementById('editUserTeacherEmail');
+    const addrEl = document.getElementById('editUserAddresses');
+    if (studEl) studEl.textContent = 'Đang tải...';
+    if (teachEl) teachEl.textContent = '';
+    if (addrEl) addrEl.innerHTML = '<div style="color:#94a3b8;font-size:12px;">Đang tải...</div>';
     document.getElementById('editUserModal').style.display = 'flex';
+
+    fetch(window.userDetailUrl + '?user_id=' + id)
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            const u = data.user;
+            document.getElementById('editUserEmail').value = u.email;
+            document.getElementById('editUserLastName').value = u.last_name;
+            document.getElementById('editUserFirstName').value = u.first_name;
+            document.getElementById('editUserPhone').value = u.phone;
+            if (studEl) studEl.textContent = u.verified_student_email || '—';
+            if (teachEl) teachEl.textContent = u.verified_teacher_email || '—';
+            if (addrEl) {
+                const defAddrs = (data.addresses || []).filter(a => a.is_default);
+                if (defAddrs.length === 0) {
+                    addrEl.innerHTML = '<div style="color:#94a3b8;font-size:12px;">Chưa có địa chỉ mặc định.</div>';
+                } else {
+                    addrEl.innerHTML = defAddrs.map(a => `
+                        <div style="padding:8px 10px;border:1px solid #e8ecf0;border-radius:6px;font-size:12px;color:#334155;margin-bottom:6px;">
+                            ${a.is_default ? '<span style="background:#eff6ff;color:#1d4ed8;font-size:10px;padding:1px 6px;border-radius:4px;margin-right:6px;">Địa chỉ mặc định</span>' : ''}
+                            <strong>${a.full_name}</strong> &middot; ${a.phone}<br>
+                            <span style="color:#64748b;">${a.detail}, ${a.ward_name}, ${a.district_name}, ${a.province_name}</span>
+                        </div>
+                    `).join('');
+                }
+            }
+        })
+        .catch(() => {
+            if (addrEl) addrEl.innerHTML = '<div style="color:#dc2626;font-size:12px;">Lỗi tải dữ liệu.</div>';
+        });
 }
 
 function closeEditUserModal() {
@@ -187,6 +482,94 @@ function showSidebarPage(page) {
     });
 }
 
+// ==================== Biểu đồ doanh thu năm (Chart.js) ====================
+function initRevenueChart() {
+    var wrap = document.getElementById('revenueChartWrap');
+    if (!wrap || typeof Chart === 'undefined') return;
+    var raw = wrap.getAttribute('data-months');
+    if (!raw) return;
+    var months;
+    try { months = JSON.parse(raw); } catch (e) { return; }
+
+    var labels = months.map(function (m) { return m.label; });
+    var values = months.map(function (m) { return m.value; });
+
+    // Làm tròn max lên mức hợp lý
+    var maxVal = Math.max.apply(null, values);
+    var unit;
+    if (maxVal <= 0) unit = 10000000;
+    else if (maxVal <= 1000000) unit = 500000;     // 500 nghìn
+    else if (maxVal <= 10000000) unit = 1000000;    // 1 triệu
+    else if (maxVal <= 100000000) unit = 10000000;   // 10 triệu
+    else if (maxVal <= 500000000) unit = 50000000;   // 50 triệu
+    else unit = 100000000;  // 100 triệu
+    var chartMax = maxVal > 0 ? Math.ceil(maxVal / unit) * unit : unit * 5;
+
+    // Điều chỉnh container cho Chart.js
+    wrap.style.display = 'block';
+    wrap.style.position = 'relative';
+    wrap.style.height = '240px';
+
+    var canvas = document.getElementById('revenueChartCanvas');
+    if (!canvas) return;
+
+    function fmtVND(v) {
+        return Number(v).toLocaleString('vi-VN') + 'đ';
+    }
+
+    new Chart(canvas, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                data: values,
+                backgroundColor: '#A9CCF0',
+                hoverBackgroundColor: '#8BB8E0',
+                borderRadius: 4,
+                borderSkipped: false,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        title: function (items) {
+                            return 'Tháng ' + items[0].label.replace('T', '');
+                        },
+                        label: function (item) {
+                            return fmtVND(item.raw);
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    grid: { display: false },
+                    ticks: {
+                        font: { size: 10, family: "'Signika', sans-serif" },
+                        color: '#94a3b8'
+                    }
+                },
+                y: {
+                    beginAtZero: true,
+                    max: chartMax,
+                    grid: { color: '#f1f5f9' },
+                    ticks: {
+                        font: { size: 10, family: "'Signika', sans-serif" },
+                        color: '#94a3b8',
+                        callback: function (value) {
+                            return fmtVND(value);
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
 // Khởi tạo Dashboard
 document.addEventListener('DOMContentLoaded', function () {
     // Lấy section từ URL hoặc mặc định là stats
@@ -209,6 +592,7 @@ document.addEventListener('DOMContentLoaded', function () {
         }
     }
     showSidebarPage(pageToShow);
+    initRevenueChart();
 
     // Cập nhật sidebar active
     sidebarItems.forEach(item => {
@@ -409,7 +793,7 @@ let allSkus = [];
 // ==================== Phân trang SKU ====================
 var _skuData = [];
 var _skuPage = 1;
-var _skuPerPage = 8;
+var _skuPerPage = 15;
 
 function loadSkuList() {
     fetch('/products/sku/list/', {
@@ -422,7 +806,9 @@ function loadSkuList() {
         .then(data => {
             if (data.success) {
                 allSkus = data.skus;
-                renderSkuTable(allSkus);
+                _skuData = data.skus;
+                _skuPage = 1;
+                renderSkuTable();
             }
         })
         .catch(error => console.error('Error loading SKU list:', error));
@@ -436,7 +822,11 @@ let imageFolderPreviewImages = [];
 // ==================== Phân trang thư mục ảnh ====================
 var _imageFolderData = [];
 var _imageFolderPage = 1;
-var _imageFolderPerPage = 8;
+var _imageFolderPerPage = 15;
+
+// Phân trang panel Thư mục đã tạo
+var _folderDirPage = 1;
+var _folderDirPerPage = 15;
 
 function initProductImagesSection() {
     loadImageFolderRows();
@@ -454,7 +844,10 @@ function loadImageFolderRows() {
             if (data.success) {
                 allImageFolderRows = data.rows || [];
                 allImageFolders = data.folders || [];
-                renderImageFolderTable(allImageFolderRows);
+                _imageFolderData = allImageFolderRows;
+                _imageFolderPage = 1;
+                renderImageFolderTable();
+                renderImageFolderDir();
                 refreshImageFolderOptions();
             }
         })
@@ -464,22 +857,27 @@ function loadImageFolderRows() {
 }
 
 function renderImageFolderTable(rows) {
+    if (rows !== undefined) {
+        _imageFolderData = rows;
+        _imageFolderPage = 1;
+    }
     const tbody = document.getElementById('imageFolderTableBody');
     if (!tbody) return;
 
-    if (!rows || rows.length === 0) {
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="5" style="padding: 40px; text-align: center; color: #64748b; font-size: 14px; font-family: 'Signika', sans-serif;">
-                    Chưa có màu ảnh nào.
-                </td>
-            </tr>
-        `;
+    var totalPages = Math.ceil(_imageFolderData.length / _imageFolderPerPage);
+    if (_imageFolderPage > totalPages) _imageFolderPage = totalPages || 1;
+    var startIdx = (_imageFolderPage - 1) * _imageFolderPerPage;
+    var paged = _imageFolderData.slice(startIdx, startIdx + _imageFolderPerPage);
+
+    if (!paged || paged.length === 0) {
+        tbody.innerHTML = `<tr class="da-table-empty"><td colspan="5">Chưa có màu ảnh nào.</td></tr>`;
+        _renderPagination('imageFolder', 0, 1);
         return;
     }
 
     let html = '';
-    rows.forEach((row, index) => {
+    paged.forEach((row, index) => {
+        const globalIdx = startIdx + index + 1;
         const colorNameEscaped = (row.color_name || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const skuEscaped = (row.sku || '').replace(/'/g, "\\'").replace(/"/g, '&quot;');
         const rowDataJson = JSON.stringify({
@@ -491,21 +889,20 @@ function renderImageFolderTable(rows) {
             folder_product_id: row.folder_product_id
         }).replace(/'/g, "\\'").replace(/"/g, '&quot;');
         html += `
-            <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${index + 1}</td>
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">${row.folder_name}</td>
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${row.color_name}</td>
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${row.sku}</td>
-                <td style="padding: 12px 16px;">
-                    <div style="display: flex; gap: 6px;">
-                        <button type="button" onclick="openAddColorImageModalWithData('${rowDataJson}')" style="background: #dbeafe; color: #1e40af; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Quản lý</button>
-                        <button type="button" onclick="deleteColorImageRow(${row.folder_id || 'null'}, '${skuEscaped}', '${colorNameEscaped}')" style="background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Xóa</button>
-                    </div>
+            <tr>
+                <td>${globalIdx}</td>
+                <td style="font-weight:500;">${row.folder_name}</td>
+                <td>${row.color_name}</td>
+                <td>${row.sku}</td>
+                <td>
+                    <button type="button" onclick="openAddColorImageModalWithData('${rowDataJson}')" class="da-btn da-btn-sm da-btn-info">Quản lý</button>
+                    <button type="button" onclick="deleteColorImageRow(${row.folder_id || 'null'}, '${skuEscaped}', '${colorNameEscaped}')" class="da-btn da-btn-sm da-btn-del">Xóa</button>
                 </td>
             </tr>
         `;
     });
     tbody.innerHTML = html;
+    _renderPagination('imageFolder', Math.ceil(_imageFolderData.length / _imageFolderPerPage), _imageFolderPage);
 }
 
 function openAddColorImageModalWithData(rowDataJson) {
@@ -569,14 +966,77 @@ function searchImageFolders() {
     const input = document.getElementById('imageFolderSearchInput');
     if (!input) return;
     const term = input.value.toLowerCase();
-    const filtered = allImageFolderRows.filter(r => (r.folder_name || '').toLowerCase().includes(term));
-    renderImageFolderTable(filtered);
+    _imageFolderData = allImageFolderRows.filter(r => (r.folder_name || '').toLowerCase().includes(term));
+    _imageFolderPage = 1;
+    renderImageFolderTable();
 }
 
 function resetImageFolderSearch() {
     const input = document.getElementById('imageFolderSearchInput');
     if (input) input.value = '';
-    renderImageFolderTable(allImageFolderRows);
+    _imageFolderData = allImageFolderRows;
+    _imageFolderPage = 1;
+    renderImageFolderTable();
+}
+
+function renderImageFolderDir() {
+    var tbody = document.getElementById('imageFolderDirBody');
+    if (!tbody) return;
+    var list = allImageFolders || [];
+    if (list.length === 0) {
+        tbody.innerHTML = '<tr class="da-table-empty"><td colspan="5">Chưa có thư mục nào.</td></tr>';
+        var pEl = document.getElementById('imageFolderDirPagination');
+        if (pEl) pEl.innerHTML = '';
+        return;
+    }
+    var totalPages = Math.ceil(list.length / _folderDirPerPage);
+    if (_folderDirPage > totalPages) _folderDirPage = totalPages || 1;
+    var startIdx = (_folderDirPage - 1) * _folderDirPerPage;
+    var paged = list.slice(startIdx, startIdx + _folderDirPerPage);
+    var html = '';
+    paged.forEach(function (f, idx) {
+        var nameEsc = (f.name || '').replace(/'/g, "\\'");
+        html += '<tr style="border-bottom:1px solid #f1f5f9;">'
+            + '<td style="padding:11px 14px;text-align:center;font-size:13px;color:#64748b;">' + (startIdx + idx + 1) + '</td>'
+            + '<td style="padding:11px 14px;font-size:13px;font-weight:500;color:#1e293b;">' + (f.name || '-') + '</td>'
+            + '<td style="padding:11px 14px;font-size:13px;color:#64748b;">' + (f.brand_name || '-') + '</td>'
+            + '<td style="padding:11px 14px;font-size:13px;color:#64748b;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:130px;">' + (f.product_name || '-') + '</td>'
+            + '<td style="padding:11px 14px;text-align:center;"><button type="button" onclick="deleteImageFolder(' + f.id + ',\'' + nameEsc + '\')" class="da-btn da-btn-sm da-btn-del">Xóa</button></td>'
+            + '</tr>';
+    });
+    tbody.innerHTML = html;
+    _renderPagination('imageFolderDir', totalPages, _folderDirPage);
+}
+
+function deleteImageFolder(id, name) {
+    if (!id) return;
+    var msg = 'Xóa thư mục <strong>' + name + '</strong>? Tất cả ảnh trong thư mục sẽ bị xóa!';
+    function doDelete() {
+        var fd = new FormData();
+        fd.append('folder_id', id);
+        fetch('/product-images/folders/delete/', {
+            method: 'POST',
+            body: fd,
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'X-CSRFToken': window.csrfToken }
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (data.success) {
+                    window.QHToast && window.QHToast.show && window.QHToast.show(data.message || 'Đã xóa thư mục!', 'success');
+                    loadImageFolderRows();
+                } else {
+                    window.QHToast && window.QHToast.show && window.QHToast.show(data.message || 'Không thể xóa!', 'error');
+                }
+            })
+            .catch(function () {
+                window.QHToast && window.QHToast.show && window.QHToast.show('Lỗi kết nối!', 'error');
+            });
+    }
+    if (window.QHConfirm && window.QHConfirm.show) {
+        window.QHConfirm.show(msg, doDelete);
+    } else if (confirm('Xóa thư mục "' + name + '"? Tất cả ảnh sẽ bị xóa!')) {
+        doDelete();
+    }
 }
 
 function openAddImageFolderModal() {
@@ -1176,10 +1636,19 @@ function deleteColorImage(imageId, indexInPreview) {
 }
 
 function renderSkuTable(skus) {
+    if (skus !== undefined) {
+        _skuData = skus;
+        _skuPage = 1;
+    }
     const tbody = document.getElementById('skuTableBody');
     if (!tbody) return;
 
-    if (skus.length === 0) {
+    var totalPages = Math.ceil(_skuData.length / _skuPerPage);
+    if (_skuPage > totalPages) _skuPage = totalPages || 1;
+    var startIdx = (_skuPage - 1) * _skuPerPage;
+    var paged = _skuData.slice(startIdx, startIdx + _skuPerPage);
+
+    if (paged.length === 0) {
         tbody.innerHTML = `
             <tr>
                 <td colspan="6" style="padding: 40px; text-align: center; color: #64748b; font-size: 14px;">
@@ -1187,11 +1656,13 @@ function renderSkuTable(skus) {
                 </td>
             </tr>
         `;
+        _renderPagination('sku', 0, 1);
         return;
     }
 
     let html = '';
-    skus.forEach((sku, index) => {
+    paged.forEach((sku, index) => {
+        const index_global = startIdx + index;
         const date = new Date(sku.created_at).toLocaleDateString('vi-VN');
         const skuIdEscaped = String(sku.id).replace(/\\/g, '\\\\').replace(/'/g, "\\'");
         const skuEscaped = (sku.sku || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'");
@@ -1199,22 +1670,21 @@ function renderSkuTable(skus) {
         const productNameEscaped = escapeHtml(sku.product_name || '-');
         const brandDisplay = escapeHtml(sku.brand_name || '-');
         html += `
-            <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${index + 1}</td>
-                <td style="padding: 12px 16px; font-size: 14px; font-weight: 500; font-family: 'Signika', sans-serif;">${escapeHtml(sku.sku)}</td>
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${productNameEscaped}</td>
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${brandDisplay}</td>
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${date}</td>
-                <td style="padding: 12px 16px;">
-                    <div style="display: flex; gap: 6px;">
-                        <button type="button" onclick="editSku('${skuIdEscaped}', '${skuEscaped}')" style="background: #fef3c7; color: #b45309; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer; font-family: 'Signika', sans-serif;">Sửa</button>
-                        <button type="button" onclick="deleteSkuItem('${skuIdEscaped}', '${skuEscaped}')" style="background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 6px 12px; font-size: 13px; cursor: pointer; font-family: 'Signika', sans-serif;">Xóa</button>
-                    </div>
+            <tr>
+                <td>${index_global + 1}</td>
+                <td style="font-weight:500;">${escapeHtml(sku.sku)}</td>
+                <td>${productNameEscaped}</td>
+                <td>${brandDisplay}</td>
+                <td>${date}</td>
+                <td>
+                    <button type="button" onclick="editSku('${skuIdEscaped}', '${skuEscaped}')" class="da-btn da-btn-sm" style="background:#fef3c7;color:#b45309;">Sửa</button>
+                    <button type="button" onclick="deleteSkuItem('${skuIdEscaped}', '${skuEscaped}')" class="da-btn da-btn-sm da-btn-del">Xóa</button>
                 </td>
             </tr>
         `;
     });
     tbody.innerHTML = html;
+    _renderPagination('sku', Math.ceil(_skuData.length / _skuPerPage), _skuPage);
 }
 
 function filterSkuByBrand() {
@@ -1235,7 +1705,9 @@ function filterSkuByBrand() {
         filtered = filtered.filter(s => s.sku.toLowerCase().includes(searchTerm));
     }
 
-    renderSkuTable(filtered);
+    _skuData = filtered;
+    _skuPage = 1;
+    renderSkuTable();
 }
 
 function addNewSku() {
@@ -1522,7 +1994,9 @@ function resetSkuSearch() {
     const skuBrandFilter = document.getElementById('skuBrandFilter');
     if (skuSearchInput) skuSearchInput.value = '';
     if (skuBrandFilter) skuBrandFilter.value = '';
-    renderSkuTable(allSkus);
+    _skuData = allSkus;
+    _skuPage = 1;
+    renderSkuTable();
 }
 
 // Tải sản phẩm cho quản lý SKU
@@ -1558,7 +2032,7 @@ function initBannerImagesSection() {
 // ==================== Phân trang Banner ====================
 var _bannerData = [];
 var _bannerPage = 1;
-var _bannerPerPage = 6;
+var _bannerPerPage = 9;
 
 function loadBannerRows() {
     fetch('/banner-images/list/', {
@@ -2080,7 +2554,7 @@ function initProductContentSection() {
 // ==================== Phân trang Nội dung sản phẩm ====================
 var _productContentData = [];
 var _productContentPage = 1;
-var _productContentPerPage = 8;
+var _productContentPerPage = 15;
 
 function loadProductContentRows() {
     fetch('/product-content/list/', {
@@ -2145,17 +2619,15 @@ function renderProductContentTable() {
         }
 
         html += `
-            <tr style="border-bottom: 1px solid #f1f5f9;">
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${globalIdx}</td>
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif; font-weight: 500;">${content.brand_name || '-'}</td>
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif;">${content.product_name || '-'}</td>
-                <td style="padding: 12px 16px; font-size: 14px; font-family: 'Signika', sans-serif; color: #64748b;">${dateStr}</td>
-                <td style="padding: 12px 16px;">
-                    <div style="display: flex; gap: 6px;">
-                        <button type="button" onclick="openEditProductContentModal(${content.id})" style="background: #fef3c7; color: #b45309; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Sửa</button>
-                        <button type="button" onclick="quickReplaceProductContent(${content.id})" style="background: #dbeafe; color: #1e40af; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Ảnh</button>
-                        <button type="button" onclick="deleteProductContentItem(${content.id})" style="background: #fee2e2; color: #dc2626; border: none; border-radius: 6px; padding: 6px 12px; font-size: 12px; cursor: pointer; font-family: 'Signika', sans-serif;">Xóa</button>
-                    </div>
+            <tr>
+                <td>${globalIdx}</td>
+                <td style="font-weight:500;">${content.brand_name || '-'}</td>
+                <td>${content.product_name || '-'}</td>
+                <td style="color:#64748b;">${dateStr}</td>
+                <td>
+                    <button type="button" onclick="openEditProductContentModal(${content.id})" class="da-btn da-btn-sm" style="background:#fef3c7;color:#b45309;">Sửa</button>
+                    <button type="button" onclick="quickReplaceProductContent(${content.id})" class="da-btn da-btn-sm da-btn-info">Ảnh</button>
+                    <button type="button" onclick="deleteProductContentItem(${content.id})" class="da-btn da-btn-sm da-btn-del">Xóa</button>
                 </td>
             </tr>
         `;
@@ -2173,21 +2645,24 @@ function searchProductContent() {
 
     const searchTerm = searchInput.value.trim().toLowerCase();
     if (searchTerm) {
-        const filtered = allProductContentRows.filter(c =>
+        _productContentData = allProductContentRows.filter(c =>
             (c.brand_name && c.brand_name.toLowerCase().includes(searchTerm)) ||
             (c.product_name && c.product_name.toLowerCase().includes(searchTerm)) ||
             (c.content_text && c.content_text.toLowerCase().includes(searchTerm))
         );
-        renderProductContentTable(filtered);
     } else {
-        renderProductContentTable(allProductContentRows);
+        _productContentData = allProductContentRows;
     }
+    _productContentPage = 1;
+    renderProductContentTable();
 }
 
 function resetProductContentSearch() {
     const searchInput = document.getElementById('productContentSearchInput');
     if (searchInput) searchInput.value = '';
-    renderProductContentTable(allProductContentRows);
+    _productContentData = allProductContentRows;
+    _productContentPage = 1;
+    renderProductContentTable();
 }
 
 function openAddProductContentModal() {
@@ -2859,44 +3334,120 @@ function formatQrPrice(num) {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + 'đ';
 }
 
+// ==================== Duyệt QR ====================
+var _qrData = [];
+var _qrPage = 1;
+var _qrPerPage = 15;
+var _qrFilter = 'pending';
+var _qrSearch = '';
+
+function searchQrList() {
+    var input = document.getElementById('qrSearchInput');
+    _qrSearch = input ? input.value.trim() : '';
+    _qrPage = 1;
+    _renderQrTable();
+}
+
+function resetQrSearch() {
+    var input = document.getElementById('qrSearchInput');
+    if (input) input.value = '';
+    _qrSearch = '';
+    _qrPage = 1;
+    _renderQrTable();
+}
+
+function searchCoupons() {
+    var input = document.getElementById('couponSearchInput');
+    _couponSearch = input ? input.value.trim() : '';
+    _couponPage = 1;
+    _renderCouponList();
+}
+
+function resetCouponSearch() {
+    var input = document.getElementById('couponSearchInput');
+    if (input) input.value = '';
+    _couponSearch = '';
+    _couponPage = 1;
+    _renderCouponList();
+}
+
+function switchQrTab(tab) {
+    _qrFilter = tab;
+    ['pending', 'history'].forEach(function (t) {
+        var btn = document.getElementById('qrTab_' + t);
+        if (btn) {
+            if (t === tab) btn.classList.add('active');
+            else btn.classList.remove('active');
+        }
+    });
+    loadQrApprovalList();
+}
+
 function loadQrApprovalList() {
     if (!window.qrListUrl) return;
     var tbody = document.getElementById('qrApprovalTableBody');
     if (!tbody) return;
-
-    fetch(window.qrListUrl)
+    tbody.innerHTML = '<tr><td colspan="7" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Đang tải...</td></tr>';
+    fetch(window.qrListUrl + '?filter=' + _qrFilter)
         .then(function (r) { return r.json(); })
         .then(function (data) {
             if (!data.success) {
-                tbody.innerHTML = '<tr><td colspan="6" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Lỗi tải dữ liệu</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Lỗi tải dữ liệu</td></tr>';
                 return;
             }
-            if (data.items.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Không có QR nào đang chờ duyệt</td></tr>';
-                return;
-            }
-            var html = '';
-            data.items.forEach(function (item) {
-                html += '<tr style="border-bottom: 1px solid #f1f5f9;">'
-                    + '<td style="padding:12px 16px;text-align:center;font-size:14px;color:#334155;">' + item.stt + '</td>'
-                    + '<td style="padding:12px 16px;font-size:14px;color:#334155;">' + item.user_email + '</td>'
-                    + '<td style="padding:12px 16px;text-align:right;font-size:14px;font-weight:600;color:#dc2626;">' + formatQrPrice(item.amount) + '</td>'
-                    + '<td style="padding:12px 16px;font-size:14px;color:#334155;font-family:monospace;font-weight:600;">' + item.transfer_code + '</td>'
-                    + '<td style="padding:12px 16px;font-size:13px;color:#64748b;">' + item.created_at + '</td>'
-                    + '<td style="padding:12px 16px;text-align:center;">'
-                    + '  <div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap;">'
-                    + '    <button onclick="openQrDetail(' + item.id + ')" style="padding:6px 12px;background:#eff6ff;color:#2563eb;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-family:\'Signika\',sans-serif;font-weight:500;">Xem</button>'
-                    + '    <button onclick="approveQr(' + item.id + ')" style="padding:6px 12px;background:#d1fae5;color:#059669;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-family:\'Signika\',sans-serif;font-weight:500;">Duyệt</button>'
-                    + '    <button onclick="cancelQr(' + item.id + ')" style="padding:6px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-size:13px;font-family:\'Signika\',sans-serif;font-weight:500;">Hủy</button>'
-                    + '  </div>'
-                    + '</td>'
-                    + '</tr>';
-            });
-            tbody.innerHTML = html;
+            _qrData = data.items || [];
+            _qrPage = 1;
+            _qrSearch = '';
+            var inp = document.getElementById('qrSearchInput');
+            if (inp) inp.value = '';
+            _renderQrTable();
         })
         .catch(function () {
-            tbody.innerHTML = '<tr><td colspan="6" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Lỗi kết nối</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Lỗi kết nối</td></tr>';
         });
+}
+
+function _renderQrTable() {
+    var tbody = document.getElementById('qrApprovalTableBody');
+    if (!tbody) return;
+    var emptyMsg = _qrFilter === 'history' ? 'Chưa có lịch sử duyệt QR nào' : 'Không có QR nào đang chờ duyệt';
+    var list = _qrData;
+    if (_qrSearch) {
+        var s = _qrSearch.toLowerCase();
+        list = _qrData.filter(function (item) { return (item.transfer_code || '').toLowerCase().includes(s); });
+    }
+    if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="7" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">' + emptyMsg + '</td></tr>';
+        var pEl = document.getElementById('qrApprovalPagination');
+        if (pEl) pEl.innerHTML = '';
+        return;
+    }
+    var totalPages = Math.ceil(list.length / _qrPerPage);
+    if (_qrPage > totalPages) _qrPage = totalPages || 1;
+    var startIdx = (_qrPage - 1) * _qrPerPage;
+    var paged = list.slice(startIdx, startIdx + _qrPerPage);
+    var html = '';
+    paged.forEach(function (item) {
+        var statusBg, statusColor, statusText;
+        if (item.status === 'approved') { statusBg = '#d1fae5'; statusColor = '#065f46'; statusText = 'Đã duyệt'; }
+        else if (item.status === 'cancelled') { statusBg = '#fee2e2'; statusColor = '#991b1b'; statusText = 'Đã hủy'; }
+        else { statusBg = '#fef3c7'; statusColor = '#92400e'; statusText = 'Chờ duyệt'; }
+        var actionHtml = '<button onclick="openQrDetail(' + item.id + ')" class="da-btn da-btn-sm da-btn-info">Xem</button>';
+        if (item.status === 'pending') {
+            actionHtml += ' <button onclick="approveQr(' + item.id + ')" class="da-btn da-btn-sm" style="background:#d1fae5;color:#059669;">Duyệt</button>'
+                + ' <button onclick="cancelQr(' + item.id + ')" class="da-btn da-btn-sm da-btn-del">Hủy</button>';
+        }
+        html += '<tr style="border-bottom:1px solid #f1f5f9;">'
+            + '<td style="padding:11px 14px;text-align:center;font-size:13px;color:#64748b;">' + item.stt + '</td>'
+            + '<td style="padding:11px 14px;font-size:13px;color:#334155;">' + item.user_email + '</td>'
+            + '<td style="padding:11px 14px;text-align:right;font-size:13px;font-weight:600;color:#dc2626;">' + formatQrPrice(item.amount) + '</td>'
+            + '<td style="padding:11px 14px;font-size:13px;color:#1e293b;font-family:monospace;font-weight:600;">' + item.transfer_code + '</td>'
+            + '<td style="padding:11px 14px;font-size:12px;color:#64748b;">' + item.created_at + '</td>'
+            + '<td style="padding:11px 14px;text-align:center;"><span style="padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;background:' + statusBg + ';color:' + statusColor + ';">' + statusText + '</span></td>'
+            + '<td style="padding:11px 14px;text-align:center;"><div style="display:flex;gap:5px;justify-content:center;">' + actionHtml + '</div></td></tr>';
+    });
+    tbody.innerHTML = html;
+    _renderPagination('qrApproval', totalPages, _qrPage);
 }
 
 function openQrDetail(id) {
@@ -3021,7 +3572,8 @@ var _adminOrderDetailCurrentId = null;
 var _adminOrdersData = [];  // Lưu tạm toàn bộ dữ liệu đơn hàng
 var _adminOrdersFilter = 'all';  // Bộ lọc hiện tại
 var _adminOrdersPage = 1;  // Trang hiện tại
-var _adminOrdersPerPage = 8;  // Số đơn hàng mỗi trang
+var _adminOrdersPerPage = 15;  // Số đơn hàng mỗi trang
+var _adminOrdersSearch = '';  // Tìm kiếm theo mã đơn
 
 function loadAdminOrders() {
     var tbody = document.getElementById('adminOrderTableBody');
@@ -3050,7 +3602,6 @@ function _renderAdminOrdersTable() {
     var filtered = _adminOrdersData;
     if (_adminOrdersFilter !== 'all') {
         if (_adminOrdersFilter === 'refund') {
-            // Filter: đơn cần hoàn tiền (đã hủy + VNPay/VietQR + chờ hoàn tiền)
             filtered = _adminOrdersData.filter(function (o) {
                 return o.status === 'cancelled' &&
                     (o.payment_method === 'vietqr' || o.payment_method === 'vnpay') &&
@@ -3060,9 +3611,15 @@ function _renderAdminOrdersTable() {
             filtered = _adminOrdersData.filter(function (o) { return o.status === _adminOrdersFilter; });
         }
     }
+    if (_adminOrdersSearch) {
+        var s = _adminOrdersSearch.toLowerCase();
+        filtered = filtered.filter(function (o) { return (o.order_code || '').toLowerCase().includes(s); });
+    }
 
     if (filtered.length === 0) {
         tbody.innerHTML = '<tr><td colspan="10" style="padding: 40px 16px; text-align: center; color: #94a3b8; font-size: 14px;">Không có đơn hàng nào</td></tr>';
+        var _pEl = document.getElementById('adminOrdersPagination');
+        if (_pEl) _pEl.innerHTML = '';
         return;
     }
 
@@ -3109,26 +3666,31 @@ function _renderAdminOrdersTable() {
         });
     });
     tbody.innerHTML = html;
+    _renderPagination('adminOrders', totalPages, _adminOrdersPage);
 }
 
 function filterAdminOrders(status) {
     _adminOrdersFilter = status;
-    _adminOrdersPage = 1; // Đặt lại về trang đầu tiên
+    _adminOrdersPage = 1;
     _renderAdminOrdersTable();
-    // Cập nhật nút đang được chọn
-    var btns = document.querySelectorAll('.admin-order-filter-btn');
-    btns.forEach(function (btn) {
-        var f = btn.getAttribute('data-filter');
-        if (f === status) {
-            btn.style.color = '#3b82f6';
-            btn.style.fontWeight = '600';
-            btn.style.borderBottomColor = '#3b82f6';
-        } else {
-            btn.style.color = '#64748b';
-            btn.style.fontWeight = '500';
-            btn.style.borderBottomColor = 'transparent';
-        }
+    document.querySelectorAll('.da-order-tab[data-filter]').forEach(function (btn) {
+        btn.classList.toggle('active', btn.getAttribute('data-filter') === status);
     });
+}
+
+function searchAdminOrders() {
+    var input = document.getElementById('orderSearchInput');
+    _adminOrdersSearch = input ? input.value.trim() : '';
+    _adminOrdersPage = 1;
+    _renderAdminOrdersTable();
+}
+
+function resetOrderSearch() {
+    var input = document.getElementById('orderSearchInput');
+    if (input) input.value = '';
+    _adminOrdersSearch = '';
+    _adminOrdersPage = 1;
+    _renderAdminOrdersTable();
 }
 
 function openAdminOrderDetail(id) {
@@ -3360,7 +3922,11 @@ function _goToPage(section, page) {
             break;
         case 'coupons':
             _couponPage = page;
-            renderCouponList();
+            _renderCouponList();
+            break;
+        case 'qrApproval':
+            _qrPage = page;
+            _renderQrTable();
             break;
         case 'productContent':
             _productContentPage = page;
@@ -3376,7 +3942,11 @@ function _goToPage(section, page) {
             break;
         case 'imageFolder':
             _imageFolderPage = page;
-            renderImageFolderGrid();
+            renderImageFolderTable();
+            break;
+        case 'imageFolderDir':
+            _folderDirPage = page;
+            renderImageFolderDir();
             break;
     }
 }
@@ -3462,73 +4032,78 @@ function previewExpireDate() {
 // ==================== Phân trang mã giảm giá ====================
 var _couponData = [];
 var _couponPage = 1;
-var _couponPerPage = 8;
+var _couponPerPage = 15;
+var _couponSearch = '';
 
 function loadCouponList() {
     var tbody = document.getElementById('couponTableBody');
     if (!tbody) return;
     tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Đang tải...</td></tr>';
-
-    fetch(window.couponListUrl, {
-        headers: { 'X-CSRFToken': window.csrfToken }
-    })
+    fetch(window.couponListUrl, { headers: { 'X-CSRFToken': window.csrfToken } })
         .then(function (res) { return res.json(); })
         .then(function (data) {
             if (!data.success) {
                 tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi: ' + (data.message || 'Không thể tải') + '</td></tr>';
                 return;
             }
-            var coupons = data.coupons || [];
-            _couponData = coupons;
-
-            // Phân trang
-            var totalPages = Math.ceil(coupons.length / _couponPerPage);
-            if (_couponPage > totalPages) _couponPage = totalPages || 1;
-            var startIdx = (_couponPage - 1) * _couponPerPage;
-            var paged = coupons.slice(startIdx, startIdx + _couponPerPage);
-
-            if (paged.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Chưa có mã giảm giá nào</td></tr>';
-                return;
-            }
-            var html = '';
-            var startIdx = (_couponPage - 1) * _couponPerPage;
-            paged.forEach(function (c, idx) {
-                var globalIdx = startIdx + idx + 1;
-                var discountLabel = c.discount_type === 'percentage' ? c.discount_value + '%' : Number(c.discount_value).toLocaleString('vi-VN') + 'đ';
-                var statusBg = c.is_valid ? '#d1fae5' : '#fee2e2';
-                var statusColor = c.is_valid ? '#065f46' : '#991b1b';
-                var statusText = c.is_valid ? 'Còn sử dụng' : 'Đã hết hạn';
-                var usageText = c.used_count + (c.usage_limit > 0 ? '/' + c.usage_limit : '/∞');
-                var targetText = c.target_type === 'all' ? 'Mọi người' : c.target_email;
-                var maxProdText = c.max_products > 0 ? c.max_products : '∞';
-
-                html += '<tr style="border-bottom:1px solid #f1f5f9;">'
-                    + '<td style="padding:12px 14px;text-align:center;font-size:14px;color:#64748b;">' + globalIdx + '</td>'
-                    + '<td style="padding:12px 14px;font-size:14px;font-weight:600;color:#1e293b;white-space:nowrap;">' + c.code + '</td>'
-                    + '<td style="padding:12px 14px;font-size:13px;color:#64748b;max-width:150px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (c.name || '-') + '</td>'
-                    + '<td style="padding:12px 14px;text-align:center;font-size:14px;font-weight:500;color:#1e293b;">' + discountLabel + '</td>'
-                    + '<td style="padding:12px 14px;text-align:center;font-size:12px;color:#64748b;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + targetText + '</td>'
-                    + '<td style="padding:12px 14px;text-align:right;font-size:13px;color:#64748b;">' + (c.min_order_amount > 0 ? Number(c.min_order_amount).toLocaleString('vi-VN') + 'đ' : '0đ') + '</td>'
-                    + '<td style="padding:12px 14px;text-align:center;font-size:13px;color:#64748b;">' + maxProdText + '</td>'
-                    + '<td style="padding:12px 14px;text-align:center;font-size:13px;color:#64748b;">' + usageText + '</td>'
-                    + '<td style="padding:12px 14px;text-align:center;"><span style="padding:4px 10px;border-radius:20px;font-size:12px;font-weight:500;background:' + statusBg + ';color:' + statusColor + ';">' + statusText + '</span></td>'
-                    + '<td style="padding:12px 14px;font-size:12px;color:#64748b;white-space:nowrap;">' + c.expire_at + '</td>'
-                    + '<td style="padding:12px 14px;text-align:center;white-space:nowrap;">'
-                    + '<button type="button" onclick="editCoupon(' + c.id + ')" style="padding:6px 12px;background:#dbeafe;color:#1e40af;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:\'Signika\',sans-serif;font-weight:500;margin-right:4px;">Sửa</button>'
-                    + '<button type="button" onclick="deleteCoupon(' + c.id + ',\'' + c.code + '\')" style="padding:6px 12px;background:#fee2e2;color:#dc2626;border:none;border-radius:6px;cursor:pointer;font-size:12px;font-family:\'Signika\',sans-serif;font-weight:500;">Xóa</button>'
-                    + '</td>'
-                    + '</tr>';
-            });
-            tbody.innerHTML = html;
-
-            // Hiển thị phân trang
-            var totalPages = Math.ceil(_couponData.length / _couponPerPage);
-            _renderPagination('coupons', totalPages, _couponPage);
+            _couponData = data.coupons || [];
+            _couponPage = 1;
+            _couponSearch = '';
+            var inp = document.getElementById('couponSearchInput');
+            if (inp) inp.value = '';
+            _renderCouponList();
         })
         .catch(function () {
             tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#ef4444;font-size:14px;">Lỗi kết nối</td></tr>';
         });
+}
+
+function _renderCouponList() {
+    var tbody = document.getElementById('couponTableBody');
+    if (!tbody) return;
+    var list = _couponData;
+    if (_couponSearch) {
+        var s = _couponSearch.toLowerCase();
+        list = _couponData.filter(function (c) { return (c.code || '').toLowerCase().includes(s) || (c.name || '').toLowerCase().includes(s); });
+    }
+    if (list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="11" style="padding:40px 16px;text-align:center;color:#94a3b8;font-size:14px;">Chưa có mã giảm giá nào</td></tr>';
+        var pEl = document.getElementById('couponsPagination');
+        if (pEl) pEl.innerHTML = '';
+        return;
+    }
+    var totalPages = Math.ceil(list.length / _couponPerPage);
+    if (_couponPage > totalPages) _couponPage = totalPages || 1;
+    var startIdx = (_couponPage - 1) * _couponPerPage;
+    var paged = list.slice(startIdx, startIdx + _couponPerPage);
+    var html = '';
+    paged.forEach(function (c, idx) {
+        var globalIdx = startIdx + idx + 1;
+        var discountLabel = c.discount_type === 'percentage' ? c.discount_value + '%' : Number(c.discount_value).toLocaleString('vi-VN') + 'đ';
+        var statusBg = c.is_valid ? '#d1fae5' : '#fee2e2';
+        var statusColor = c.is_valid ? '#065f46' : '#991b1b';
+        var statusText = c.is_valid ? 'Còn sử dụng' : 'Đã hết hạn';
+        var usageText = c.used_count + (c.usage_limit > 0 ? '/' + c.usage_limit : '/∞');
+        var targetText = c.target_type === 'all' ? 'Mọi người' : c.target_email;
+        var maxProdText = c.max_products > 0 ? c.max_products : '∞';
+        html += '<tr style="border-bottom:1px solid #f1f5f9;">'
+            + '<td style="padding:11px 14px;text-align:center;font-size:13px;color:#64748b;">' + globalIdx + '</td>'
+            + '<td style="padding:11px 14px;font-size:13px;font-weight:600;color:#1e293b;white-space:nowrap;">' + c.code + '</td>'
+            + '<td style="padding:11px 14px;font-size:12px;color:#64748b;max-width:140px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + (c.name || '-') + '</td>'
+            + '<td style="padding:11px 14px;text-align:center;font-size:13px;font-weight:500;color:#1e293b;">' + discountLabel + '</td>'
+            + '<td style="padding:11px 14px;text-align:center;font-size:12px;color:#64748b;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">' + targetText + '</td>'
+            + '<td style="padding:11px 14px;text-align:right;font-size:12px;color:#64748b;">' + (c.min_order_amount > 0 ? Number(c.min_order_amount).toLocaleString('vi-VN') + 'đ' : '0đ') + '</td>'
+            + '<td style="padding:11px 14px;text-align:center;font-size:12px;color:#64748b;">' + maxProdText + '</td>'
+            + '<td style="padding:11px 14px;text-align:center;font-size:12px;color:#64748b;">' + usageText + '</td>'
+            + '<td style="padding:11px 14px;text-align:center;"><span style="padding:3px 8px;border-radius:20px;font-size:11px;font-weight:500;background:' + statusBg + ';color:' + statusColor + ';">' + statusText + '</span></td>'
+            + '<td style="padding:11px 14px;font-size:12px;color:#64748b;white-space:nowrap;">' + c.expire_at + '</td>'
+            + '<td style="padding:11px 14px;text-align:center;white-space:nowrap;">'
+            + '<button type="button" onclick="editCoupon(' + c.id + ')" class="da-btn da-btn-sm da-btn-info" style="margin-right:4px;">Sửa</button>'
+            + '<button type="button" onclick="deleteCoupon(' + c.id + ',\'' + c.code + '\')" class="da-btn da-btn-sm da-btn-del">Xóa</button>'
+            + '</td></tr>';
+    });
+    tbody.innerHTML = html;
+    _renderPagination('coupons', totalPages, _couponPage);
 }
 
 function openAddCouponModal() {
@@ -3644,6 +4219,8 @@ function saveCoupon() {
         .then(function (res) { return res.json(); })
         .then(function (data) {
             if (data.success) {
+                var msg = editId ? 'Cập nhật mã giảm giá thành công!' : 'Thêm mã giảm giá thành công!';
+                window.QHToast && window.QHToast.show(msg, 'success');
                 closeCouponModal();
                 loadCouponList();
             } else {
