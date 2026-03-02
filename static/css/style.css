@@ -394,7 +394,7 @@ body {
 /* ==================== TOAST NOTIFICATIONS ==================== */
 .qh-toast-container {
     position: fixed;
-    top: 80px;
+    top: 90px;
     right: 24px;
     z-index: 9999;
     display: flex;
