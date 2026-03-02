@@ -54,7 +54,7 @@ const resetPasswordForm = document.getElementById('resetPasswordForm');
 let countdownInterval;
 
 // Khởi tạo khi DOM đã sẵn sàng
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     if (emailInput && otpBtn) {
         initEmailStep();
     }
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Bước 1: Xác thực email và gửi OTP
 function initEmailStep() {
-    emailInput.addEventListener('input', function() {
+    emailInput.addEventListener('input', function () {
         const email = this.value.trim();
         const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
         otpBtn.disabled = !emailRegex.test(email);
@@ -77,12 +77,12 @@ function initEmailStep() {
         }
     });
 
-    otpBtn.addEventListener('click', function() {
+    otpBtn.addEventListener('click', function () {
         const email = emailInput.value.trim();
-        
+
         otpBtn.disabled = true;
         otpBtn.textContent = 'Đang gửi...';
-        
+
         fetch(FORGOT_PASSWORD_URLS.sendOtp, {
             method: 'POST',
             headers: {
@@ -91,22 +91,22 @@ function initEmailStep() {
             },
             body: 'email=' + encodeURIComponent(email)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showToast('Đã gửi mã OTP về email của bạn!', 'success');
-                showStep2(email);
-            } else {
-                showToast(data.message || 'Gửi OTP thất bại!', 'error');
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast('Đã gửi mã OTP về email của bạn!', 'success');
+                    showStep2(email);
+                } else {
+                    showToast(data.message || 'Gửi OTP thất bại!', 'error');
+                    otpBtn.disabled = false;
+                    otpBtn.textContent = 'Gửi mã';
+                }
+            })
+            .catch(error => {
+                showToast('Đã xảy ra lỗi. Vui lòng thử lại!', 'error');
                 otpBtn.disabled = false;
                 otpBtn.textContent = 'Gửi mã';
-            }
-        })
-        .catch(error => {
-            showToast('Đã xảy ra lỗi. Vui lòng thử lại!', 'error');
-            otpBtn.disabled = false;
-            otpBtn.textContent = 'Gửi mã';
-        });
+            });
     });
 }
 
@@ -117,20 +117,20 @@ function showStep2(email) {
     document.getElementById('step1').classList.remove('active');
     document.getElementById('step1').classList.add('completed');
     document.getElementById('step2').classList.add('active');
-    
+
     document.getElementById('hiddenEmail').value = email;
-    
+
     startCountdown();
 }
 
 // Bước 2: Xác thực OTP
 function initOtpStep() {
-    otpForm.addEventListener('submit', function(e) {
+    otpForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        
+
         const email = document.getElementById('hiddenEmail').value;
         const otp = document.getElementById('otp').value;
-        
+
         fetch(FORGOT_PASSWORD_URLS.verifyOtp, {
             method: 'POST',
             headers: {
@@ -139,28 +139,28 @@ function initOtpStep() {
             },
             body: 'email=' + encodeURIComponent(email) + '&otp=' + encodeURIComponent(otp)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showStep3(email);
-            } else {
-                showToast(data.message || 'OTP không hợp lệ!', 'error');
-            }
-        })
-        .catch(error => {
-            showToast('Đã xảy ra lỗi. Vui lòng thử lại!', 'error');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showStep3(email);
+                } else {
+                    showToast(data.message || 'OTP không hợp lệ!', 'error');
+                }
+            })
+            .catch(error => {
+                showToast('Đã xảy ra lỗi. Vui lòng thử lại!', 'error');
+            });
     });
 
     // Nút gửi lại OTP
     const resendBtn = document.getElementById('resendOtpBtn');
     if (resendBtn) {
-        resendBtn.addEventListener('click', function() {
+        resendBtn.addEventListener('click', function () {
             const email = document.getElementById('hiddenEmail').value;
-            
+
             this.disabled = true;
             this.textContent = 'Đang gửi lại...';
-            
+
             fetch(FORGOT_PASSWORD_URLS.sendOtp, {
                 method: 'POST',
                 headers: {
@@ -169,21 +169,21 @@ function initOtpStep() {
                 },
                 body: 'email=' + encodeURIComponent(email)
             })
-            .then(response => response.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    showToast('Mã OTP đã được gửi lại!', 'success');
-                    this.textContent = 'Gửi lại mã OTP';
-                    startCountdown();
-                } else {
-                    showToast(data.message || 'Gửi lại OTP thất bại!', 'error');
+                .then(response => response.json())
+                .then(data => {
+                    if (data.status === 'success') {
+                        showToast('Mã OTP đã được gửi lại!', 'success');
+                        this.textContent = 'Gửi lại mã OTP';
+                        startCountdown();
+                    } else {
+                        showToast(data.message || 'Gửi lại OTP thất bại!', 'error');
+                        this.disabled = false;
+                    }
+                })
+                .catch(error => {
+                    showToast('Đã xảy ra lỗi. Vui lòng thử lại!', 'error');
                     this.disabled = false;
-                }
-            })
-            .catch(error => {
-                showToast('Đã xảy ra lỗi. Vui lòng thử lại!', 'error');
-                this.disabled = false;
-            });
+                });
         });
     }
 }
@@ -193,23 +193,23 @@ function startCountdown() {
     let timeLeft = 300; // 5 minutes
     const countdownEl = document.getElementById('countdown');
     const resendBtn = document.getElementById('resendOtpBtn');
-    
+
     if (resendBtn) {
         resendBtn.disabled = true;
     }
-    
+
     if (countdownInterval) {
         clearInterval(countdownInterval);
     }
-    
-    countdownInterval = setInterval(function() {
+
+    countdownInterval = setInterval(function () {
         const minutes = Math.floor(timeLeft / 60);
         const seconds = timeLeft % 60;
-        
+
         if (countdownEl) {
             countdownEl.textContent = minutes + ':' + (seconds < 10 ? '0' : '') + seconds;
         }
-        
+
         if (timeLeft <= 0) {
             clearInterval(countdownInterval);
             if (countdownEl) {
@@ -219,7 +219,7 @@ function startCountdown() {
                 resendBtn.disabled = false;
             }
         }
-        
+
         timeLeft--;
     }, 1000);
 }
@@ -231,9 +231,9 @@ function showStep3(email) {
     document.getElementById('step2').classList.remove('active');
     document.getElementById('step2').classList.add('completed');
     document.getElementById('step3').classList.add('active');
-    
+
     document.getElementById('resetEmail').value = email;
-    
+
     if (countdownInterval) {
         clearInterval(countdownInterval);
     }
@@ -241,24 +241,24 @@ function showStep3(email) {
 
 // Bước 3: Đặt lại mật khẩu
 function initResetPasswordStep() {
-    resetPasswordForm.addEventListener('submit', function(e) {
+    resetPasswordForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        
+
         const email = document.getElementById('resetEmail').value;
         const newPassword = document.getElementById('newPassword').value;
         const confirmPassword = document.getElementById('confirmPassword').value;
-        
+
         // Xác thực mật khẩu
         if (newPassword.length < 6) {
             showToast('Mật khẩu phải có ít nhất 6 ký tự!', 'error');
             return;
         }
-        
+
         if (newPassword !== confirmPassword) {
             showToast('Mật khẩu không khớp!', 'error');
             return;
         }
-        
+
         fetch(FORGOT_PASSWORD_URLS.resetPassword, {
             method: 'POST',
             headers: {
@@ -267,19 +267,19 @@ function initResetPasswordStep() {
             },
             body: 'email=' + encodeURIComponent(email) + '&new_password=' + encodeURIComponent(newPassword)
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.status === 'success') {
-                showToast('Đổi mật khẩu thành công!', 'success');
-                setTimeout(function() {
-                    window.location.href = '/login/';
-                }, 2000);
-            } else {
-                showToast(data.message || 'Đổi mật khẩu thất bại!', 'error');
-            }
-        })
-        .catch(error => {
-            showToast('Đã xảy ra lỗi. Vui lòng thử lại!', 'error');
-        });
+            .then(response => response.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    showToast('Đổi mật khẩu thành công!', 'success');
+                    setTimeout(function () {
+                        window.location.href = '/login/';
+                    }, 2000);
+                } else {
+                    showToast(data.message || 'Đổi mật khẩu thất bại!', 'error');
+                }
+            })
+            .catch(error => {
+                showToast('Đã xảy ra lỗi. Vui lòng thử lại!', 'error');
+            });
     });
 }

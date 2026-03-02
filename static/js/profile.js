@@ -10,13 +10,13 @@
  * @param {string} code - Mã voucher
  */
 function copyVoucher(btn, code) {
-    navigator.clipboard.writeText(code).then(function() {
+    navigator.clipboard.writeText(code).then(function () {
         var orig = btn.innerHTML;
         btn.innerHTML = '<svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/></svg> Đã sao chép';
         btn.style.borderColor = '#10b981';
         btn.style.color = '#10b981';
         if (window.QHToast) QHToast.show('Đã sao chép mã ' + code, 'success');
-        setTimeout(function() {
+        setTimeout(function () {
             btn.innerHTML = orig;
             btn.style.borderColor = '#cbd5e1';
             btn.style.color = '#64748b';
@@ -55,17 +55,17 @@ var wardsData = [];
  */
 function loadProvinces() {
     fetch('https://provinces.open-api.vn/api/p/')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
             provincesData = data;
             var sel = document.getElementById('addrProvince');
             if (!sel) return;
             sel.innerHTML = '<option value="">-- Chọn Tỉnh/Thành phố --</option>';
-            data.forEach(function(p) {
+            data.forEach(function (p) {
                 sel.innerHTML += '<option value="' + p.code + '">' + p.name + '</option>';
             });
         })
-        .catch(function(err) { console.error('Lỗi tải tỉnh/thành:', err); });
+        .catch(function (err) { console.error('Lỗi tải tỉnh/thành:', err); });
 }
 
 /**
@@ -83,15 +83,15 @@ function loadDistricts() {
     if (!sel.value) return;
 
     fetch('https://provinces.open-api.vn/api/p/' + sel.value + '?depth=2')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
             districtsData = data.districts || [];
             distSel.disabled = false;
-            districtsData.forEach(function(d) {
+            districtsData.forEach(function (d) {
                 distSel.innerHTML += '<option value="' + d.code + '">' + d.name + '</option>';
             });
         })
-        .catch(function(err) { console.error('Lỗi tải quận/huyện:', err); });
+        .catch(function (err) { console.error('Lỗi tải quận/huyện:', err); });
 }
 
 /**
@@ -106,15 +106,15 @@ function loadWards() {
     if (!distSel.value) return;
 
     fetch('https://provinces.open-api.vn/api/d/' + distSel.value + '?depth=2')
-        .then(function(r) { return r.json(); })
-        .then(function(data) {
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
             wardsData = data.wards || [];
             wardSel.disabled = false;
-            wardsData.forEach(function(w) {
+            wardsData.forEach(function (w) {
                 wardSel.innerHTML += '<option value="' + w.code + '">' + w.name + '</option>';
             });
         })
-        .catch(function(err) { console.error('Lỗi tải phường/xã:', err); });
+        .catch(function (err) { console.error('Lỗi tải phường/xã:', err); });
 }
 
 /* ==================== Thêm địa chỉ ==================== */
@@ -152,23 +152,23 @@ function submitAddress(e) {
         },
         body: body
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.success) {
-            if (window.QHToast) QHToast.show(data.message, 'success');
-            setTimeout(function() { location.reload(); }, 600);
-        } else {
-            if (window.QHToast) QHToast.show(data.message, 'error');
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                if (window.QHToast) QHToast.show(data.message, 'success');
+                setTimeout(function () { location.reload(); }, 600);
+            } else {
+                if (window.QHToast) QHToast.show(data.message, 'error');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="ri-add-line" style="margin-right:4px;"></i> Thêm địa chỉ';
+            }
+        })
+        .catch(function (err) {
+            console.error('Lỗi:', err);
+            if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
             btn.disabled = false;
             btn.innerHTML = '<i class="ri-add-line" style="margin-right:4px;"></i> Thêm địa chỉ';
-        }
-    })
-    .catch(function(err) {
-        console.error('Lỗi:', err);
-        if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
-        btn.disabled = false;
-        btn.innerHTML = '<i class="ri-add-line" style="margin-right:4px;"></i> Thêm địa chỉ';
-    });
+        });
 
     return false;
 }
@@ -180,7 +180,7 @@ function submitAddress(e) {
  */
 function deleteAddress(id) {
     if (typeof QHConfirm !== 'undefined' && QHConfirm && QHConfirm.show) {
-        QHConfirm.show('Bạn có chắc muốn xóa địa chỉ này?', function() {
+        QHConfirm.show('Bạn có chắc muốn xóa địa chỉ này?', function () {
             doDeleteAddress(id);
         });
     } else {
@@ -204,19 +204,19 @@ function doDeleteAddress(id) {
         },
         body: 'address_id=' + id
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.success) {
-            if (window.QHToast) QHToast.show(data.message, 'success');
-            setTimeout(function() { location.reload(); }, 600);
-        } else {
-            if (window.QHToast) QHToast.show(data.message, 'error');
-        }
-    })
-    .catch(function(err) {
-        console.error('Lỗi:', err);
-        if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
-    });
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                if (window.QHToast) QHToast.show(data.message, 'success');
+                setTimeout(function () { location.reload(); }, 600);
+            } else {
+                if (window.QHToast) QHToast.show(data.message, 'error');
+            }
+        })
+        .catch(function (err) {
+            console.error('Lỗi:', err);
+            if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
+        });
 }
 
 /* ==================== Đặt địa chỉ mặc định ==================== */
@@ -233,19 +233,19 @@ function setDefaultAddress(id) {
         },
         body: 'address_id=' + id
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        if (data.success) {
-            if (window.QHToast) QHToast.show(data.message, 'success');
-            setTimeout(function() { location.reload(); }, 600);
-        } else {
-            if (window.QHToast) QHToast.show(data.message, 'error');
-        }
-    })
-    .catch(function(err) {
-        console.error('Lỗi:', err);
-        if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
-    });
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (data.success) {
+                if (window.QHToast) QHToast.show(data.message, 'success');
+                setTimeout(function () { location.reload(); }, 600);
+            } else {
+                if (window.QHToast) QHToast.show(data.message, 'error');
+            }
+        })
+        .catch(function (err) {
+            console.error('Lỗi:', err);
+            if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
+        });
 }
 
 /* ==================== Hoàn tiền ==================== */
@@ -268,63 +268,63 @@ function qhLoadRefundData() {
         method: 'GET',
         headers: { 'X-CSRFToken': qhGetCookie('csrftoken') }
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        var listEl = document.getElementById('qh-refund-pending-list');
-        if (data.orders && data.orders.length > 0) {
-            var html = '<table class="qh-refund-table" style="width:100%;font-size:13px;border-collapse:collapse;">';
-            html += '<thead><tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">';
-            html += '<th style="padding:8px;text-align:left;font-weight:600;color:#64748b;">Mã đơn</th>';
-            html += '<th style="padding:8px;text-align:left;font-weight:600;color:#64748b;">Sản phẩm</th>';
-            html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">Trạng thái</th>';
-            html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">Xem</th>';
-            html += '</tr></thead><tbody>';
-            data.orders.forEach(function(o) {
-                html += '<tr style="border-bottom:1px solid #f1f5f9;">';
-                html += '<td style="padding:8px;color:#3b82f6;font-weight:600;">' + o.order_code + '</td>';
-                html += '<td style="padding:8px;color:#1e293b;">' + (o.items.length > 0 ? o.items[0].product_name : '—') + '</td>';
-                html += '<td style="padding:8px;text-align:center;"><span class="qh-ot-badge cancelled">Chờ hoàn tiền</span></td>';
-                html += '<td style="padding:8px;text-align:center;"><button onclick="qhShowRefundDetail(\'' + o.order_code + '\')" style="padding:4px 12px;background:#3b82f6;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;">Xem</button></td>';
-                html += '</tr>';
-            });
-            html += '</tbody></table>';
-            listEl.innerHTML = html;
-        } else {
-            listEl.innerHTML = '<p style="color:#94a3b8;font-size:14px;text-align:center;padding:20px;">Không có đơn cần hoàn tiền</p>';
-        }
-    })
-    .catch(function(err) {
-        document.getElementById('qh-refund-pending-list').innerHTML = '<p style="color:#ef4444;font-size:14px;text-align:center;padding:20px;">Lỗi tải dữ liệu</p>';
-    });
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var listEl = document.getElementById('qh-refund-pending-list');
+            if (data.orders && data.orders.length > 0) {
+                var html = '<table class="qh-refund-table" style="width:100%;font-size:13px;border-collapse:collapse;">';
+                html += '<thead><tr style="background:#f8fafc;border-bottom:1px solid #e2e8f0;">';
+                html += '<th style="padding:8px;text-align:left;font-weight:600;color:#64748b;">Mã đơn</th>';
+                html += '<th style="padding:8px;text-align:left;font-weight:600;color:#64748b;">Sản phẩm</th>';
+                html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">Trạng thái</th>';
+                html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">Xem</th>';
+                html += '</tr></thead><tbody>';
+                data.orders.forEach(function (o) {
+                    html += '<tr style="border-bottom:1px solid #f1f5f9;">';
+                    html += '<td style="padding:8px;color:#3b82f6;font-weight:600;">' + o.order_code + '</td>';
+                    html += '<td style="padding:8px;color:#1e293b;">' + (o.items.length > 0 ? o.items[0].product_name : '—') + '</td>';
+                    html += '<td style="padding:8px;text-align:center;"><span class="qh-ot-badge cancelled">Chờ hoàn tiền</span></td>';
+                    html += '<td style="padding:8px;text-align:center;"><button onclick="qhShowRefundDetail(\'' + o.order_code + '\')" style="padding:4px 12px;background:#3b82f6;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:12px;">Xem</button></td>';
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                listEl.innerHTML = html;
+            } else {
+                listEl.innerHTML = '<p style="color:#94a3b8;font-size:14px;text-align:center;padding:20px;">Không có đơn cần hoàn tiền</p>';
+            }
+        })
+        .catch(function (err) {
+            document.getElementById('qh-refund-pending-list').innerHTML = '<p style="color:#ef4444;font-size:14px;text-align:center;padding:20px;">Lỗi tải dữ liệu</p>';
+        });
 
     // Tải lịch sử hoàn tiền
     fetch('/api/refund-history/', {
         method: 'GET',
         headers: { 'X-CSRFToken': qhGetCookie('csrftoken') }
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        var listEl = document.getElementById('qh-refund-history-list');
-        if (data.orders && data.orders.length > 0) {
-            var html = '';
-            data.orders.forEach(function(o) {
-                var productName = o.items.length > 0 ? o.items[0].product_name : '—';
-                html += '<div style="padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:8px;cursor:pointer;" onclick="qhShowRefundDetail(\'' + o.order_code + '\')">';
-                html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
-                html += '<span style="color:#3b82f6;font-weight:600;font-size:13px;">' + o.order_code + '</span>';
-                html += '<span style="color:#10b981;font-weight:600;font-size:14px;">Đã hoàn ' + qhFmtVND(o.total_amount) + '</span>';
-                html += '</div>';
-                html += '<div style="color:#64748b;font-size:12px;margin-top:4px;">' + productName + '</div>';
-                html += '</div>';
-            });
-            listEl.innerHTML = html;
-        } else {
-            listEl.innerHTML = '<p style="color:#94a3b8;font-size:14px;text-align:center;padding:20px;">Chưa có lịch sử hoàn tiền</p>';
-        }
-    })
-    .catch(function(err) {
-        document.getElementById('qh-refund-history-list').innerHTML = '<p style="color:#ef4444;font-size:14px;text-align:center;padding:20px;">Lỗi tải dữ liệu</p>';
-    });
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var listEl = document.getElementById('qh-refund-history-list');
+            if (data.orders && data.orders.length > 0) {
+                var html = '';
+                data.orders.forEach(function (o) {
+                    var productName = o.items.length > 0 ? o.items[0].product_name : '—';
+                    html += '<div style="padding:12px;background:#f8fafc;border-radius:8px;margin-bottom:8px;cursor:pointer;" onclick="qhShowRefundDetail(\'' + o.order_code + '\')">';
+                    html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+                    html += '<span style="color:#3b82f6;font-weight:600;font-size:13px;">' + o.order_code + '</span>';
+                    html += '<span style="color:#10b981;font-weight:600;font-size:14px;">Đã hoàn ' + qhFmtVND(o.total_amount) + '</span>';
+                    html += '</div>';
+                    html += '<div style="color:#64748b;font-size:12px;margin-top:4px;">' + productName + '</div>';
+                    html += '</div>';
+                });
+                listEl.innerHTML = html;
+            } else {
+                listEl.innerHTML = '<p style="color:#94a3b8;font-size:14px;text-align:center;padding:20px;">Chưa có lịch sử hoàn tiền</p>';
+            }
+        })
+        .catch(function (err) {
+            document.getElementById('qh-refund-history-list').innerHTML = '<p style="color:#ef4444;font-size:14px;text-align:center;padding:20px;">Lỗi tải dữ liệu</p>';
+        });
 }
 
 /**
@@ -336,54 +336,54 @@ function qhShowRefundDetail(orderCode) {
         method: 'GET',
         headers: { 'X-CSRFToken': qhGetCookie('csrftoken') }
     })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-        var modal = document.getElementById('qhRefundDetailModal');
-        var body = document.getElementById('qhRefundDetailBody');
-        modal.classList.add('active');
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            var modal = document.getElementById('qhRefundDetailModal');
+            var body = document.getElementById('qhRefundDetailBody');
+            modal.classList.add('active');
 
-        if (!data.order) {
-            body.innerHTML = '<p style="color:#ef4444;text-align:center;">Không tìm thấy đơn hàng</p>';
-            return;
-        }
+            if (!data.order) {
+                body.innerHTML = '<p style="color:#ef4444;text-align:center;">Không tìm thấy đơn hàng</p>';
+                return;
+            }
 
-        var o = data.order;
-        var html = '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:16px;">';
-        html += '<thead><tr style="background:#f8fafc;">';
-        html += '<th style="padding:8px;text-align:left;font-weight:600;color:#64748b;">Mã đơn</th>';
-        html += '<th style="padding:8px;text-align:left;font-weight:600;color:#64748b;">Sản phẩm</th>';
-        html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">SL</th>';
-        html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">Màu</th>';
-        html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">Bộ nhớ</th>';
-        html += '<th style="padding:8px;text-align:right;font-weight:600;color:#64748b;">Giá</th>';
-        html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">STK</th>';
-        html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">Ngân hàng</th>';
-        html += '</tr></thead><tbody>';
+            var o = data.order;
+            var html = '<table style="width:100%;font-size:13px;border-collapse:collapse;margin-bottom:16px;">';
+            html += '<thead><tr style="background:#f8fafc;">';
+            html += '<th style="padding:8px;text-align:left;font-weight:600;color:#64748b;">Mã đơn</th>';
+            html += '<th style="padding:8px;text-align:left;font-weight:600;color:#64748b;">Sản phẩm</th>';
+            html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">SL</th>';
+            html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">Màu</th>';
+            html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">Bộ nhớ</th>';
+            html += '<th style="padding:8px;text-align:right;font-weight:600;color:#64748b;">Giá</th>';
+            html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">STK</th>';
+            html += '<th style="padding:8px;text-align:center;font-weight:600;color:#64748b;">Ngân hàng</th>';
+            html += '</tr></thead><tbody>';
 
-        o.items.forEach(function(item) {
-            html += '<tr style="border-bottom:1px solid #f1f5f9;">';
-            html += '<td style="padding:8px;color:#3b82f6;font-weight:600;">' + o.order_code + '</td>';
-            html += '<td style="padding:8px;color:#1e293b;">' + item.product_name + '</td>';
-            html += '<td style="padding:8px;text-align:center;color:#64748b;">' + item.quantity + '</td>';
-            html += '<td style="padding:8px;text-align:center;color:#64748b;">' + (item.color_name || '—') + '</td>';
-            html += '<td style="padding:8px;text-align:center;color:#64748b;">' + (item.storage || '—') + '</td>';
-            html += '<td style="padding:8px;text-align:right;color:#1e293b;font-weight:600;">' + qhFmtVND(item.price) + '</td>';
-            html += '<td style="padding:8px;text-align:center;color:#64748b;">' + (o.refund_account || '—') + '</td>';
-            html += '<td style="padding:8px;text-align:center;color:#64748b;">' + (o.refund_bank || '—') + '</td>';
-            html += '</tr>';
+            o.items.forEach(function (item) {
+                html += '<tr style="border-bottom:1px solid #f1f5f9;">';
+                html += '<td style="padding:8px;color:#3b82f6;font-weight:600;">' + o.order_code + '</td>';
+                html += '<td style="padding:8px;color:#1e293b;">' + item.product_name + '</td>';
+                html += '<td style="padding:8px;text-align:center;color:#64748b;">' + item.quantity + '</td>';
+                html += '<td style="padding:8px;text-align:center;color:#64748b;">' + (item.color_name || '—') + '</td>';
+                html += '<td style="padding:8px;text-align:center;color:#64748b;">' + (item.storage || '—') + '</td>';
+                html += '<td style="padding:8px;text-align:right;color:#1e293b;font-weight:600;">' + qhFmtVND(item.price) + '</td>';
+                html += '<td style="padding:8px;text-align:center;color:#64748b;">' + (o.refund_account || '—') + '</td>';
+                html += '<td style="padding:8px;text-align:center;color:#64748b;">' + (o.refund_bank || '—') + '</td>';
+                html += '</tr>';
+            });
+            html += '</tbody></table>';
+
+            html += '<div style="background:#f8fafc;padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">';
+            html += '<span style="font-weight:600;color:#334155;">Tổng hoàn tiền:</span>';
+            html += '<span style="font-size:18px;font-weight:700;color:#ef4444;">' + qhFmtVND(o.total_amount) + '</span>';
+            html += '</div>';
+
+            body.innerHTML = html;
+        })
+        .catch(function (err) {
+            document.getElementById('qhRefundDetailBody').innerHTML = '<p style="color:#ef4444;text-align:center;">Lỗi tải dữ liệu</p>';
         });
-        html += '</tbody></table>';
-
-        html += '<div style="background:#f8fafc;padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;">';
-        html += '<span style="font-weight:600;color:#334155;">Tổng hoàn tiền:</span>';
-        html += '<span style="font-size:18px;font-weight:700;color:#ef4444;">' + qhFmtVND(o.total_amount) + '</span>';
-        html += '</div>';
-
-        body.innerHTML = html;
-    })
-    .catch(function(err) {
-        document.getElementById('qhRefundDetailBody').innerHTML = '<p style="color:#ef4444;text-align:center;">Lỗi tải dữ liệu</p>';
-    });
 }
 
 /**
@@ -415,14 +415,14 @@ function qhFmtVND(v) {
 }
 
 /* ==================== Khởi tạo khi trang tải xong ==================== */
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     // ===== Chuyển đổi tab =====
     var tabs = document.querySelectorAll('.qh-pf-tab[data-tab]');
     var panels = document.querySelectorAll('.qh-pf-tab-panel');
 
     function activateTab(tabName) {
-        tabs.forEach(function(t) { t.classList.remove('active'); });
-        panels.forEach(function(p) { p.classList.remove('active'); });
+        tabs.forEach(function (t) { t.classList.remove('active'); });
+        panels.forEach(function (p) { p.classList.remove('active'); });
         var targetTab = document.querySelector('.qh-pf-tab[data-tab="' + tabName + '"]');
         var targetPanel = document.getElementById('tab-' + tabName);
         if (targetTab) targetTab.classList.add('active');
@@ -440,8 +440,8 @@ document.addEventListener('DOMContentLoaded', function() {
     var activeTab = tabParam || savedTab || 'address';
     activateTab(activeTab);
 
-    tabs.forEach(function(tab) {
-        tab.addEventListener('click', function(e) {
+    tabs.forEach(function (tab) {
+        tab.addEventListener('click', function (e) {
             e.preventDefault();
             var target = this.getAttribute('data-tab');
             activateTab(target);
@@ -459,7 +459,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function showPwPage(page) {
             var start = (page - 1) * PW_PER_PAGE;
             var end = start + PW_PER_PAGE;
-            pwItems.forEach(function(item, i) {
+            pwItems.forEach(function (item, i) {
                 item.style.display = (i >= start && i < end) ? '' : 'none';
             });
             renderPwPagination(page);
@@ -475,8 +475,8 @@ document.addEventListener('DOMContentLoaded', function() {
             html += '<button class="qh-pf-pw-page-btn" data-pw-page="' + (current + 1) + '"' + (current === totalPages ? ' disabled' : '') + '><i class="ri-arrow-right-s-line"></i></button>';
             pwPagination.innerHTML = html;
 
-            pwPagination.querySelectorAll('.qh-pf-pw-page-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
+            pwPagination.querySelectorAll('.qh-pf-pw-page-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
                     if (this.disabled) return;
                     showPwPage(parseInt(this.getAttribute('data-pw-page')));
                 });
@@ -497,7 +497,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function showAddrPage(page) {
             var start = (page - 1) * ADDR_PER_PAGE;
             var end = start + ADDR_PER_PAGE;
-            addrItems.forEach(function(item, i) {
+            addrItems.forEach(function (item, i) {
                 item.style.display = (i >= start && i < end) ? '' : 'none';
             });
             renderAddrPagination(page);
@@ -513,8 +513,8 @@ document.addEventListener('DOMContentLoaded', function() {
             html += '<button class="qh-pf-pw-page-btn" data-addr-page="' + (current + 1) + '"' + (current === addrTotalPages ? ' disabled' : '') + '><i class="ri-arrow-right-s-line"></i></button>';
             addrPagination.innerHTML = html;
 
-            addrPagination.querySelectorAll('.qh-pf-pw-page-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
+            addrPagination.querySelectorAll('.qh-pf-pw-page-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
                     if (this.disabled) return;
                     showAddrPage(parseInt(this.getAttribute('data-addr-page')));
                 });
@@ -535,7 +535,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function showCouponPage(page) {
             var start = (page - 1) * COUPON_PER_PAGE;
             var end = start + COUPON_PER_PAGE;
-            couponItems.forEach(function(item, i) {
+            couponItems.forEach(function (item, i) {
                 item.style.display = (i >= start && i < end) ? '' : 'none';
             });
             renderCouponPagination(page);
@@ -551,8 +551,8 @@ document.addEventListener('DOMContentLoaded', function() {
             html += '<button class="qh-pf-pw-page-btn" data-coupon-page="' + (current + 1) + '"' + (current === couponTotalPages ? ' disabled' : '') + '><i class="ri-arrow-right-s-line"></i></button>';
             couponPagination.innerHTML = html;
 
-            couponPagination.querySelectorAll('.qh-pf-pw-page-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
+            couponPagination.querySelectorAll('.qh-pf-pw-page-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
                     if (this.disabled) return;
                     showCouponPage(parseInt(this.getAttribute('data-coupon-page')));
                 });
@@ -573,7 +573,7 @@ document.addEventListener('DOMContentLoaded', function() {
         function showOrderPage(page) {
             var start = (page - 1) * ORDER_PER_PAGE;
             var end = start + ORDER_PER_PAGE;
-            orderItems.forEach(function(item, i) {
+            orderItems.forEach(function (item, i) {
                 item.style.display = (i >= start && i < end) ? '' : 'none';
             });
             renderOrderPagination(page);
@@ -589,8 +589,8 @@ document.addEventListener('DOMContentLoaded', function() {
             html += '<button class="qh-pf-pw-page-btn" data-order-page="' + (current + 1) + '"' + (current === orderTotalPages ? ' disabled' : '') + '><i class="ri-arrow-right-s-line"></i></button>';
             orderPagination.innerHTML = html;
 
-            orderPagination.querySelectorAll('.qh-pf-pw-page-btn').forEach(function(btn) {
-                btn.addEventListener('click', function() {
+            orderPagination.querySelectorAll('.qh-pf-pw-page-btn').forEach(function (btn) {
+                btn.addEventListener('click', function () {
                     if (this.disabled) return;
                     showOrderPage(parseInt(this.getAttribute('data-order-page')));
                 });
@@ -605,8 +605,8 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // ===== Tải dữ liệu hoàn tiền khi tab được mở =====
     var allTabs = document.querySelectorAll('.qh-pf-tab[data-tab]');
-    allTabs.forEach(function(tab) {
-        tab.addEventListener('click', function() {
+    allTabs.forEach(function (tab) {
+        tab.addEventListener('click', function () {
             var target = this.getAttribute('data-tab');
             if (target === 'refund') {
                 setTimeout(qhLoadRefundData, 100);
