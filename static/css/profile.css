@@ -9,7 +9,7 @@
 .qh-pf-info-card {
     background: var(--qh-white);
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     padding: 28px 32px;
     display: flex;
     align-items: center;
@@ -142,20 +142,42 @@
     line-height: 1;
 }
 
-.qh-pf-rank-icon.bronze { color: #b87333; }
-.qh-pf-rank-icon.silver { color: #9ca3af; }
-.qh-pf-rank-icon.gold   { color: #f59e0b; }
-.qh-pf-rank-icon.diamond { color: #3b82f6; }
+.qh-pf-rank-icon.bronze {
+    color: #b87333;
+}
+
+.qh-pf-rank-icon.silver {
+    color: #9ca3af;
+}
+
+.qh-pf-rank-icon.gold {
+    color: #f59e0b;
+}
+
+.qh-pf-rank-icon.diamond {
+    color: #3b82f6;
+}
 
 .qh-pf-rank-label {
     font-size: 15px;
     font-weight: 600;
 }
 
-.qh-pf-rank-label.bronze { color: #b87333; }
-.qh-pf-rank-label.silver { color: #9ca3af; }
-.qh-pf-rank-label.gold   { color: #f59e0b; }
-.qh-pf-rank-label.diamond { color: #3b82f6; }
+.qh-pf-rank-label.bronze {
+    color: #b87333;
+}
+
+.qh-pf-rank-label.silver {
+    color: #9ca3af;
+}
+
+.qh-pf-rank-label.gold {
+    color: #f59e0b;
+}
+
+.qh-pf-rank-label.diamond {
+    color: #3b82f6;
+}
 
 /* Logout Button in top card */
 .qh-pf-logout-section {
@@ -196,7 +218,7 @@
 .qh-pf-tabs {
     background: var(--qh-white);
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     padding: 0 16px;
     display: flex;
     align-items: center;
@@ -215,19 +237,53 @@
 }
 
 /* Order: Sổ địa chỉ mật -> Đổi mật khẩu -> Student -> Coupon -> History -> Refund */
-#tab-address { order: 1; }
-#tab-password { order: 2; }
-#tab-student { order: 3; }
-#tab-coupon { order: 4; }
-#tab-history { order: 5; }
-#tab-refund { order: 6; }
+#tab-address {
+    order: 1;
+}
 
-#tab-address.active { display: block; }
-#tab-password.active { display: block; }
-#tab-student.active { display: block; }
-#tab-coupon.active { display: block; }
-#tab-history.active { display: block; }
-#tab-refund.active { display: block; }
+#tab-password {
+    order: 2;
+}
+
+#tab-student {
+    order: 3;
+}
+
+#tab-coupon {
+    order: 4;
+}
+
+#tab-history {
+    order: 5;
+}
+
+#tab-refund {
+    order: 6;
+}
+
+#tab-address.active {
+    display: block;
+}
+
+#tab-password.active {
+    display: block;
+}
+
+#tab-student.active {
+    display: block;
+}
+
+#tab-coupon.active {
+    display: block;
+}
+
+#tab-history.active {
+    display: block;
+}
+
+#tab-refund.active {
+    display: block;
+}
 
 .qh-pf-tab {
     display: flex;
@@ -272,7 +328,7 @@
 .qh-pf-content {
     background: var(--qh-white);
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     padding: 32px;
     min-height: 200px;
 }
@@ -388,7 +444,7 @@
 }
 
 .qh-pf-addr-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .qh-pf-addr-card.is-default {
@@ -625,7 +681,7 @@
 }
 
 .qh-pf-order:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .qh-pf-order:last-child {
@@ -691,12 +747,35 @@
     font-weight: 600;
 }
 
-.qh-pf-status.awaiting_payment { background: #fef9c3; color: #854d0e; }
-.qh-pf-status.pending    { background: #fef3c7; color: #d97706; }
-.qh-pf-status.processing { background: #dbeafe; color: #2563eb; }
-.qh-pf-status.shipped    { background: #e0e7ff; color: #4f46e5; }
-.qh-pf-status.delivered  { background: #d1fae5; color: #059669; }
-.qh-pf-status.cancelled  { background: #fee2e2; color: #dc2626; }
+.qh-pf-status.awaiting_payment {
+    background: #fef9c3;
+    color: #854d0e;
+}
+
+.qh-pf-status.pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.qh-pf-status.processing {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.qh-pf-status.shipped {
+    background: #e0e7ff;
+    color: #4f46e5;
+}
+
+.qh-pf-status.delivered {
+    background: #d1fae5;
+    color: #059669;
+}
+
+.qh-pf-status.cancelled {
+    background: #fee2e2;
+    color: #dc2626;
+}
 
 /* ---- Coupon Grid 3x3 ---- */
 .qh-pf-coupon-grid {
@@ -708,7 +787,7 @@
 .qh-pf-coupon-card {
     background: white;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     overflow: hidden;
     display: flex;
     border: 1px solid #e2e8f0;
@@ -784,7 +863,7 @@
 }
 
 .qh-pf-order-card:hover {
-    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .qh-pf-order-card .qh-pf-order-id {
@@ -899,21 +978,25 @@
         flex-wrap: wrap;
         gap: 20px;
     }
+
     .qh-pf-user {
         border-right: none;
         padding-right: 0;
         min-width: unset;
         flex: 1 1 100%;
     }
+
     .qh-pf-stats {
         flex: 1 1 100%;
     }
+
     .qh-pf-logout-section {
         padding-left: 0;
         flex: 1 1 100%;
         display: flex;
         justify-content: center;
     }
+
     .qh-pf-logout-btn {
         flex-direction: row;
         width: 100%;
@@ -925,38 +1008,47 @@
     .qh-pf-info-card {
         padding: 20px;
     }
+
     .qh-pf-stats {
         flex-wrap: wrap;
     }
+
     .qh-pf-stat {
         flex: 1 1 50%;
         padding: 12px 8px;
         border-right: none;
         border-bottom: 1px solid var(--qh-border);
     }
+
     .qh-pf-tab {
         padding: 14px 16px;
         font-size: 14px;
     }
+
     .qh-pf-content {
         padding: 20px;
     }
+
     .qh-pf-order {
         flex-direction: column;
         align-items: flex-start;
         gap: 12px;
     }
+
     .qh-pf-order-right {
         width: 100%;
         justify-content: space-between;
     }
+
     .qh-pf-addr-grid {
         grid-template-columns: 1fr;
         gap: 24px;
     }
+
     .qh-pf-addr-form .qh-form-row {
         grid-template-columns: 1fr;
     }
+
     .qh-pf-pw-grid {
         grid-template-columns: 1fr;
         gap: 24px;
@@ -973,7 +1065,7 @@
 .qh-pf-refund-list {
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     padding: 20px;
 }
 
@@ -987,7 +1079,7 @@
 .qh-pf-refund-history {
     background: #fff;
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
     padding: 20px;
 }
 
@@ -1206,8 +1298,15 @@
 }
 
 @keyframes qhModalFadeIn {
-    from { opacity: 0; transform: scale(0.95); }
-    to { opacity: 1; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
 }
 
 .qh-modal-title {
