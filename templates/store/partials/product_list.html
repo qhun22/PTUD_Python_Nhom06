@@ -1,0 +1,97 @@
+{% load static %}
+{% load custom_filters %}
+
+{% for product in products %}
+<a href="{% url 'store:product_detail' product.id %}" class="qh-product-card {% if product.stock == 0 %}out-of-stock{% endif %}" style="text-decoration: none; color: inherit; display: block; background: var(--qh-white); border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s;">
+        
+        <!-- Ảnh sản phẩm -->
+        <div class="qh-product-image" style="position: relative; aspect-ratio: 1; background: #ffffff; overflow: hidden;">
+            
+            {% if product.image %}
+            <img src="{{ product.image.url }}" alt="{{ product.name }}" style="width: 100%; height: 100%; object-fit: cover;">
+            {% else %}
+            <div style="display: flex; align-items: center; justify-content: center; height: 100%; color: var(--qh-text-light);">
+                <svg style="width: 64px; height: 64px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+            </div>
+            {% endif %}
+            
+            <!-- Huy hiệu giảm giá -->
+            {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
+            <div class="discount-badge">
+                -{{ product.detail.summary_discount_percent }}%
+            </div>
+            {% endif %}
+            
+            <!-- Nút tim danh sách yêu thích -->
+            {% if product.id in wishlist_product_ids %}
+            <button class="wishlist-btn liked" data-product-id="{{ product.id }}" onclick="toggleWishlist(this, {{ product.id }}); return false;">
+            {% else %}
+            <button class="wishlist-btn" data-product-id="{{ product.id }}" onclick="toggleWishlist(this, {{ product.id }}); return false;">
+            {% endif %}
+                <svg viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+            </button>
+            
+            <!-- Lớp phủ hết hàng -->
+            {% if product.stock == 0 %}
+            <div class="out-of-stock-overlay"></div>
+            {% endif %}
+        </div>
+        
+        <!-- Thông tin sản phẩm -->
+        <div class="qh-product-info" style="padding: 12px 14px 14px; border-top: 1px solid #f0f0f0;">
+            <!-- Tên sản phẩm -->
+            <h3 class="qh-product-name" style="font-size: 17px; font-weight: 600; color: var(--qh-text); margin-bottom: 4px; line-height: 1.4; min-height: 44px; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">
+                {{ product.name }}
+            </h3>
+            
+            <!-- Giá -->
+            <div class="qh-product-price" style="margin-bottom: 6px;">
+                {% if product.detail and product.detail.summary_original_price and product.detail.summary_original_price > product.detail.discounted_price and product.detail.summary_discount_percent > 0 %}
+                <span style="font-size: 13px; color: #999; text-decoration: line-through; display: block; margin-bottom: 1px;">
+                    {{ product.detail.summary_original_price|format_price_with_unit }}
+                </span>
+                <span style="font-size: 18px; font-weight: 700; color: #dc2626;">
+                    {{ product.detail.discounted_price|format_price_with_unit }}
+                </span>
+                {% else %}
+                <span style="font-size: 18px; font-weight: 700; color: var(--qh-primary);">
+                    {% if product.detail %}{{ product.detail.discounted_price|format_price_with_unit }}{% else %}{{ product.price|format_price_with_unit }}{% endif %}
+                </span>
+                {% endif %}
+            </div>
+            
+            <!-- Hàng hiển thị trạng thái sản phẩm -->
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                {% if product.stock > 0 %}
+                <span style="font-size: 11px; color: #059669; font-weight: 600; background: #d1fae5; padding: 4px 8px; border-radius: 4px; flex: 1; text-align: center;">
+                    Còn hàng
+                </span>
+                <span style="font-size: 11px; color: #d97706; font-weight: 600; background: #fef3c7; padding: 4px 8px; border-radius: 4px; flex: 1; text-align: center;">
+                    Trả góp 0%
+                </span>
+                {% else %}
+                <span style="font-size: 11px; color: #dc2626; font-weight: 600; background: #fee2e2; padding: 4px 8px; border-radius: 4px; flex: 1; text-align: center;">
+                    Hết hàng
+                </span>
+                {% endif %}
+            </div>
+            
+            <!-- Các nút hành động -->
+            <div style="display: flex; gap: 6px;">
+                <button class="qh-btn qh-btn-outline qh-compare-btn"
+                        data-product-id="{{ product.id }}"
+                        data-product-name="{{ product.name }}"
+                        data-product-image="{% if product.image %}{{ product.image.url }}{% else %}{% endif %}"
+                        data-product-price="{% if product.detail %}{{ product.detail.discounted_price|format_price_with_unit }}{% else %}{{ product.price|format_price_with_unit }}{% endif %}"
+                        onclick="event.preventDefault();event.stopPropagation();QHCompare.addToCompare({{ product.id }}, this.dataset.productName, this.dataset.productImage, this.dataset.productPrice)"
+                        style="flex: 1; padding: 8px 4px; font-size: 12px; border: 1px solid var(--qh-border); background: transparent; border-radius: 6px; cursor: pointer; transition: all 0.2s; display:flex; align-items:center; justify-content:center; gap:4px;">
+                    <i class="ri-arrow-left-right-line"></i> So sánh
+                </button>
+            </div>
+        </div>
+</a>
+{% endfor %}

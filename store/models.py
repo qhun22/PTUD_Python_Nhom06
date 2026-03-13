@@ -909,3 +909,27 @@ class EmailVerification(models.Model):
     def is_valid(self):
         from django.utils import timezone
         return not self.is_verified and timezone.now() < self.expires_at
+
+
+class Newsletter(models.Model):
+    """Subscribers: đăng ký nhận tư vấn & ưu đãi (user_id nullable cho guest)"""
+    user = models.ForeignKey(
+        CustomUser,
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True,
+        related_name='newsletter_subscriptions',
+        verbose_name='Người dùng'
+    )
+    email = models.EmailField(verbose_name='Email', null=True, blank=True)
+    phone = models.CharField(max_length=20, verbose_name='Số điện thoại', null=True, blank=True)
+    is_active = models.BooleanField(default=True, verbose_name='Hoạt động')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Thời gian đăng ký')
+
+    class Meta:
+        verbose_name = 'Đăng ký nhận tin'
+        verbose_name_plural = 'Đăng ký nhận tin'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.email or self.phone or (self.user.get_full_name() if self.user else str(self.id))

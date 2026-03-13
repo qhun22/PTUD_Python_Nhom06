@@ -13,6 +13,7 @@ urlpatterns = [
     path('product/<int:product_id>/', views.product_detail_view, name='product_detail'),
     # So sánh sản phẩm
     path('compare/', views.compare_view, name='compare'),
+    path('newsletter/subscribe/', views.newsletter_subscribe, name='newsletter_subscribe'),
     # Tìm kiếm sản phẩm
     path('products/search/', views.product_search, name='product_search'),
     # Giỏ hàng
@@ -89,6 +90,9 @@ urlpatterns = [
     path('product-content/delete/', views.product_content_delete, name='product_content_delete'),
     # Product List JSON
     path('products/list/json/', views.product_list_json, name='product_list_json'),
+
+    # Product Filter JSON (AJAX)
+    path('api/products/filter/', views.product_filter_json, name='product_filter_json'),
     # SKU Management
     path('products/sku/list/', views.sku_list, name='sku_list'),
     path('products/sku/add/', views.sku_add, name='sku_add'),

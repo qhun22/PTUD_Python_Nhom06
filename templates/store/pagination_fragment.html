@@ -1,0 +1,27 @@
+{% if paginator.num_pages > 1 %}
+<div class="qh-pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 40px;">
+    {% if page_obj.has_previous %}
+    <a href="#" data-page="{{ page_obj.previous_page_number }}" onclick="QHProductFilter.loadPage({{ page_obj.previous_page_number }}); return false;" class="qh-btn qh-btn-secondary" style="padding: 8px 16px;">
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+    </a>
+    {% endif %}
+    
+    {% for num in paginator.page_range %}
+        {% if page_obj.number == num %}
+        <span class="qh-btn qh-btn-primary" style="padding: 8px 16px; cursor: default;">{{ num }}</span>
+        {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+        <a href="#" data-page="{{ num }}" onclick="QHProductFilter.loadPage({{ num }}); return false;" class="qh-btn qh-btn-secondary" style="padding: 8px 16px;">{{ num }}</a>
+        {% endif %}
+    {% endfor %}
+    
+    {% if page_obj.has_next %}
+    <a href="#" data-page="{{ page_obj.next_page_number }}" onclick="QHProductFilter.loadPage({{ page_obj.next_page_number }}); return false;" class="qh-btn qh-btn-secondary" style="padding: 8px 16px;">
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+    </a>
+    {% endif %}
+</div>
+{% endif %}

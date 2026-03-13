@@ -25,6 +25,43 @@
     opacity: 0.75;
 }
 
+/* Shared product grid for suggest, best-seller and featured sections */
+.qh-product-grid {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.qh-suggest-section .qh-product-grid {
+    margin-bottom: 0;
+}
+
+@media (max-width: 1200px) {
+    .qh-product-grid {
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 992px) {
+    .qh-product-grid {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 768px) {
+    .qh-product-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 12px;
+    }
+}
+
+@media (max-width: 480px) {
+    .qh-product-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
 /* ==================== Discount Ribbon ==================== */
 .discount-badge {
     position: absolute;
@@ -603,5 +640,573 @@
         width: 90vw;
         min-width: 0;
         max-width: 100vw;
+    }
+}
+
+/* ==================== Product Filter Bar ==================== */
+.qh-filter-bar {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    max-width: 1400px;
+    margin: 0 auto 24px auto;
+    padding: 18px 24px;
+    background: #fff;
+    border-radius: 14px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+    border: 1.5px solid #f0f0f0;
+    flex-wrap: wrap;
+}
+
+.qh-filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+    min-width: 160px;
+}
+
+.qh-filter-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #555;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    font-family: 'Signika', sans-serif;
+}
+
+.qh-filter-select {
+    width: 100%;
+    padding: 10px 36px 10px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+    background: #f8f9fa;
+    border: 1.5px solid #e0e0e0;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    font-family: 'Signika', sans-serif;
+}
+
+.qh-filter-select:focus {
+    outline: none;
+    border-color: var(--qh-primary, #4f46e5);
+    box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+.qh-filter-select:hover {
+    border-color: #ccc;
+}
+
+.qh-filter-actions {
+    display: flex;
+    gap: 8px;
+    align-items: flex-end;
+    flex-shrink: 0;
+}
+
+.qh-filter-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-decoration: none;
+    white-space: nowrap;
+    font-family: 'Signika', sans-serif;
+    line-height: 1.4;
+}
+
+.qh-filter-btn-search {
+    background: #8bb8e0;
+    color: #fff;
+}
+
+.qh-filter-btn-search:hover {
+    background: var(--qh-primary-dark);
+    transform: translateY(-1px);
+}
+
+.qh-filter-btn-reset {
+    background: #f3f4f6;
+    color: #555;
+    border: 1.5px solid #e0e0e0;
+}
+
+.qh-filter-btn-reset:hover {
+    background: #e5e7eb;
+    color: #333;
+    border-color: #d0d0d0;
+    transform: translateY(-1px);
+}
+
+/* Responsive filter bar */
+@media (max-width: 1024px) {
+    .qh-filter-bar {
+        gap: 12px;
+        padding: 16px 18px;
+    }
+
+    .qh-filter-group {
+        min-width: 140px;
+    }
+}
+
+@media (max-width: 768px) {
+    .qh-filter-bar {
+        flex-direction: column;
+        gap: 12px;
+        padding: 16px;
+    }
+
+    .qh-filter-group {
+        min-width: 100%;
+    }
+
+    .qh-filter-actions {
+        width: 100%;
+        justify-content: stretch;
+    }
+
+    .qh-filter-btn {
+        flex: 1;
+        padding: 12px 16px;
+    }
+}
+
+/* ==================== Loading Spinner Overlay ==================== */
+.qh-loading-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9999;
+    -webkit-backdrop-filter: blur(4px);
+    backdrop-filter: blur(4px);
+}
+
+.qh-loading-spinner {
+    width: 60px;
+    height: 60px;
+    position: relative;
+}
+
+.qh-loading-spinner svg {
+    width: 100%;
+    height: 100%;
+    animation: rotate 1.5s linear infinite;
+}
+
+.qh-loading-spinner circle {
+    stroke: var(--qh-primary, #4a90d9);
+    stroke-linecap: round;
+    animation: dash 1.5s ease-in-out infinite;
+}
+
+@keyframes rotate {
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+@keyframes dash {
+    0% {
+        stroke-dasharray: 1, 150;
+        stroke-dashoffset: 0;
+    }
+
+    50% {
+        stroke-dasharray: 90, 150;
+        stroke-dashoffset: -35;
+    }
+
+    100% {
+        stroke-dasharray: 90, 150;
+        stroke-dashoffset: -124;
+    }
+}
+
+/* ==================== Newsletter Section ==================== */
+/* Đồng bộ khung nội dung với USP / product: max-width 1400px, padding 0 24px */
+.qh-newsletter-section {
+    margin-top: 20px;
+    max-width: 1400px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 0 24px;
+    position: relative;
+    background: #ffffff;
+    border-radius: var(--qh-radius-lg);
+    box-shadow: 0 4px 16px var(--qh-shadow);
+}
+
+.qh-newsletter-section::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0.75) 100%);
+    pointer-events: none;
+}
+
+.qh-newsletter-shell {
+    position: relative;
+    padding: 24px 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto auto;
+    align-items: center;
+    gap: 20px;
+}
+
+.qh-newsletter-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    min-width: 0;
+}
+
+.qh-newsletter-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: var(--qh-radius);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--qh-white);
+    background: #8BB8E0;
+    box-shadow: 0 4px 12px var(--qh-shadow);
+    flex-shrink: 0;
+}
+
+.qh-newsletter-icon svg {
+    width: 24px;
+    height: 24px;
+    stroke: var(--qh-white);
+}
+
+.qh-newsletter-copy {
+    min-width: 0;
+}
+
+.qh-newsletter-title {
+    margin: 0;
+    font-size: 18px;
+    line-height: 1.3;
+    color: var(--qh-text);
+    font-weight: 700;
+    font-family: 'Signika', sans-serif;
+}
+
+.qh-newsletter-subtitle {
+    margin: 2px 0 0;
+    color: var(--qh-text-light);
+    font-size: 13px;
+    line-height: 1.3;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.qh-newsletter-form {
+    display: flex;
+    min-width: 0;
+}
+
+.qh-newsletter-right {
+    display: flex;
+    align-items: center;
+    border: 2px solid var(--qh-primary);
+    background: var(--qh-white);
+    border-radius: var(--qh-radius);
+    overflow: hidden;
+    box-shadow: 0 2px 8px var(--qh-shadow);
+}
+
+.qh-newsletter-input {
+    flex: 1;
+    border: 0;
+    background: transparent;
+    color: var(--qh-text);
+    height: 46px;
+    padding: 0 16px;
+    font-size: 14px;
+    font-family: 'Signika', sans-serif;
+    outline: none;
+    min-width: 260px;
+    max-width: 380px;
+}
+
+.qh-newsletter-input::placeholder {
+    color: var(--qh-text-light);
+}
+
+.qh-newsletter-btn {
+    width: 52px;
+    height: 46px;
+    border: 0;
+    background: #8BB8E0;
+    color: var(--qh-white);
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    flex-shrink: 0;
+}
+
+.qh-newsletter-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--qh-shadow);
+}
+
+.qh-newsletter-btn:active {
+    transform: translateY(0);
+}
+
+.qh-newsletter-btn:disabled {
+    cursor: not-allowed;
+    opacity: 0.7;
+}
+
+.qh-newsletter-btn-text {
+    font-size: 20px;
+    line-height: 1;
+    font-weight: 500;
+}
+
+.qh-newsletter-spinner {
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    border-top-color: var(--qh-white);
+    border-radius: 50%;
+    opacity: 0;
+    animation: qh-newsletter-spin 0.7s linear infinite;
+}
+
+.qh-newsletter-btn.loading .qh-newsletter-btn-text {
+    opacity: 0;
+}
+
+.qh-newsletter-btn.loading .qh-newsletter-spinner {
+    opacity: 1;
+}
+
+@keyframes qh-newsletter-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.qh-newsletter-social-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qh-newsletter-social-label {
+    color: var(--qh-text);
+    font-size: 13px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+
+.qh-newsletter-social-list {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.qh-newsletter-social-btn {
+    width: 36px;
+    height: 36px;
+    border-radius: var(--qh-radius-sm);
+    text-decoration: none;
+    background: #8BB8E0;
+    color: var(--qh-white);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.qh-newsletter-social-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px var(--qh-shadow);
+}
+
+/* ----- Newsletter Responsive (trùng breakpoint với .qh-product-grid) ----- */
+@media (max-width: 1200px) {
+    .qh-newsletter-shell {
+        grid-template-columns: auto 1fr;
+        gap: 16px;
+    }
+
+    .qh-newsletter-social-wrap {
+        grid-column: 1 / -1;
+        justify-content: flex-start;
+    }
+}
+
+@media (max-width: 992px) {
+    .qh-newsletter-shell {
+        grid-template-columns: 1fr;
+        padding: 20px 24px;
+        gap: 14px;
+    }
+
+    .qh-newsletter-left {
+        justify-content: flex-start;
+    }
+
+    .qh-newsletter-form {
+        width: 100%;
+    }
+
+    .qh-newsletter-right {
+        max-width: 100%;
+    }
+
+    .qh-newsletter-input {
+        min-width: 0;
+        max-width: none;
+    }
+
+    .qh-newsletter-subtitle {
+        white-space: normal;
+    }
+}
+
+@media (max-width: 768px) {
+    .qh-newsletter-shell {
+        padding: 16px 20px;
+        gap: 12px;
+    }
+
+    .qh-newsletter-title {
+        font-size: 16px;
+    }
+
+    .qh-newsletter-subtitle {
+        font-size: 12px;
+    }
+
+    .qh-newsletter-icon {
+        width: 42px;
+        height: 42px;
+    }
+
+    .qh-newsletter-icon svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .qh-newsletter-right {
+        border-radius: var(--qh-radius-sm);
+    }
+
+    .qh-newsletter-input {
+        height: 42px;
+        font-size: 13px;
+        padding: 0 14px;
+    }
+
+    .qh-newsletter-btn {
+        width: 48px;
+        height: 42px;
+    }
+
+    .qh-newsletter-btn-text {
+        font-size: 18px;
+    }
+
+    .qh-newsletter-social-wrap {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 8px;
+    }
+
+    .qh-newsletter-social-label {
+        font-size: 12px;
+    }
+
+    .qh-newsletter-social-btn {
+        width: 32px;
+        height: 32px;
+        font-size: 14px;
+    }
+}
+
+@media (max-width: 480px) {
+    .qh-newsletter-shell {
+        padding: 14px 16px;
+        gap: 10px;
+    }
+
+    .qh-newsletter-title {
+        font-size: 15px;
+    }
+
+    .qh-newsletter-subtitle {
+        font-size: 11px;
+    }
+
+    .qh-newsletter-left {
+        gap: 10px;
+    }
+
+    .qh-newsletter-icon {
+        width: 40px;
+        height: 40px;
+    }
+
+    .qh-newsletter-icon svg {
+        width: 18px;
+        height: 18px;
+    }
+
+    .qh-newsletter-input {
+        height: 40px;
+        font-size: 12px;
+        padding: 0 12px;
+    }
+
+    .qh-newsletter-btn {
+        width: 44px;
+        height: 40px;
+    }
+
+    .qh-newsletter-btn-text {
+        font-size: 16px;
+    }
+
+    .qh-newsletter-social-label {
+        font-size: 11px;
+    }
+
+    .qh-newsletter-social-btn {
+        width: 30px;
+        height: 30px;
+        font-size: 12px;
     }
 }

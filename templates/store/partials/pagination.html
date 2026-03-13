@@ -1,0 +1,27 @@
+{% if products.has_other_pages %}
+<div class="qh-pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 40px;">
+    {% if products.has_previous %}
+    <button type="button" class="qh-btn qh-btn-secondary" style="padding: 8px 16px;" onclick="QHProductFilter.loadPage({{ products.previous_page_number }})">
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+        </svg>
+    </button>
+    {% endif %}
+    
+    {% for num in products.paginator.page_range %}
+        {% if products.number == num %}
+        <span class="qh-btn qh-btn-primary" style="padding: 8px 16px; cursor: default;">{{ num }}</span>
+        {% elif num > products.number|add:'-3' and num < products.number|add:'3' %}
+        <button type="button" class="qh-btn qh-btn-secondary" style="padding: 8px 16px;" onclick="QHProductFilter.loadPage({{ num }})">{{ num }}</button>
+        {% endif %}
+    {% endfor %}
+    
+    {% if products.has_next %}
+    <button type="button" class="qh-btn qh-btn-secondary" style="padding: 8px 16px;" onclick="QHProductFilter.loadPage({{ products.next_page_number }})">
+        <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+        </svg>
+    </button>
+    {% endif %}
+</div>
+{% endif %}

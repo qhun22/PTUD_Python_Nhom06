@@ -274,7 +274,98 @@ def home(request):
             default=1,
             output_field=IntegerField(),
         )
-    ).order_by('stock_order', '-created_at')
+    )
+    
+    # Bộ lọc: theo hãng
+    selected_brand = request.GET.get('brand', '').strip()
+    if selected_brand:
+        products_list = products_list.filter(brand__slug=selected_brand)
+    
+    # Bộ lọc: theo khoảng giá - SỬ DỤNG discounted_price từ ProductDetail
+    selected_price_range = request.GET.get('price_range', '').strip()
+    price_ranges = {
+        '0-2': (0, 2000000),
+        '2-4': (2000000, 4000000),
+        '4-7': (4000000, 7000000),
+        '7-13': (7000000, 13000000),
+        '13-20': (13000000, 20000000),
+        '20-999': (20000000, None),
+    }
+    if selected_price_range in price_ranges:
+        min_p, max_p = price_ranges[selected_price_range]
+        # Lọc theo giá thực tế hiển thị trên card:
+        # 1) Giá giảm từ ProductDetail (nếu có)
+        # 2) Giá gốc ProductDetail
+        # 3) Giá nhỏ nhất của biến thể
+        # 4) Product.price (fallback cuối)
+        products_list = products_list.annotate(
+            _variant_min_price=models.Min('detail__variants__price'),
+            _discounted_price=models.Case(
+                models.When(
+                    detail__original_price__gt=0,
+                    detail__discount_percent__gt=0,
+                    then=models.F('detail__original_price') - (models.F('detail__original_price') * models.F('detail__discount_percent') / 100)
+                ),
+                models.When(
+                    detail__original_price__gt=0,
+                    then=models.F('detail__original_price')
+                ),
+                models.When(
+                    _variant_min_price__gt=0,
+                    then=models.F('_variant_min_price')
+                ),
+                default=models.F('price'),
+                output_field=models.DecimalField(max_digits=15, decimal_places=0)
+            )
+        )
+        if max_p is not None:
+            products_list = products_list.filter(_discounted_price__gte=min_p, _discounted_price__lt=max_p)
+        else:
+            products_list = products_list.filter(_discounted_price__gte=min_p)
+    
+    # Sắp xếp theo giá
+    selected_sort_price = request.GET.get('sort_price', '').strip()
+    
+    if selected_sort_price == 'asc':
+        products_list = products_list.order_by('stock_order', 'price')
+    elif selected_sort_price == 'desc':
+        products_list = products_list.order_by('stock_order', '-price')
+    else:
+        # Default: Random display (có hàng trước, sau đó hết hàng)
+        # Split thành 2 group, random mỗi group riêng, sau đó ghép lại
+        from django.db.models import Case, When, FloatField
+        
+        # Dùng 30 phút làm seed để random consistent mỗi 30 phút
+        # Sau mỗi 30 phút random khác lần
+        import random
+        import datetime
+        now = datetime.datetime.now()
+        # Tính slot 30 phút: (hour * 60 + minute) // 30
+        time_slot = (now.hour * 60 + now.minute) // 30
+        seed_str = f"{now.date()}_{time_slot}"
+        random.seed(seed_str)
+        
+        # Split: có hàng (stock_order = 0) và hết hàng (stock_order = 1)
+        in_stock = products_list.filter(stock__gt=0)
+        out_of_stock = products_list.filter(stock__lte=0)
+        
+        # Random trong mỗi group riêng
+        in_stock_ids = list(in_stock.values_list('id', flat=True))
+        out_of_stock_ids = list(out_of_stock.values_list('id', flat=True))
+        
+        random.shuffle(in_stock_ids)
+        random.shuffle(out_of_stock_ids)
+        
+        # Ghép lại bằng cách tạo preserve order instruction
+        all_ids = in_stock_ids + out_of_stock_ids
+        
+        # Dùng Case/When để preserve order theo list ID
+        if all_ids:
+            # Tạo Case statement để preserve order
+            preserved_order = Case(*[When(id=id, then=pos) for pos, id in enumerate(all_ids)], output_field=IntegerField())
+            products_list = products_list.filter(id__in=all_ids).annotate(preserved_pos=preserved_order).order_by('preserved_pos')
+        else:
+            products_list = products_list.order_by('stock_order')
     
     # Phân trang - 15 sản phẩm mỗi trang
     paginator = Paginator(products_list, 15)
@@ -325,6 +416,9 @@ def home(request):
         'products': products,
         'wishlist_product_ids': wishlist_product_ids,
         'best_sellers': best_sellers,
+        'selected_brand': selected_brand,
+        'selected_price_range': selected_price_range,
+        'selected_sort_price': selected_sort_price,
     }
     
     # Lấy danh sách brands cho header và featured brands
@@ -415,7 +509,7 @@ def product_list_json(request):
     from store.models import Product
     try:
         products = Product.objects.select_related('brand').order_by('-created_at')
-        
+
         product_list = []
         for p in products:
             product_list.append({
@@ -424,10 +518,151 @@ def product_list_json(request):
                 'brand_id': p.brand.id if p.brand else None,
                 'brand_name': p.brand.name if p.brand else None,
             })
-        
+
         return JsonResponse({'success': True, 'products': product_list})
     except Exception as e:
         return JsonResponse({'success': False, 'message': str(e)}, status=500)
+
+
+@require_http_methods(["GET"])
+def product_filter_json(request):
+    """
+    API lọc sản phẩm bằng AJAX - trả về HTML danh sách sản phẩm
+    """
+    from django.template.loader import render_to_string
+    from store.models import Product, Wishlist
+
+    # Lấy các tham số lọc
+    selected_brand = request.GET.get('brand', '').strip()
+    selected_price_range = request.GET.get('price_range', '').strip()
+    selected_sort_price = request.GET.get('sort_price', '').strip()
+    page = request.GET.get('page', 1)
+
+    # Build query sản phẩm
+    products_list = Product.objects.filter(is_active=True).select_related('brand', 'detail')
+
+    # Lọc theo hãng
+    if selected_brand:
+        products_list = products_list.filter(brand__slug=selected_brand)
+
+    # Lọc theo khoảng giá - SỬ DỤNG discounted_price từ ProductDetail
+    price_ranges = {
+        '0-2': (0, 2000000),
+        '2-4': (2000000, 4000000),
+        '4-7': (4000000, 7000000),
+        '7-13': (7000000, 13000000),
+        '13-20': (13000000, 20000000),
+        '20-999': (20000000, None),
+    }
+
+    if selected_price_range in price_ranges:
+        min_p, max_p = price_ranges[selected_price_range]
+        # Lọc theo giá thực tế hiển thị trên card:
+        # 1) Giá giảm từ ProductDetail (nếu có)
+        # 2) Giá gốc ProductDetail
+        # 3) Giá nhỏ nhất của biến thể
+        # 4) Product.price (fallback cuối)
+        products_list = products_list.annotate(
+            _variant_min_price=models.Min('detail__variants__price'),
+            _discounted_price=models.Case(
+                models.When(
+                    detail__original_price__gt=0,
+                    detail__discount_percent__gt=0,
+                    then=models.F('detail__original_price') - (models.F('detail__original_price') * models.F('detail__discount_percent') / 100)
+                ),
+                models.When(
+                    detail__original_price__gt=0,
+                    then=models.F('detail__original_price')
+                ),
+                models.When(
+                    _variant_min_price__gt=0,
+                    then=models.F('_variant_min_price')
+                ),
+                default=models.F('price'),
+                output_field=models.DecimalField(max_digits=15, decimal_places=0)
+            )
+        )
+        if max_p is not None:
+            products_list = products_list.filter(_discounted_price__gte=min_p, _discounted_price__lt=max_p)
+        else:
+            products_list = products_list.filter(_discounted_price__gte=min_p)
+
+    # Sắp xếp
+    from django.db.models import Case, When, IntegerField
+    products_list = products_list.annotate(
+        stock_order=Case(
+            When(stock__gt=0, then=0),
+            default=1,
+            output_field=IntegerField(),
+        )
+    )
+
+    if selected_sort_price == 'asc':
+        products_list = products_list.order_by('stock_order', 'price')
+    elif selected_sort_price == 'desc':
+        products_list = products_list.order_by('stock_order', '-price')
+    else:
+        # Default: Random display giống hàm home
+        import random
+        import datetime
+        
+        # Dùng 30 phút làm seed để random consistent mỗi 30 phút
+        now = datetime.datetime.now()
+        time_slot = (now.hour * 60 + now.minute) // 30
+        seed_str = f"{now.date()}_{time_slot}"
+        random.seed(seed_str)
+        
+        in_stock_ids = list(products_list.filter(stock__gt=0).values_list('id', flat=True))
+        out_of_stock_ids = list(products_list.filter(stock__lte=0).values_list('id', flat=True))
+        
+        random.shuffle(in_stock_ids)
+        random.shuffle(out_of_stock_ids)
+        
+        all_ids = in_stock_ids + out_of_stock_ids
+        
+        if all_ids:
+            preserved_order = Case(*[When(id=id, then=pos) for pos, id in enumerate(all_ids)], output_field=IntegerField())
+            products_list = products_list.filter(id__in=all_ids).annotate(preserved_pos=preserved_order).order_by('preserved_pos')
+        else:
+            products_list = products_list.order_by('stock_order')
+
+    # Phân trang - 15 sản phẩm mỗi trang
+    paginator = Paginator(products_list, 15)
+
+    try:
+        products = paginator.page(page)
+    except PageNotAnInteger:
+        products = paginator.page(1)
+    except EmptyPage:
+        products = paginator.page(paginator.num_pages)
+
+    # Lấy wishlist của user
+    wishlist_product_ids = []
+    if request.user and request.user.is_authenticated:
+        wishlist = Wishlist.get_or_create_for_user(request.user)
+        if wishlist:
+            wishlist_product_ids = list(wishlist.products.values_list('id', flat=True))
+
+    # Render HTML cho danh sách sản phẩm
+    products_html = render_to_string('store/products_fragment.html', {
+        'products': products,
+        'wishlist_product_ids': wishlist_product_ids,
+    })
+
+    # Render HTML cho phân trang
+    pagination_html = render_to_string('store/pagination_fragment.html', {
+        'page_obj': products,
+        'paginator': paginator,
+    })
+
+    return JsonResponse({
+        'success': True,
+        'products_html': products_html,
+        'pagination_html': pagination_html,
+        'total_products': paginator.count,
+        'num_pages': paginator.num_pages,
+        'current_page': products.number,
+    })
 
 
 
@@ -505,3 +740,89 @@ def compare_view(request):
         'compare_data': compare_data,
     }
     return render(request, 'store/compare.html', context)
+
+
+def _newsletter_parse_contact(contact):
+    """Trả về (email, phone) — một trong hai có giá trị, cái kia None."""
+    contact = (contact or '').strip()
+    if not contact:
+        return None, None
+    if '@' in contact:
+        return contact, None
+    phone = ''.join(filter(str.isdigit, contact))
+    if len(phone) >= 10:
+        return None, phone
+    return None, None
+
+
+@require_POST
+def newsletter_subscribe(request):
+    """Đăng ký nhận tư vấn & ưu đãi. User đăng nhập: lưu user_id + email/phone; Guest: lưu email/phone. Gửi Telegram."""
+    from store.models import Newsletter
+    from store.telegram_utils import notify_newsletter_subscribe
+
+    contact = request.POST.get('contact', '').strip()
+    is_ajax = request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+    def err(msg):
+        if is_ajax:
+            return JsonResponse({'success': False, 'message': msg})
+        messages.error(request, msg)
+        return redirect('store:home')
+
+    def ok(msg):
+        if is_ajax:
+            return JsonResponse({'success': True, 'message': msg})
+        messages.success(request, msg)
+        return redirect('store:home')
+
+    # --- User đã đăng nhập: dùng thông tin user, có thể ghi đè bằng contact nếu nhập ---
+    if request.user.is_authenticated:
+        user = request.user
+        # Tránh đăng ký trùng: mỗi user chỉ một bản ghi active
+        existing = Newsletter.objects.filter(user=user, is_active=True).first()
+        if existing:
+            return err('Bạn đã đăng ký nhận tin rồi.')
+
+        email, phone = _newsletter_parse_contact(contact)
+        # Nếu guest không nhập, lấy từ user
+        if not email and not phone:
+            email = getattr(user, 'email', None) or ''
+            if email:
+                email = email.strip()
+            # Số điện thoại từ profile nếu có
+            phone = getattr(user, 'phone', None) or ''
+            if isinstance(phone, str):
+                phone = ''.join(filter(str.isdigit, phone)) or None
+            else:
+                phone = None
+        if not email and not phone:
+            return err('Vui lòng nhập email hoặc số điện thoại.')
+
+        newsletter = Newsletter(user=user, email=email or None, phone=phone or None)
+        newsletter.save()
+
+        created_str = timezone.localtime(newsletter.created_at).strftime('%d/%m/%Y %H:%M')
+        notify_newsletter_subscribe(True, user.get_full_name() or user.email or str(user), created_str)
+        return ok('Đăng ký thành công! Cảm ơn bạn đã quan tâm.')
+
+    # --- Guest ---
+    if not contact:
+        return err('Vui lòng nhập email hoặc số điện thoại.')
+
+    email, phone = _newsletter_parse_contact(contact)
+    if not email and not phone:
+        return err('Email hoặc số điện thoại không hợp lệ.')
+
+    if email and Newsletter.objects.filter(email=email, is_active=True).exists():
+        return err('Email này đã được đăng ký.')
+    if phone and Newsletter.objects.filter(phone=phone, is_active=True).exists():
+        return err('Số điện thoại này đã được đăng ký.')
+
+    newsletter = Newsletter(email=email, phone=phone)
+    newsletter.save()
+
+    created_str = timezone.localtime(newsletter.created_at).strftime('%d/%m/%Y %H:%M')
+    display = email or phone
+    notify_newsletter_subscribe(False, display, created_str)
+    return ok('Đăng ký thành công! Cảm ơn bạn đã quan tâm.')

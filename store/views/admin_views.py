@@ -75,6 +75,8 @@ def dashboard_view(request):
     
     # Danh sách hãng với số sản phẩm (cho stats)
     brands_for_stats = Brand.objects.filter(is_active=True).annotate(product_count=Count('products')).order_by('name')[:8]
+    # Danh sách hãng đầy đủ (cho dropdown/select ở dashboard)
+    brands_all_active = Brand.objects.filter(is_active=True).order_by('name')
     
     # Danh sách hãng cho bảng (có phân trang)
     all_brands = Brand.objects.filter(is_active=True).annotate(product_count=Count('products')).order_by('name')
@@ -189,7 +191,10 @@ def dashboard_view(request):
         'revenue_this_month': revenue_this_month,
         'months': month_data,
         'chart_year': current_year,
-        'brands': brands_for_stats,
+        # NOTE: dashboard.html dùng `brands` cho các dropdown (chọn hãng) => phải là danh sách đầy đủ
+        'brands': brands_all_active,
+        # nếu cần hiển thị 8 hãng cho thống kê/box, dùng biến riêng
+        'brands_for_stats': brands_for_stats,
         'brands_paginated': brands_paginated,
         'products_paginated': products_paginated,
         'products': all_products[:50],  # For SKU dropdown

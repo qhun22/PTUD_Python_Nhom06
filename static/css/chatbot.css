@@ -205,7 +205,7 @@
 }
 
 .qh-chat-msg.user .qh-chat-msg-bubble {
-    background: linear-gradient(135deg, var(--qh-primary), var(--qh-secondary));
+    background: linear-gradient(135deg, var(--qh-primary));
     color: #fff;
     border-top-right-radius: 4px;
 }

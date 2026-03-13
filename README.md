@@ -15,7 +15,7 @@ Website cung cấp đầy đủ tính năng cho một cửa hàng điện thoạ
 
 | Thành phần | Công nghệ sử dụng |
 |------------|---------------------|
-| Backend | Python 3.10+, Django 4.2.11 |
+| Backend | Python **3.10+** (khuyến nghị 3.11), Django 4.2.x |
 | Database | SQLite3 |
 | Authentication | django-allauth |
 | Payment | VNPay API, VietQR, COD |
@@ -46,35 +46,52 @@ qhun22/
 
 ## Hướng dẫn cài đặt
 
+### Yêu cầu hệ thống
+
+| Yêu cầu | Phiên bản |
+|---------|----------|
+| Python | **3.10 trở lên** (3.11 khuyến nghị) |
+| pip | 23.0 trở lên |
+| OS | Windows / Linux / macOS |
+
+> **Lưu ý quan trọng:** Dự án dùng `>=` cho tất cả package thay vì `==` để tránh xung đột version giữa các máy. Không cần cài đúng version như người share — chỉ cần Python 3.10+.
+
+### Cách nhanh nhất (Windows)
+
+Chạy file `qhun22.bat` → chọn **[0] Cài đặt lần đầu** — script sẽ tự động:
+
+- Kiểm tra Python
+- Tạo môi trường ảo (`venv`)
+- Nâng cấp `pip`
+- Cài tất cả thư viện
+- Chạy database migration
+
+### Cài đặt thủ công (mọi OS)
+
 ### Bước 1: Tạo môi trường ảo
 
 Tạo môi trường Python riêng biệt để không ảnh hưởng đến các dự án khác:
 
 ```bash
+# Windows
 python -m venv venv
-```
-
-### Bước 2: Kích hoạt môi trường
-
-- Trên Windows:
-
-```bash
 venv\Scripts\activate
-```
 
-- Trên Mac/Linux:
-
-```bash
+# Linux / macOS
+python3 -m venv venv
 source venv/bin/activate
 ```
 
-### Bước 3: Cài đặt các thư viện
+### Bước 2: Nâng cấp pip và cài thư viện
 
 ```bash
+pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
-### Bước 4: Cấu hình biến môi trường
+> **Ghi chú về tzdata:** Trên Linux/macOS không cần `tzdata` vì hệ thống đã có. File `requirements.txt` đã xử lý tự động với điều kiện `sys_platform == "win32"`.
+
+### Bước 3: Cấu hình biến môi trường
 
 Tạo file `.env` trong thư mục gốc với nội dung:
 
@@ -102,13 +119,13 @@ GOOGLE_OAUTH2_CLIENT_SECRET=client-secret
 ANTHROPIC_API_KEY=api-key-của-anthropic
 ```
 
-### Bước 5: Tạo database
+### Bước 4: Tạo database
 
 ```bash
 python manage.py migrate
 ```
 
-### Bước 6: Tạo tài khoản admin
+### Bước 5: Tạo tài khoản admin
 
 ```bash
 python manage.py createsuperuser
@@ -116,13 +133,23 @@ python manage.py createsuperuser
 
 Nhập email và mật khẩu theo hướng dẫn. Tài khoản này sẽ được sử dụng để truy cập trang quản trị /admin/
 
-### Bước 7: Khởi động server
+### Bước 6: Khởi động server
 
 ```bash
 python manage.py runserver
 ```
 
 Truy cập website tại: <http://127.0.0.1:8000/>
+
+## Xử lý lỗi thường gặp khi cài đặt
+
+| Lỗi | Nguyên nhân | Giải pháp |
+|-----|------------|----------|
+| `No module named 'openpyxl'` | Package bị thiếu trong venv cũ | `pip install openpyxl` |
+| `tzdata` conflict trên Linux | Hệ thống không cần tzdata | Bỏ qua, dòng có `sys_platform` sẽ tự skip |
+| `typing_extensions` error | Python < 3.10 | Nâng cấp Python lên 3.10+ |
+| `django-allauth` import error | Version không tương thích | `pip install -U django-allauth` |
+| `.env not found` | Chưa tạo file .env | Tạo file `.env` theo mẫu ở trên |
 
 ## Tài khoản mẫu
 

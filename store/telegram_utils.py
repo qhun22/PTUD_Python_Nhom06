@@ -84,13 +84,13 @@ def notify_payment_created(payment_method, order_code, username, total_amount):
     """
     method_label = 'VietQR' if payment_method == 'vietqr' else 'VNPay'
     text = (
-        f'🔔 <b>Thanh toán mới - {method_label}</b>\n'
+        f' <b>Thanh toán mới - {method_label}</b>\n'
         f'━━━━━━━━━━━━━━━━━\n'
-        f'👤 Khách: <b>{username}</b>\n'
-        f'💰 Số tiền: <b>{_format_price(total_amount)}</b>\n'
-        f'📋 Mã đơn: <code>{order_code}</code>\n'
+        f' Khách: <b>{username}</b>\n'
+        f' Số tiền: <b>{_format_price(total_amount)}</b>\n'
+        f' Mã đơn: <code>{order_code}</code>\n'
         f'━━━━━━━━━━━━━━━━━\n'
-        f'⏳ Đang chờ thanh toán {method_label}...\n'
+        f' Đang chờ thanh toán {method_label}...\n'
         f'<i>(Tin nhắn này sẽ tự xóa sau 15 phút)</i>'
     )
     _send_and_delete_later(text, delay_seconds=900)
@@ -126,15 +126,39 @@ def notify_order_success(order_code, payment_method, items):
         product_lines += '\n'
 
     text = (
-        f'✅ <b>ĐƠN HÀNG THÀNH CÔNG</b>\n'
+        f' <b>ĐƠN HÀNG THÀNH CÔNG</b>\n'
         f'━━━━━━━━━━━━━━━━━\n'
-        f'📋 Mã đơn: <code>{order_code}</code>\n'
-        f'💳 Thanh toán: <b>{method_label}</b>\n'
+        f' Mã đơn: <code>{order_code}</code>\n'
+        f' Thanh toán: <b>{method_label}</b>\n'
         f'━━━━━━━━━━━━━━━━━\n'
-        f'📦 Sản phẩm:\n'
+        f' Sản phẩm:\n'
         f'{product_lines}'
     )
 
+    def _worker():
+        _send_message(text)
+    t = threading.Thread(target=_worker, daemon=True)
+    t.start()
+
+
+def notify_newsletter_subscribe(is_user, display_name, created_at_str):
+    """
+    Có khách đăng ký nhận tư vấn & ưu đãi -> gửi Telegram.
+    is_user: True nếu đã đăng nhập, False nếu guest.
+    display_name: tên user (QUANG HUY) hoặc email/phone của guest (0987654321).
+    created_at_str: thời gian đăng ký, ví dụ "13/03/2026".
+    """
+    if is_user:
+        line = f' User: <b>{display_name}</b>'
+    else:
+        line = f' Guest: <b>{display_name}</b>'
+    text = (
+        f' <b>Có khách đăng ký nhận tư vấn</b>\n'
+        f'━━━━━━━━━━━━━━━━━\n'
+        f'{line}\n'
+        f' Thời gian: {created_at_str}\n'
+        f'━━━━━━━━━━━━━━━━━'
+    )
     def _worker():
         _send_message(text)
     t = threading.Thread(target=_worker, daemon=True)

@@ -44,7 +44,7 @@ def chatbot_api(request):
         return JsonResponse({"message": "Tin nhắn quá dài, vui lòng rút gọn lại nhé!", "suggestions": []}, status=400)
 
     try:
-        from .chatbot_service import ChatbotService
+        from store.chatbot_service import ChatbotService
         user = request.user if hasattr(request, 'user') and request.user.is_authenticated else None
         service = ChatbotService()
         result = service.process_message(message, user=user, session=getattr(request, "session", None))

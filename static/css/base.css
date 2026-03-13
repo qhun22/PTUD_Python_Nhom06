@@ -197,7 +197,7 @@
 /* Compare FAB */
 .qh-compare-fab {
     position: fixed;
-    bottom: 24px;
+    bottom: 88px;
     left: 24px;
     z-index: 10001;
     width: 52px;
@@ -251,5 +251,5 @@
     .qh-compare-bar-item { min-width: 160px; max-width: 180px; padding: 6px 10px; }
     .qh-compare-bar-item img { width: 36px; height: 36px; }
     .qh-compare-bar-slot { min-width: 160px; max-width: 180px; height: 48px; }
-    .qh-compare-fab { bottom: 16px; left: 16px; width: 46px; height: 46px; }
+    .qh-compare-fab { bottom: 74px; left: 16px; width: 46px; height: 46px; }
 }

@@ -282,7 +282,7 @@ body {
 }
 
 .qh-btn-secondary {
-    background: linear-gradient(135deg, var(--qh-secondary) 0%, var(--qh-secondary-dark) 100%);
+    background: #8BB8E0;
     color: var(--qh-text);
 }
 
@@ -585,8 +585,8 @@ body {
 /* ==================== USP SECTION ==================== */
 .qh-usp-section {
     background: #f8fafc;
-    padding: 60px 0;
-    margin-top: 60px;
+    padding: 36px 0 48px;
+    margin-top: 28px;
     width: 100vw;
     position: relative;
     left: 50%;
@@ -601,6 +601,11 @@ body {
     padding: 0 24px;
 }
 
+/* Cách xa nhẹ tiêu đề "TẠI SAO NÊN CHỌN CHÚNG TÔI?" với grid bên dưới */
+.qh-usp-container .qh-featured-title-wrap {
+    margin-bottom: 24px;
+}
+
 .qh-usp-title {
     text-align: center;
     font-size: 26px;
@@ -613,29 +618,29 @@ body {
 .qh-usp-grid {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 24px;
+    gap: 32px;
 }
 
+/* Card không bọc box, chỉ là khối nội dung trên nền section */
 .qh-usp-card {
-    background: var(--qh-white);
-    border-radius: 12px;
-    padding: 32px 24px;
+    background: transparent;
+    padding: 0;
     text-align: center;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    transition: transform 0.3s ease;
 }
 
 .qh-usp-card:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.1);
+    transform: none;
 }
 
+/* Icon: ô vuông trắng bo góc, đổ bóng nhẹ (giống ảnh design) */
 .qh-usp-icon {
     width: 56px;
     height: 56px;
-    margin: 0 auto 18px;
-    background: linear-gradient(135deg, var(--qh-primary));
-    border-radius: 50%;
+    margin: 0 auto 16px;
+    background: var(--qh-white);
+    border-radius: var(--qh-radius);
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -643,36 +648,32 @@ body {
 }
 
 .qh-usp-card:hover .qh-usp-icon {
-    transform: scale(1.1);
+    transform: scale(1.05);
 }
 
 .qh-usp-icon svg {
     width: 26px;
     height: 26px;
-    stroke: var(--qh-white);
+    stroke: #b91c1c;
 }
 
 .qh-usp-card-title {
     font-size: 17px;
     font-weight: 600;
     color: var(--qh-text);
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 
 .qh-usp-card-desc {
     font-size: 14px;
     color: var(--qh-text-light);
-    line-height: 1.6;
+    line-height: 1.5;
 }
 
-/* ==================== FOOTER ==================== */
+/* ==================== FOOTER (COOLMATE style) ==================== */
 .qh-footer {
     margin-top: 0;
-}
-
-.qh-footer-main {
     background: #0f172a;
-    padding: 60px 0 40px;
 }
 
 .qh-footer-container {
@@ -681,163 +682,462 @@ body {
     padding: 0 24px;
 }
 
-.qh-footer-grid {
+/* ----- Top: Lắng nghe bạn | Hotline/Email | Social ----- */
+.qh-footer-top {
+    padding: 48px 0 40px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.qh-footer-top-inner {
     display: grid;
-    grid-template-columns: 1.5fr 1fr 1fr 1fr;
-    gap: 40px;
+    grid-template-columns: 1fr 1fr 1fr;
+    align-items: center;
+    gap: 32px;
 }
 
-/* Column styles */
-.qh-footer-col-title {
-    font-size: 17px;
-    font-weight: 600;
+.qh-footer-feedback-title {
+    font-size: 22px;
+    font-weight: 700;
     color: var(--qh-white);
-    margin-bottom: 20px;
-    position: relative;
-    padding-bottom: 12px;
+    margin: 0 0 12px;
+    letter-spacing: 0.02em;
 }
 
-.qh-footer-col-title::after {
-    content: '';
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    width: 32px;
-    height: 3px;
-    background: linear-gradient(90deg, var(--qh-primary), var(--qh-secondary));
-    border-radius: 2px;
-}
-
-/* Brand column */
-.qh-footer-logo {
-    display: inline-block;
-    margin-bottom: 14px;
-}
-
-.qh-footer-logo-img {
-    height: 50px;
-    width: auto;
-    object-fit: contain;
-    border-radius: 8px;
-}
-
-.qh-footer-desc {
+.qh-footer-feedback-desc {
     font-size: 14px;
     color: #94a3b8;
-    line-height: 1.7;
-    margin-bottom: 20px;
+    line-height: 1.6;
+    margin: 0 0 20px;
+    max-width: 420px;
 }
 
-.qh-footer-socials {
+.qh-footer-feedback-form {
     display: flex;
-    gap: 12px;
+    gap: 0;
+    max-width: 420px;
 }
 
-.qh-footer-social {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
+.qh-footer-feedback-input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    background: rgba(255, 255, 255, 0.06);
+    color: var(--qh-white);
+    font-size: 14px;
+    font-family: 'Signika', sans-serif;
+    outline: none;
+    transition: border-color 0.2s, background 0.2s;
+}
+
+.qh-footer-feedback-input::placeholder {
+    color: #94a3b8;
+}
+
+.qh-footer-feedback-input:focus {
+    border-color: var(--qh-primary);
     background: rgba(255, 255, 255, 0.08);
+}
+
+.qh-footer-feedback-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: var(--qh-white);
+    color: #0f172a;
+    border: none;
+    border-radius: 0 8px 8px 0;
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    font-family: 'Signika', sans-serif;
+    cursor: pointer;
+    transition: background 0.2s, transform 0.2s;
+    position: relative;
+}
+
+.qh-footer-feedback-btn:hover:not(:disabled) {
+    background: #e2e8f0;
+    transform: translateY(-1px);
+}
+
+.qh-footer-feedback-btn:disabled {
+    opacity: 0.8;
+    cursor: not-allowed;
+}
+
+.qh-footer-feedback-btn .qh-newsletter-spinner {
+    display: none;
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    border: 2px solid rgba(15, 23, 42, 0.2);
+    border-top-color: #0f172a;
+    border-radius: 50%;
+    animation: qh-newsletter-spin 0.7s linear infinite;
+}
+
+.qh-footer-feedback-btn .qh-footer-feedback-btn-arrow {
+    margin-left: 2px;
+}
+
+/* Giữa: Hotline + Email */
+/* Khối Hotline + Email: căn giữa trong cột */
+.qh-footer-contact-block {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+    justify-self: center;
+}
+
+.qh-footer-contact-row {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.qh-footer-contact-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.12);
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
+    color: var(--qh-white);
+    font-size: 26px;
+    flex-shrink: 0;
 }
 
-.qh-footer-social:hover {
-    background: linear-gradient(135deg, var(--qh-primary), var(--qh-secondary));
+.qh-footer-contact-label {
+    display: block;
+    font-size: 13px;
+    color: #94a3b8;
+    margin-bottom: 4px;
+}
+
+.qh-footer-contact-value {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--qh-white);
+    text-decoration: none;
+    transition: color 0.2s;
+}
+
+.qh-footer-contact-value:hover {
+    color: var(--qh-primary);
+}
+
+/* Phải: Social icon to, màu đúng thương hiệu */
+.qh-footer-social-block {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    justify-self: center;
+}
+
+.qh-footer-social-circles {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.qh-footer-social-circle {
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    color: var(--qh-white);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.qh-footer-social-circle:hover {
     transform: translateY(-3px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
 
-.qh-footer-social svg {
-    width: 18px;
-    height: 18px;
-    fill: #94a3b8;
-    transition: fill 0.3s ease;
+.qh-footer-social-fb {
+    background: #1877F2;
 }
 
-.qh-footer-social:hover svg {
-    fill: var(--qh-white);
+.qh-footer-social-fb:hover {
+    color: #fff;
 }
 
-/* Nav links */
+.qh-footer-social-zalo {
+    background: #0068FF;
+}
+
+.qh-footer-social-zalo:hover {
+    color: #fff;
+}
+
+.qh-footer-social-tiktok {
+    background: #000000;
+    color: #fff;
+}
+
+.qh-footer-social-tiktok:hover {
+    color: #fff;
+}
+
+.qh-footer-social-ig {
+    background: linear-gradient(135deg, #F58529, #DD2A7B, #8134AF, #515BD4);
+    color: #fff;
+}
+
+.qh-footer-social-ig:hover {
+    color: #fff;
+}
+
+.qh-footer-social-yt {
+    background: #FF0000;
+}
+
+.qh-footer-social-yt:hover {
+    color: #fff;
+}
+
+/* ----- Giữa: Cột liên kết ----- */
+.qh-footer-mid {
+    padding: 40px 0 36px;
+}
+
+.qh-footer-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 32px 24px;
+}
+
+.qh-footer-col-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--qh-white);
+    margin: 0 0 16px;
+    letter-spacing: 0.06em;
+}
+
 .qh-footer-nav {
     display: flex;
     flex-direction: column;
-    gap: 12px;
+    gap: 10px;
 }
 
 .qh-footer-nav a {
     font-size: 14px;
     color: #94a3b8;
-    transition: color 0.3s ease, padding-left 0.3s ease;
-    display: inline-block;
+    text-decoration: none;
+    transition: color 0.2s, padding-left 0.2s;
 }
 
 .qh-footer-nav a:hover {
     color: var(--qh-white);
-    padding-left: 6px;
+    padding-left: 4px;
 }
 
-/* Contact items */
-.qh-footer-contact {
-    display: flex;
-    flex-direction: column;
-    gap: 14px;
-}
-
-.qh-footer-contact-item {
-    display: flex;
-    align-items: flex-start;
-    gap: 10px;
+.qh-footer-address p {
     font-size: 14px;
     color: #94a3b8;
+    line-height: 1.6;
+    margin: 0;
 }
 
-.qh-footer-contact-item svg {
-    width: 18px;
-    height: 18px;
-    flex-shrink: 0;
-    stroke: var(--qh-primary);
-    margin-top: 2px;
-}
-
-.qh-footer-contact-item a {
-    color: #94a3b8;
-    transition: color 0.3s ease;
-}
-
-.qh-footer-contact-item a:hover {
-    color: var(--qh-white);
-}
-
-/* Bottom Bar */
+/* ----- Đáy: Copyright + Badges ----- */
 .qh-footer-bottom {
     background: #0b1220;
-    padding: 18px 0;
-    text-align: center;
+    padding: 20px 0;
 }
 
-.qh-footer-bottom p {
+.qh-footer-bottom-inner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.qh-footer-copyright p {
     font-size: 13px;
     color: #64748b;
+    margin: 0;
 }
 
-/* ==================== FOOTER RESPONSIVE ==================== */
+.qh-footer-badge {
+    font-size: 11px;
+    color: #64748b;
+    padding: 4px 10px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 4px;
+}
+
+@keyframes qh-newsletter-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ----- Footer Responsive ----- */
 @media (max-width: 1024px) {
-    .qh-usp-grid {
-        grid-template-columns: repeat(2, 1fr);
+    .qh-footer-top-inner {
+        grid-template-columns: 1fr;
+        gap: 28px;
+    }
+
+    .qh-footer-contact-block {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 24px;
+    }
+
+    .qh-footer-social-block {
+        justify-content: flex-start;
+    }
+
+    .qh-footer-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .qh-footer-top {
+        padding: 32px 0 28px;
+    }
+
+    .qh-footer-feedback-form {
+        flex-direction: column;
+        max-width: 100%;
+    }
+
+    .qh-footer-feedback-input {
+        border-right: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 8px;
+    }
+
+    .qh-footer-feedback-btn {
+        border-radius: 8px;
+    }
+
+    .qh-footer-mid {
+        padding: 28px 0 24px;
     }
 
     .qh-footer-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 32px;
+        gap: 24px 16px;
+    }
+
+    .qh-footer-bottom-inner {
+        flex-direction: column;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .qh-footer-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .qh-footer-contact-block {
+        flex-direction: column;
+    }
+}
+
+/* Nút cuộn lên: dưới nút so sánh */
+.qh-scroll-top {
+    position: fixed;
+    left: 24px;
+    bottom: 24px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--qh-primary));
+    color: var(--qh-text);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(169, 204, 240, 0.5);
+    transition: transform 0.2s, opacity 0.3s, box-shadow 0.2s;
+    z-index: 9999;
+    opacity: 0;
+    pointer-events: none;
+}
+
+.qh-scroll-top.qh-scroll-top--visible {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.qh-scroll-top:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 24px rgba(169, 204, 240, 0.6);
+}
+
+/* Nút Zalo: đồng bộ cùng style */
+.qh-zalo-fab {
+    position: fixed;
+    right: 24px;
+    bottom: 24px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--qh-primary));
+    color: var(--qh-text);
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    cursor: pointer;
+    box-shadow: 0 4px 16px rgba(169, 204, 240, 0.5);
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 9998;
+    text-decoration: none;
+}
+
+.qh-zalo-fab:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 24px rgba(169, 204, 240, 0.6);
+    color: var(--qh-text);
+}
+
+@media (max-width: 768px) {
+    .qh-scroll-top {
+        left: 16px;
+        bottom: 16px;
+        width: 46px;
+        height: 46px;
+        font-size: 22px;
+    }
+
+    .qh-zalo-fab {
+        right: 16px;
+        bottom: 16px;
+        width: 46px;
+        height: 46px;
+        font-size: 22px;
+    }
+}
+
+/* ==================== USP + FOOTER RESPONSIVE ==================== */
+@media (max-width: 1024px) {
+    .qh-usp-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
 
 @media (max-width: 640px) {
     .qh-usp-section {
-        padding: 40px 0;
+        padding: 28px 0 36px;
+        margin-top: 20px;
     }
 
     .qh-usp-title {
@@ -847,32 +1147,11 @@ body {
 
     .qh-usp-grid {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 20px;
     }
 
     .qh-usp-card {
-        padding: 24px 20px;
-    }
-
-    .qh-footer-main {
-        padding: 40px 0 30px;
-    }
-
-    .qh-footer-grid {
-        grid-template-columns: 1fr;
-        gap: 32px;
-    }
-
-    .qh-footer-brand {
-        text-align: center;
-    }
-
-    .qh-footer-socials {
-        justify-content: center;
-    }
-
-    .qh-footer-col-title::after {
-        left: 0;
+        padding: 0;
     }
 }
 

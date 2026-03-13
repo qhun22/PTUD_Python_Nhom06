@@ -11,6 +11,7 @@ echo ========================================
 echo   QHUN22 - Menu Quan Ly
 echo ========================================
 echo.
+echo  [0] Cai dat lan dau (tao venv + cai thu vien)
 echo  [1] Khoi dong Server
 echo  [2] Khoi dong Server (Port tuy chon)
 echo  [3] Chay Migration
@@ -18,11 +19,13 @@ echo  [4] Tao tai khoan Admin
 echo  [5] Thu nghiem Gui Email
 echo  [6] Xem Log Server
 echo  [7] Xoa Log cu
-echo  [8] Thoat
+echo  [8] Xuat requirements.txt tu venv hien tai
+echo  [9] Thoat
 echo.
 echo ========================================
-set /p choice="Chon chuc nang [1-8]: "
+set /p choice="Chon chuc nang [0-9]: "
 
+if "%choice%"=="0" goto setup_install
 if "%choice%"=="1" goto start_server
 if "%choice%"=="2" goto start_server_port
 if "%choice%"=="3" goto run_migrate
@@ -30,7 +33,8 @@ if "%choice%"=="4" goto create_admin
 if "%choice%"=="5" goto test_email
 if "%choice%"=="6" goto view_log
 if "%choice%"=="7" goto clear_log
-if "%choice%"=="8" goto exit
+if "%choice%"=="8" goto export_requirements
+if "%choice%"=="9" goto exit
 
 echo.
 echo [!] Lua chon khong hop le!
@@ -217,6 +221,148 @@ if exist "logs\server.log" (
 )
 echo.
 timeout /t 2 >nul
+goto main_menu
+
+
+:setup_install
+cls
+echo ========================================
+echo   Cai Dat Tu Dong - QHUN22
+echo ========================================
+echo.
+echo  Quy trinh se tu dong chay khong can thao tac them.
+echo  Vui long cho den khi hoan tat...
+echo.
+echo ========================================
+echo.
+
+:: ---- BUOC 1: Kiem tra Python ----
+echo [1/5] Kiem tra Python...
+python --version >nul 2>&1
+if errorlevel 1 (
+    echo.
+    echo  [THAT BAI] Khong tim thay Python!
+    echo.
+    echo  Vui long cai Python 3.10+ tu:
+    echo     https://www.python.org/downloads/
+    echo.
+    echo  Sau khi cai xong, mo lai file bat nay va chon [0].
+    echo.
+    pause
+    goto main_menu
+)
+for /f "tokens=*" %%v in ('python --version 2^>^&1') do echo        Phien ban: %%v
+echo  [OK] Python hop le!
+echo.
+
+:: ---- BUOC 2: Tao venv ----
+echo [2/5] Tao Virtual Environment...
+if exist "venv\Scripts\activate.bat" (
+    echo  [OK] venv da ton tai - bo qua.
+) else (
+    python -m venv venv >nul 2>&1
+    if errorlevel 1 (
+        echo  [THAT BAI] Khong the tao venv!
+        echo             Thu chay: python -m venv venv
+        echo.
+        pause
+        goto main_menu
+    )
+    echo  [OK] Da tao venv moi.
+)
+echo.
+
+:: ---- BUOC 3: Kich hoat venv + nang cap pip ----
+echo [3/5] Kich hoat venv va nang cap pip...
+call venv\Scripts\activate.bat >nul 2>&1
+python -m pip install --upgrade pip --quiet --no-warn-script-location
+echo  [OK] pip da cap nhat.
+echo.
+
+:: ---- BUOC 4: Cai thu vien ----
+echo [4/5] Cai dat thu vien tu requirements.txt...
+echo.
+pip install -r requirements.txt --no-warn-script-location
+if errorlevel 1 (
+    echo.
+    echo  [THAT BAI] Cai dat thu vien gap loi!
+    echo.
+    echo  Nguyen nhan co the:
+    echo    - Khong co ket noi Internet
+    echo    - requirements.txt bi loi format
+    echo.
+    echo  Thu kiem tra ket noi mang roi chay lai [0].
+    echo.
+    pause
+    goto main_menu
+)
+echo.
+echo  [OK] Tat ca thu vien da duoc cai dat.
+echo.
+
+:: ---- BUOC 5: Chay migrate ----
+echo [5/5] Chay database migration...
+echo.
+python manage.py migrate --run-syncdb
+if errorlevel 1 (
+    echo.
+    echo  [CANH BAO] Migration gap van de - co the can cau hinh .env truoc.
+) else (
+    echo.
+    echo  [OK] Database san sang.
+)
+echo.
+
+:: ---- KIEM TRA FILE .env ----
+if not exist ".env" (
+    echo ========================================
+    echo  CANH BAO: Chua co file .env
+    echo ========================================
+    echo.
+    echo  Website se KHONG chay duoc neu thieu .env!
+    echo  Tao file .env trong thu muc goc voi noi dung:
+    echo.
+    echo    SECRET_KEY=your-secret-key
+    echo    DEBUG=True
+    echo    ALLOWED_HOSTS=127.0.0.1,localhost
+    echo    ANTHROPIC_API_KEY=your-api-key
+    echo.
+    echo  Xem them trong README.md
+    echo.
+) else (
+    echo  [OK] File .env da co san.
+    echo.
+)
+
+echo ========================================
+echo   CAI DAT HOAN TAT!
+echo ========================================
+echo.
+echo   Buoc tiep theo:
+echo     - Chon [1] de khoi dong server
+echo     - Truy cap: http://127.0.0.1:8000/
+echo.
+pause
+goto main_menu
+
+
+:export_requirements
+cls
+echo ========================================
+echo   Xuat requirements.txt
+echo ========================================
+echo.
+call venv\Scripts\activate.bat
+if errorlevel 1 (
+    echo [!] Khong tim thay venv! Hay chay [0] Cai dat lan dau truoc.
+    pause
+    goto main_menu
+)
+pip freeze > requirements_freeze.txt
+echo [OK] Da xuat ra file: requirements_freeze.txt
+echo     (Day la snapshot chinh xac, dung de debug version conflict)
+echo.
+pause
 goto main_menu
 
 

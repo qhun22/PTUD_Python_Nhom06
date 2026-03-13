@@ -157,96 +157,175 @@
         {% block content %}{% endblock %}
     </main>
 
-    <!-- ==================== CHÂN TRANG ==================== -->
+    <!-- ==================== CHÂN TRANG (COOLMATE style) ==================== -->
     <footer class="qh-footer">
-        <div class="qh-footer-main">
+        <!-- Top: Lắng nghe bạn + Hotline/Email + Social -->
+        <div class="qh-footer-top">
             <div class="qh-footer-container">
-                <div class="qh-footer-grid">
-                    <!-- Cột 1: Thương hiệu -->
-                    <div class="qh-footer-col qh-footer-brand">
-                        <a href="{% url 'store:home' %}" class="qh-footer-logo">
-                            <img src="{% static 'logos/sean.gif' %}" alt="QHUN22 Mobile" class="qh-footer-logo-img">
-                        </a>
-                        <p class="qh-footer-desc">Thầy giáo Ngô Hữu Huy</p>
-                        <div class="qh-footer-socials">
-                            <a href="#" class="qh-footer-social" aria-label="Facebook">
-                                <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
-                                </svg>
-                            </a>
-                            <a href="#" class="qh-footer-social" aria-label="TikTok">
-                                <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M12 2h3a5 5 0 004 4v3a8 8 0 01-4-1v6.5A4.5 4.5 0 1110.5 10v3a1.5 1.5 0 101.5 1.5V2z"/>
-                                </svg>
-                            </a>
-                            <a href="tel:0327221005" class="qh-footer-social" aria-label="Phone">
-                                <svg viewBox="0 0 24 24" fill="currentColor">
-                                    <path d="M6.6 10.8a15.05 15.05 0 006.6 6.6l2.2-2.2a1 1 0 011-.24 11.72 11.72 0 003.7.6 1 1 0 011 1V21a1 1 0 01-1 1A19 19 0 012 3a1 1 0 011-1h3.5a1 1 0 011 1 11.72 11.72 0 00.6 3.7 1 1 0 01-.24 1z"/>
-                                </svg>
-                            </a>
+                <div class="qh-footer-top-inner">
+                    <!-- Trái: Đóng góp ý kiến (form newsletter) -->
+                    <div class="qh-footer-feedback">
+                        <h2 class="qh-footer-feedback-title">NHẬN TƯ VẤN VÀ ƯU ĐÃI</h2>
+                        <p class="qh-footer-feedback-desc">Đăng ký ngay hôm nay để nhận được những ưu đãi đặc biệt và tư vấn miễn phí từ chúng tôi!</p>
+                        <form class="qh-footer-feedback-form" id="qhNewsletterForm" action="{% url 'store:newsletter_subscribe' %}" method="POST">
+                            {% csrf_token %}
+                            <input type="text" name="contact" class="qh-footer-feedback-input" placeholder="Email hoặc số điện thoại" required>
+                            <button type="submit" class="qh-footer-feedback-btn" id="qhNewsletterBtn">
+                                <span class="qh-footer-feedback-btn-text">ĐĂNG KÝ NGAY</span>
+                                <span class="qh-footer-feedback-btn-arrow" aria-hidden="true">→</span>
+                                <span class="qh-newsletter-spinner" aria-hidden="true"></span>
+                            </button>
+                        </form>
+                    </div>
+                    <!-- Giữa: Hotline + Email -->
+                    <div class="qh-footer-contact-block">
+                        <div class="qh-footer-contact-row">
+                            <div class="qh-footer-contact-icon"><i class="ri-phone-fill"></i></div>
+                            <div>
+                                <span class="qh-footer-contact-label">Hotline</span>
+                                <a href="tel:0327221005" class="qh-footer-contact-value">032.722.1005</a>
+                            </div>
+                        </div>
+                        <div class="qh-footer-contact-row">
+                            <div class="qh-footer-contact-icon"><i class="ri-mail-fill"></i></div>
+                            <div>
+                                <span class="qh-footer-contact-label">Email</span>
+                                <a href="mailto:qhun22@gmail.com" class="qh-footer-contact-value">qhun22@gmail.com</a>
+                            </div>
                         </div>
                     </div>
-
-                    <!-- Cột 2: Liên kết nhanh -->
-                    <div class="qh-footer-col">
-                        <h3 class="qh-footer-col-title">Liên kết nhanh</h3>
-                        <nav class="qh-footer-nav">
-                            <a href="#">Về chúng tôi</a>
-                            <a href="#">Hướng dẫn mua hàng</a>
-                            <a href="#">Tin tức</a>
-                            <a href="#">Câu hỏi thường gặp</a>
-                        </nav>
-                    </div>
-
-                    <!-- Cột 3: Chính sách -->
-                    <div class="qh-footer-col">
-                        <h3 class="qh-footer-col-title">Chính sách</h3>
-                        <nav class="qh-footer-nav">
-                            <a href="#">Chính sách bảo hành</a>
-                            <a href="#">Chính sách đổi trả</a>
-                            <a href="#">Chính sách bảo mật</a>
-                            <a href="#">Chính sách giao hàng</a>
-                            <a href="#">Trả góp 0%</a>
-                        </nav>
-                    </div>
-
-                    <!-- Cột 4: Liên hệ -->
-                    <div class="qh-footer-col">
-                        <h3 class="qh-footer-col-title">Liên hệ</h3>
-                        <div class="qh-footer-contact">
-                            <div class="qh-footer-contact-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
-                                    <path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
-                                </svg>
-                                <span>Thái Nguyên, Việt Nam</span>
-                            </div>
-                            <div class="qh-footer-contact-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"/>
-                                </svg>
-                                <a href="tel:0327221005">0327221005</a>
-                            </div>
-                            <div class="qh-footer-contact-item">
-                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-                                    <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
-                                </svg>
-                                <a href="mailto:qhun22@gmail.com">qhun22@gmail.com</a>
-                            </div>
+                    <!-- Phải: Social (màu từng thương hiệu) -->
+                    <div class="qh-footer-social-block">
+                        <div class="qh-footer-social-circles">
+                            <a href="#" class="qh-footer-social-circle qh-footer-social-fb" aria-label="Facebook"><i class="ri-facebook-fill"></i></a>
+                            <a href="https://zalo.me/0327221005" class="qh-footer-social-circle qh-footer-social-zalo" aria-label="Zalo"><i class="ri-chat-3-fill"></i></a>
+                            <a href="#" class="qh-footer-social-circle qh-footer-social-tiktok" aria-label="TikTok"><i class="ri-tiktok-fill"></i></a>
+                            <a href="#" class="qh-footer-social-circle qh-footer-social-ig" aria-label="Instagram"><i class="ri-instagram-fill"></i></a>
+                            <a href="#" class="qh-footer-social-circle qh-footer-social-yt" aria-label="YouTube"><i class="ri-youtube-fill"></i></a>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- Thanh đáy -->
+        <!-- Giữa: Cột liên kết -->
+        <div class="qh-footer-mid">
+            <div class="qh-footer-container">
+                <div class="qh-footer-grid">
+                    <div class="qh-footer-col">
+                        <h3 class="qh-footer-col-title">TÀI KHOẢN</h3>
+                        <nav class="qh-footer-nav">
+                            <a href="{% url 'store:profile' %}">Tài khoản của tôi</a>
+                            <a href="{% url 'store:register' %}">Đăng ký thành viên</a>
+                            <a href="{% url 'store:cart_detail' %}">Ưu đãi & Giỏ hàng</a>
+                        </nav>
+                    </div>
+                    <div class="qh-footer-col">
+                        <h3 class="qh-footer-col-title">CHÍNH SÁCH</h3>
+                        <nav class="qh-footer-nav">
+                            <a href="#">Chính sách đổi trả</a>
+                            <a href="#">Chính sách bảo hành</a>
+                            <a href="#">Chính sách khuyến mãi</a>
+                            <a href="#">Chính sách bảo mật</a>
+                            <a href="#">Chính sách giao hàng</a>
+                        </nav>
+                    </div>
+                    <div class="qh-footer-col">
+                        <h3 class="qh-footer-col-title">CHĂM SÓC KHÁCH HÀNG</h3>
+                        <nav class="qh-footer-nav">
+                            <a href="{% url 'store:order_tracking' %}">Tra cứu đơn hàng</a>
+                            <a href="#">Hỏi đáp - FAQs</a>
+                        </nav>
+                    </div>
+                    <div class="qh-footer-col">
+                        <h3 class="qh-footer-col-title">VỀ QHUN22</h3>
+                        <nav class="qh-footer-nav">
+                            <a href="{% url 'store:home' %}">Trang chủ</a>
+                            <a href="{% url 'store:product_search' %}">Sản phẩm</a>
+                            <a href="#">Liên hệ</a>
+                        </nav>
+                    </div>
+                    <div class="qh-footer-col">
+                        <h3 class="qh-footer-col-title">ĐỊA CHỈ LIÊN HỆ</h3>
+                        <div class="qh-footer-address">
+                            <p>Thái Nguyên, Việt Nam</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Đáy: Copyright + Chứng nhận -->
         <div class="qh-footer-bottom">
             <div class="qh-footer-container">
-                <p>&copy; 2026 QHUN22 Mobile. All rights reserved.</p>
+                <div class="qh-footer-bottom-inner">
+                    <div class="qh-footer-copyright">
+                        <p>© CÔNG TY QHUN22 MOBILE. All rights reserved.</p>
+                    </div>
+                    <div class="qh-footer-badges" aria-hidden="true">
+                        <span class="qh-footer-badge">Đã thông báo Bộ Công Thương</span>
+                    </div>
+                </div>
             </div>
         </div>
     </footer>
+    <!-- Newsletter form script (form nằm trong footer) -->
+    <script>
+    (function() {
+        var form = document.getElementById('qhNewsletterForm');
+        var btn = document.getElementById('qhNewsletterBtn');
+        if (!form || !btn) return;
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            var input = form.querySelector('.qh-footer-feedback-input');
+            btn.disabled = true;
+            btn.querySelector('.qh-footer-feedback-btn-text').style.visibility = 'hidden';
+            btn.querySelector('.qh-footer-feedback-btn-arrow').style.visibility = 'hidden';
+            var spinner = btn.querySelector('.qh-newsletter-spinner');
+            if (spinner) spinner.style.display = 'block';
+            var fd = new FormData(form);
+            var csrf = form.querySelector('input[name="csrfmiddlewaretoken"]');
+            if (csrf) fd.append('csrfmiddlewaretoken', csrf.value);
+            fetch(form.action, { method: 'POST', body: fd, headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success && window.QHToast) window.QHToast.show(data.message, 'success');
+                if (input) input.value = '';
+                if (!data.success && window.QHToast) window.QHToast.show(data.message || 'Có lỗi xảy ra', 'error');
+            })
+            .catch(function() { if (window.QHToast) window.QHToast.show('Có lỗi xảy ra. Vui lòng thử lại.', 'error'); })
+            .finally(function() {
+                btn.disabled = false;
+                btn.querySelector('.qh-footer-feedback-btn-text').style.visibility = '';
+                btn.querySelector('.qh-footer-feedback-btn-arrow').style.visibility = '';
+                if (spinner) spinner.style.display = 'none';
+            });
+        });
+    })();
+    </script>
     <!-- ==================== KẾT THÚC CHÂN TRANG ==================== -->
+
+    <!-- Nút cuộn lên đầu trang (trái dưới) -->
+    <button type="button" id="qh-scroll-top" class="qh-scroll-top" aria-label="Cuộn lên đầu trang">
+        <i class="ri-arrow-up-s-line"></i>
+    </button>
+    <!-- Nút Zalo / Liên hệ (phải dưới) -->
+    <a href="https://zalo.me/0327221005" class="qh-zalo-fab" aria-label="Liên hệ Zalo" target="_blank" rel="noopener">
+        <i class="ri-chat-3-fill"></i>
+    </a>
+    <script>
+    (function() {
+        var scrollBtn = document.getElementById('qh-scroll-top');
+        if (scrollBtn) {
+            window.addEventListener('scroll', function() {
+                scrollBtn.classList.toggle('qh-scroll-top--visible', window.pageYOffset > 400);
+            });
+            scrollBtn.addEventListener('click', function() {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    })();
+    </script>
 
     <!-- Thanh so sánh -->
     <div id="qh-compare-bar" class="qh-compare-bar">
