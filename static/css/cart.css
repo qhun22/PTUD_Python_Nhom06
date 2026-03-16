@@ -40,13 +40,17 @@
 .qh-cart-select-all label {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 0;
     cursor: pointer;
     font-size: 15px;
     font-weight: 500;
     color: var(--qh-text);
     -webkit-user-select: none;
     user-select: none;
+}
+
+.qh-cart-select-all label .qh-cart-checkbox {
+    margin-right: 12px;
 }
 
 .qh-cart-select-all .qh-cart-delete-all {

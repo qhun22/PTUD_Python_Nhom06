@@ -3,14 +3,20 @@
  */
 const QHChat = (() => {
     const API_URL = '/api/chatbot/';
+    const HISTORY_KEY = 'qh_chat_history_v1';
+    const HISTORY_LIMIT = 60;
+    const WELCOME_TEXT = 'Chào anh/chị, em là một trợ lý nhỏ của hệ thống, em có thể giúp gì được cho quý anh/chị ngày hôm nay ạ?';
+    const WELCOME_SUGGESTIONS = ['Tư vấn chọn máy', 'So sánh sản phẩm', 'Kiểm tra đơn hàng', 'Gặp nhân viên'];
     let isOpen = false;
     let isSending = false;
+    let history = [];
 
     const $ = (sel) => document.querySelector(sel);
 
     function init() {
         const fab = $('#qh-chat-fab');
         const closeBtn = $('#qh-chat-close');
+        const resetBtn = $('#qh-chat-reset');
         const sendBtn = $('#qh-chat-send');
         const input = $('#qh-chat-input');
 
@@ -18,6 +24,7 @@ const QHChat = (() => {
 
         fab.addEventListener('click', toggle);
         closeBtn.addEventListener('click', toggle);
+        resetBtn?.addEventListener('click', resetChat);
         sendBtn.addEventListener('click', send);
         input.addEventListener('keydown', (e) => {
             if (e.key === 'Enter' && !e.shiftKey) {
@@ -26,10 +33,27 @@ const QHChat = (() => {
             }
         });
 
-        addBotMessage(
-            'Chào anh/chị, em là trợ lý AI của anh Huy đẹp trai. Em có thể giúp gì cho anh/chị?',
-            ['Tư vấn chọn máy', 'So sánh sản phẩm', 'Kiểm tra đơn hàng', 'Gặp nhân viên']
-        );
+        loadHistory();
+        restoreHistory();
+        if (!history.length) {
+            addBotMessage(WELCOME_TEXT, WELCOME_SUGGESTIONS, []);
+        }
+    }
+
+    async function resetChat() {
+        const container = $('#qh-chat-messages');
+        const input = $('#qh-chat-input');
+        if (!container) return;
+
+        await callResetAPI();
+        showTyping(false);
+        container.innerHTML = '';
+        history = [];
+        saveHistory();
+        isSending = false;
+        setSendDisabled(false);
+        if (input) input.value = '';
+        addBotMessage(WELCOME_TEXT, WELCOME_SUGGESTIONS, []);
     }
 
     function toggle() {
@@ -83,11 +107,15 @@ const QHChat = (() => {
             })
             .then((data) => {
                 showTyping(false);
-                addBotMessage(data.message || 'Mình chưa hiểu ý anh/chị. Thử lại nhé!', data.suggestions || []);
+                addBotMessage(
+                    data.message || 'Em chưa hiểu ý anh/chị. Anh/chị thử lại nhé!',
+                    data.suggestions || [],
+                    data.product_cards || data.cards || []
+                );
             })
             .catch(() => {
                 showTyping(false);
-                addBotMessage('Xin lỗi, hệ thống đang bận. Anh/chị thử lại sau nhé! 🙏', []);
+                addBotMessage('Xin lỗi, hệ thống đang bận. Anh/chị thử lại sau nhé! 🙏', [], []);
             })
             .finally(() => {
                 isSending = false;
@@ -96,7 +124,22 @@ const QHChat = (() => {
             });
     }
 
-    function addUserMessage(text) {
+    function callResetAPI() {
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]')?.value
+            || document.cookie.match(/csrftoken=([^;]+)/)?.[1]
+            || '';
+
+        return fetch(API_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ action: 'reset' }),
+        }).catch(() => null);
+    }
+
+    function addUserMessage(text, persist = true) {
         const container = $('#qh-chat-messages');
         const el = document.createElement('div');
         el.className = 'qh-chat-msg user';
@@ -105,19 +148,42 @@ const QHChat = (() => {
             <div class="qh-chat-msg-bubble">${escapeHtml(text)}</div>
         `;
         container.appendChild(el);
+        if (persist) pushHistory({ role: 'user', text });
         scrollToBottom();
     }
 
-    function addBotMessage(text, suggestions) {
+    function addBotMessage(text, suggestions, cards = [], persist = true) {
         const container = $('#qh-chat-messages');
         const el = document.createElement('div');
         el.className = 'qh-chat-msg bot';
 
         let html = `
-            <div class="qh-chat-msg-avatar"><i class="ri-robot-2-line"></i></div>
+            <div class="qh-chat-msg-avatar"><img src="/static/icons/gatchan.png" class="qh-chat-bot-image" alt="Bot avatar"></div>
             <div>
                 <div class="qh-chat-msg-bubble">${formatMarkdown(text)}</div>
         `;
+
+        if (cards && cards.length) {
+            html += '<div class="qh-chat-cards">';
+            cards.forEach((card) => {
+                const safeTitle = escapeHtml(card?.title || 'Sản phẩm');
+                const safeSubtitle = escapeHtml(card?.subtitle || '');
+                const rawImage = (card?.image_url || '').trim();
+                const safeImage = /^(https?:\/\/|\/)/i.test(rawImage) ? rawImage : `/${rawImage}`;
+                const safeImageAttr = escapeAttr(safeImage);
+
+                html += `
+                    <div class="qh-chat-card">
+                        <img class="qh-chat-card-thumb" src="${safeImageAttr}" alt="${safeTitle}" loading="lazy">
+                        <div class="qh-chat-card-meta">
+                            <div class="qh-chat-card-title">${safeTitle}</div>
+                            ${safeSubtitle ? `<div class="qh-chat-card-subtitle">${safeSubtitle}</div>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+            html += '</div>';
+        }
 
         if (suggestions && suggestions.length) {
             html += '<div class="qh-chat-suggestions">';
@@ -130,7 +196,47 @@ const QHChat = (() => {
         html += '</div>';
         el.innerHTML = html;
         container.appendChild(el);
+        if (persist) pushHistory({ role: 'bot', text, suggestions: suggestions || [], cards: cards || [] });
         scrollToBottom();
+    }
+
+    function loadHistory() {
+        try {
+            const raw = localStorage.getItem(HISTORY_KEY);
+            const parsed = raw ? JSON.parse(raw) : [];
+            history = Array.isArray(parsed) ? parsed : [];
+        } catch {
+            history = [];
+        }
+    }
+
+    function saveHistory() {
+        try {
+            localStorage.setItem(HISTORY_KEY, JSON.stringify(history));
+        } catch {
+            // ignore localStorage quota/browser issues
+        }
+    }
+
+    function pushHistory(item) {
+        history.push(item);
+        if (history.length > HISTORY_LIMIT) {
+            history = history.slice(history.length - HISTORY_LIMIT);
+        }
+        saveHistory();
+    }
+
+    function restoreHistory() {
+        if (!history.length) return;
+        history.forEach((item) => {
+            if (item?.role === 'user' && item.text) {
+                addUserMessage(item.text, false);
+                return;
+            }
+            if (item?.role === 'bot' && item.text) {
+                addBotMessage(item.text, item.suggestions || [], item.cards || [], false);
+            }
+        });
     }
 
     function showTyping(show) {

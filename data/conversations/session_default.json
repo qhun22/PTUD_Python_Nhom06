@@ -1,0 +1,34 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "mình là sinh viên cần máy học online",
+      "intent": "phone_recommendation",
+      "timestamp": 1773681268.0450952,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "Vâng ạ, để tư vấn cho anh/chị, em cần hỏi thêm một số thông tin về nhu cầu sử dụng của anh/chị nhé:\n\n- Anh/chị sử dụng máy để làm gì chính? Như xem video học, làm bài tập, trò chuyện video call với giảng viên,...?\n- Anh/chị có nhu cầu về hiệu năng, pin, màn hình hay các tính năng khác không? \n- Anh/chị có ưu tiên một số thương hiệu nào không?\n- Anh/chị có khoảng ngân sách dự kiến không?\n\nVới những thông tin đó, em sẽ gợi ý cho anh/chị 2-3 sản phẩm phù hợp nhất. Em chưa có đủ thông tin để tư vấn cụ thể, nên mong anh/chị cung cấp thêm để em có thể hỗ trợ tốt hơn. Anh/chị có thể gọi hotline để được tư vấn chi tiết hơn nữa.",
+      "intent": "phone_recommendation",
+      "timestamp": 1773681283.6773133,
+      "metadata": {
+        "product_name": null
+      }
+    }
+  ],
+  "context": {
+    "session_id": "default",
+    "user_id": null,
+    "focused_product": null,
+    "pending_compare": null,
+    "last_intent": "phone_recommendation",
+    "mentioned_products": [
+      null
+    ],
+    "mentioned_brands": [],
+    "created_at": 1773681268.0450952,
+    "updated_at": 1773681283.6773133,
+    "expires_at": 1773684883.6773133
+  }
+}

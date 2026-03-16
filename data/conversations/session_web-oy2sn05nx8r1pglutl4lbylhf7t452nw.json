@@ -1,0 +1,34 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "mình là sinh viên cần máy học online quay video và chơi game nhẹ",
+      "intent": "phone_recommendation",
+      "timestamp": 1773682223.1704257,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "Dạ, em hiểu yêu cầu của anh/chị. Với nhu cầu này, em có thể gợi ý vài sản phẩm phù hợp như sau:\n\n1. Laptop Asus Vivobook S14 S433EA-EB237T:\n- Thiết kế mỏng nhẹ, phù hợp di chuyển.\n- Cấu hình Intel Core i5-1135G7, RAM 8GB, SSD 512GB đáp ứng tốt nhu cầu học online, quay video và chơi game nhẹ.\n- Màn hình 14 inch Full HD sắc nét.\n- Giá khoảng 18,990,000 VNĐ.\n\n2. Laptop Acer Swift 3 SF314-42-R9YN:\n- Cấu hình Ryzen 5 4500U, RAM 8GB, SSD 512GB, tương tự Asus Vivobook.\n- Thiết kế thanh lịch, mỏng nhẹ.\n- Màn hình 14 inch Full HD.\n- Giá khoảng 16,990,000 VNĐ.\n\nNếu anh/chị chưa xác định được ngân sách, em khuyến nghị có thể lựa chọn trong khoảng 15-20 triệu đồng để vừa đáp ứng được các nhu cầu của mình v",
+      "intent": "phone_recommendation",
+      "timestamp": 1773682229.0920963,
+      "metadata": {
+        "product_name": null
+      }
+    }
+  ],
+  "context": {
+    "session_id": "web-oy2sn05nx8r1pglutl4lbylhf7t452nw",
+    "user_id": null,
+    "focused_product": null,
+    "pending_compare": null,
+    "last_intent": "phone_recommendation",
+    "mentioned_products": [
+      null
+    ],
+    "mentioned_brands": [],
+    "created_at": 1773682223.1704257,
+    "updated_at": 1773682229.0920963,
+    "expires_at": 1773685829.0920963
+  }
+}

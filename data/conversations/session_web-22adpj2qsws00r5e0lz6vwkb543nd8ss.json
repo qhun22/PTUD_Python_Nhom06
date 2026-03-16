@@ -1,0 +1,51 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "Tư vấn chọn máy",
+      "intent": "phone_recommendation",
+      "timestamp": 1773683004.3498838,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "Chào anh/chị! Em là trợ lý bán hàng của QHUN22 - cửa hàng điện thoại chính hãng. Để có thể tư vấn chọn máy phù hợp với nhu cầu và ngân sách của anh/chị, em cần biết thêm một số thông tin:\n\n1. Anh/chị có mức ngân sách dự kiến cho việc mua điện thoại không ạ? Điều này sẽ giúp em gợi ý các sản phẩm phù hợp với khả năng tài chính của anh/chị.\n\n2. Anh/chị sử dụng điện thoại chủ yếu để làm gì? Ví dụ như xem phim, chơi game, chụp ảnh, gọi điện, nhắn tin... Điều này sẽ giúp em hiểu được nhu cầu và tính năng mà anh/chị cần.\n\nKhi có thêm thông tin từ anh/chị, em sẽ gợi ý một vài sản phẩm phù hợp nhất. Mong anh/chị cung cấp thông tin để em có thể tư vấn tốt nhất cho anh/chị. Em chờ phản hồi từ anh/chị.",
+      "intent": "phone_recommendation",
+      "timestamp": 1773683016.6610963,
+      "metadata": {
+        "product_name": null
+      }
+    },
+    {
+      "role": "user",
+      "content": "so sánh iPhone 17 vs iPhone Air",
+      "intent": "compare_phones",
+      "timestamp": 1773683020.7771227,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "Dưới đây là so sánh chi tiết giữa iPhone 17 và iPhone Air:\n\nMàn hình:\n- iPhone 17 có màn hình OLED 6.3 inch, độ phân giải 2622 x 1206 pixel, tần số quét 120Hz.\n- iPhone Air có màn hình OLED 6.5 inch, độ phân giải 2736 x 1260 pixel, tần số quét 120Hz.\n- Cả hai đều sử dụng công nghệ màn hình Super Retina XDR và Ceramic Shield 2.\n\nChip/Hiệu năng:\n- iPhone 17 được trang bị chip Apple A19 12-core, RAM 8GB.\n- iPhone Air được trang bị chip Apple A19 Pro 12-core, RAM 12GB.\n- Hiệu năng của iPhone Air được cải thiện đáng kể nhờ chip Apple A19 Pro và RAM 12GB.\n\nCamera:\n- iPhone 17 có camera kép 48MP ở mặt sau, camera selfie 18MP.\n- iPhone Air có camera đơn 48MP ở mặt sau, camera selfie 18MP.\n- Cả hai đều hỗ trợ quay phim 4K Dolby Vision, chụp chân dung, OIS, zoom quang học, chế độ Night Mode.\n\nPin và sạc:\n- Cả hai đều sử dụng pin lithium-ion với thời lượng pin 30 giờ.\n- Cả hai đều hỗ trợ sạc nhanh và sạc không dây.\n\nKhác biệt chính:\n- iPhone Air có thiết kế mỏng hơn (5.64mm) so với iPhone 17 (7.95mm).\n- iPhone Air sử dụng khung máy bằng titanium, mặt lưng bằng ceramic, trong khi iPhone 17 sử dụng khung nhôm, mặt lưng kính.\n- iPhone Air có thể sử dụng 2 eSIM cùng lúc, iPhone 17 chỉ có 1 eSIM và 1 nano SIM.\n- Giá bán của iPhone Air cao hơn, từ 25.590",
+      "intent": "compare_phones",
+      "timestamp": 1773683026.0212977,
+      "metadata": {
+        "product_name": "iPhone 17"
+      }
+    }
+  ],
+  "context": {
+    "session_id": "web-22adpj2qsws00r5e0lz6vwkb543nd8ss",
+    "user_id": null,
+    "focused_product": "iPhone 17",
+    "pending_compare": null,
+    "last_intent": "compare_phones",
+    "mentioned_products": [
+      null,
+      "iPhone 17"
+    ],
+    "mentioned_brands": [],
+    "created_at": 1773683004.3498838,
+    "updated_at": 1773683026.0212977,
+    "expires_at": 1773686626.0212977
+  }
+}

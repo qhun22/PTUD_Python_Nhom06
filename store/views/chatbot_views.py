@@ -24,6 +24,17 @@ from django.db.models import Q, Count, Sum, Max
 from django.utils import timezone
 from django.urls import reverse
 import datetime
+from store.chatbot_orchestrator import HybridChatbotOrchestrator
+
+
+_CHATBOT_ORCHESTRATOR = None
+
+
+def _get_orchestrator() -> HybridChatbotOrchestrator:
+    global _CHATBOT_ORCHESTRATOR
+    if _CHATBOT_ORCHESTRATOR is None:
+        _CHATBOT_ORCHESTRATOR = HybridChatbotOrchestrator()
+    return _CHATBOT_ORCHESTRATOR
 
 
 
@@ -33,9 +44,18 @@ def chatbot_api(request):
 
     try:
         body = _json.loads(request.body)
+        action = (body.get("action") or "").strip().lower()
         message = body.get("message", "").strip()
     except Exception:
         return JsonResponse({"message": "Tin nhắn không hợp lệ.", "suggestions": []}, status=400)
+
+    if action == "reset":
+        try:
+            user = request.user if hasattr(request, 'user') and request.user.is_authenticated else None
+            ok = _get_orchestrator().reset_conversation(getattr(request, "session", None), user=user)
+            return JsonResponse({"ok": bool(ok)})
+        except Exception:
+            return JsonResponse({"ok": False}, status=200)
 
     if not message:
         return JsonResponse({"message": "Vui lòng nhập nội dung.", "suggestions": []}, status=400)
@@ -44,10 +64,8 @@ def chatbot_api(request):
         return JsonResponse({"message": "Tin nhắn quá dài, vui lòng rút gọn lại nhé!", "suggestions": []}, status=400)
 
     try:
-        from store.chatbot_service import ChatbotService
         user = request.user if hasattr(request, 'user') and request.user.is_authenticated else None
-        service = ChatbotService()
-        result = service.process_message(message, user=user, session=getattr(request, "session", None))
+        result = _get_orchestrator().process_message(message, user=user, session=getattr(request, "session", None))
         return JsonResponse(result)
     except Exception as e:
         import logging

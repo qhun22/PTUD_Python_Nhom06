@@ -1,0 +1,34 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "mình là sinh viên cần máy học online quay video và chơi game nhẹ",
+      "intent": "phone_recommendation",
+      "timestamp": 1773682312.7458491,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "Vâng, em hiểu ạ. Với yêu cầu của anh/chị là sử dụng máy để học online, quay video và chơi game nhẹ, em có một vài gợi ý sản phẩm phù hợp như sau:\n\n1. Laptop ASUS VivoBook S14 S433EA:\n- Cấu hình ổn định với chip Intel Core i5-1135G7, RAM 8GB, SSD 512GB.\n- Màn hình 14 inch Full HD IPS, có camera web tích hợp để học online và quay video.\n- Cấu hình đủ mạnh để chơi các tựa game nhẹ nhàng.\n- Thiết kế mỏng nhẹ, dễ di chuyển.\n- Giá khoảng 17-19 triệu đồng.\n\n2. Laptop Dell Inspiron 15 3501:\n- Cấu hình ổn định với chip Intel Core i5-1135G7, RAM 8GB, SSD 512GB.\n- Màn hình 15.6 inch Full HD, camera web tích hợp.\n- Cấu hình phù hợp cho nhu cầu học online, quay video và chơi game nhẹ.\n- Thiết kế chắc chắn, dễ di chuyển.\n- Giá khoảng 16-18 triệu đồng.\n\nCác sản phẩm tr",
+      "intent": "phone_recommendation",
+      "timestamp": 1773682319.044491,
+      "metadata": {
+        "product_name": null
+      }
+    }
+  ],
+  "context": {
+    "session_id": "web-n3ci35wzp9qsln2lp1fu7u4q7avs7ori",
+    "user_id": null,
+    "focused_product": null,
+    "pending_compare": null,
+    "last_intent": "phone_recommendation",
+    "mentioned_products": [
+      null
+    ],
+    "mentioned_brands": [],
+    "created_at": 1773682312.7458491,
+    "updated_at": 1773682319.044491,
+    "expires_at": 1773685919.044491
+  }
+}

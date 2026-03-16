@@ -1,0 +1,34 @@
+{
+  "messages": [
+    {
+      "role": "user",
+      "content": "mình là sinh viên cần máy học online quay video và chơi game nhẹ",
+      "intent": "phone_recommendation",
+      "timestamp": 1773682186.8719196,
+      "metadata": {}
+    },
+    {
+      "role": "assistant",
+      "content": "Dạ, em hiểu ạ. Để giúp anh/chị tìm được sản phẩm phù hợp với nhu cầu, em xin đề xuất 3 mẫu điện thoại sau:\n\n1. iPhone 11:\n- Màn hình Retina 6.1 inch, hỗ trợ camera kép chụp ảnh và quay video chất lượng cao.\n- Cấu hình mạnh mẽ với chip A13 Bionic, đáp ứng tốt nhu cầu học online, quay phim và chơi game nhẹ.\n- Thiết kế đẹp, chất lượng, thời lượng pin ổn định.\n\n2. Samsung Galaxy S21:\n- Màn hình Dynamic AMOLED 2X 6.2 inch, với tần số quét 120Hz mượt mà.\n- Cấu hình hiệu năng cao, trang bị chip Exynos 2100 cùng 8GB RAM, đáp ứng tốt các nhu cầu của anh/chị.\n- Camera sau 3 ống kính, chụp ảnh và quay video chất lượng tuyệt vời.\n\n3. OPPO Reno6 Z 5G:\n- Màn hình AMOLED 6.43 inch, thiết kế mỏng nhẹ, dễ cầm nắm.\n- Cấ",
+      "intent": "phone_recommendation",
+      "timestamp": 1773682200.27362,
+      "metadata": {
+        "product_name": null
+      }
+    }
+  ],
+  "context": {
+    "session_id": "web-ve7zlzmhjuv3nipdrpaikgaq2h8lv7s0",
+    "user_id": null,
+    "focused_product": null,
+    "pending_compare": null,
+    "last_intent": "phone_recommendation",
+    "mentioned_products": [
+      null
+    ],
+    "mentioned_brands": [],
+    "created_at": 1773682186.8719196,
+    "updated_at": 1773682200.27362,
+    "expires_at": 1773685800.27362
+  }
+}

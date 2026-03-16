@@ -6304,9 +6304,18 @@ def chatbot_api(request):
 
     try:
         body = _json.loads(request.body)
+        action = (body.get("action") or "").strip().lower()
         message = body.get("message", "").strip()
     except Exception:
         return JsonResponse({"message": "Tin nhắn không hợp lệ.", "suggestions": []}, status=400)
+
+    if action == "reset":
+        try:
+            from .chatbot_service import ChatbotService
+            ChatbotService().reset_conversation(getattr(request, "session", None))
+            return JsonResponse({"ok": True})
+        except Exception:
+            return JsonResponse({"ok": False}, status=200)
 
     if not message:
         return JsonResponse({"message": "Vui lòng nhập nội dung.", "suggestions": []}, status=400)
