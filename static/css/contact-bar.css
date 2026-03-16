@@ -82,19 +82,44 @@
 }
 
 .qh-contact-bar-icon-wrap i {
-    font-size: 16px;
+    font-size: 18px;
     color: #fff;
-    transition: transform 0.25s ease;
+    transition: color 0.25s ease, transform 0.25s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
 }
 
-/* Hover: scale slightly and glow */
+/* Icon Zalo (SVG) */
+.qh-contact-bar-icon-wrap.qh-contact-bar-icon-zalo {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.qh-contact-bar-icon-wrap .qh-zalo-icon {
+    width: 18px;
+    height: 18px;
+    color: #fff;
+    transition: color 0.25s ease, transform 0.25s ease;
+}
+
+/* Hover: scale, glow, đổi nền trắng + icon đỏ */
 .qh-contact-bar-item:hover .qh-contact-bar-icon-wrap {
-    transform: scale(1.1);
-    box-shadow: 0 0 16px rgba(255, 255, 255, 0.5);
+    transform: scale(1.12);
+    box-shadow: 0 0 18px rgba(255, 255, 255, 0.6);
+    background: #fff;
+    border-color: #fff;
 }
 
 .qh-contact-bar-item:hover .qh-contact-bar-icon-wrap i {
-    transform: scale(1.05);
+    transform: scale(1.08);
+    color: #b91c1c;
+}
+
+.qh-contact-bar-item:hover .qh-contact-bar-icon-wrap .qh-zalo-icon {
+    color: #b91c1c;
+    transform: scale(1.08);
 }
 
 .qh-contact-bar-item:active .qh-contact-bar-icon-wrap {
@@ -171,7 +196,12 @@
     }
 
     .qh-contact-bar-icon-wrap i {
-        font-size: 14px;
+        font-size: 15px;
+    }
+
+    .qh-contact-bar-icon-wrap .qh-zalo-icon {
+        width: 15px;
+        height: 15px;
     }
 
     .qh-contact-bar-tooltip {
@@ -197,7 +227,12 @@
     }
 
     .qh-contact-bar-icon-wrap i {
-        font-size: 12px;
+        font-size: 13px;
+    }
+
+    .qh-contact-bar-icon-wrap .qh-zalo-icon {
+        width: 13px;
+        height: 13px;
     }
 }
 

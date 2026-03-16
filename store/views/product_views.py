@@ -299,7 +299,7 @@ def home(request):
     Hiển thị danh sách sản phẩm với phân trang (tối đa 15 sản phẩm/trang)
     Sản phẩm có hàng hiển thị trước, hết hàng hiển thị sau
     """
-    from store.models import Product, SiteVisit, OrderItem, Order, Banner
+    from store.models import Product, SiteVisit, OrderItem, Order, Banner, BlogPost
     
     # Tracking lượt truy cập trang chủ
     # Lấy IP của người dùng
@@ -497,7 +497,13 @@ def home(request):
     tomorrow = now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
     # Truyền timestamp cho JavaScript
     context['hot_sale_end_timestamp'] = int(tomorrow.timestamp())
-    
+
+    # Bốn banner ƯU ĐÃI ĐA NỀN TẢNG (IDs cấu hình từ dashboard)
+    context['multi_platform_ids'] = ['83861', '83862', '83863', '83864']
+
+    # Blog trang chủ: tối đa 4 bài (1 box)
+    context['blog_posts'] = BlogPost.objects.filter(is_active=True).order_by('-created_at')[:4]
+
     return render(request, 'store/home.html', context)
 
 

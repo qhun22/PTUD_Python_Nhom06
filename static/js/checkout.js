@@ -21,11 +21,10 @@ document.addEventListener('DOMContentLoaded', function () {
 
     /* ==================== Chọn phương thức thanh toán ==================== */
     function updatePaySelection(opt) {
-        var label = opt.getAttribute('data-pay-label');
-        if (payText && label) {
-            payText.innerHTML = 'Bạn đang chọn hình thức thanh toán <strong>' + label + '</strong>';
-        }
         var shortLabel = opt.getAttribute('data-pay-short');
+        if (payText && shortLabel) {
+            payText.innerHTML = 'Bạn đang chọn hình thức thanh toán: <strong>' + shortLabel + '</strong>';
+        }
         if (summaryPayMethod && shortLabel) {
             summaryPayMethod.textContent = shortLabel;
         }
@@ -41,10 +40,7 @@ document.addEventListener('DOMContentLoaded', function () {
             });
 
             this.classList.add('selected');
-
-            if (payType === 'cod') {
-                this.classList.add('verified');
-            }
+            this.classList.add('verified');
 
             if (summaryTotalEl) {
                 summaryTotalEl.textContent = formatPrice(totalAmount);
@@ -275,6 +271,78 @@ document.addEventListener('DOMContentLoaded', function () {
                 }
             });
     }
+
+    /* ==================== Sticky Tóm tắt đơn hàng - cuộn theo scroll (giống giỏ hàng) ==================== */
+    (function initStickySummary() {
+        var summary = document.querySelector('.qh-checkout-right');
+        var container = document.querySelector('.qh-checkout-grid');
+        if (!summary || !container) return;
+
+        var TOP = 90;
+        var isFixed = false;
+        var naturalLeft = 0;
+        var naturalWidth = 0;
+
+        function captureNaturalPosition() {
+            if (!isFixed) {
+                var r = summary.getBoundingClientRect();
+                naturalLeft = r.left;
+                naturalWidth = r.width;
+            }
+        }
+
+        function stick() {
+            if (isFixed) return;
+            captureNaturalPosition();
+            summary.style.position = 'fixed';
+            summary.style.top = TOP + 'px';
+            summary.style.left = naturalLeft + 'px';
+            summary.style.width = naturalWidth + 'px';
+            summary.style.zIndex = '100';
+            isFixed = true;
+        }
+
+        function unstick() {
+            if (!isFixed) return;
+            summary.style.position = '';
+            summary.style.top = '';
+            summary.style.left = '';
+            summary.style.width = '';
+            summary.style.zIndex = '';
+            isFixed = false;
+        }
+
+        function onScroll() {
+            if (window.innerWidth <= 992) {
+                unstick();
+                return;
+            }
+            var containerRect = container.getBoundingClientRect();
+            var summaryH = summary.offsetHeight;
+
+            if (containerRect.top <= TOP) {
+                stick();
+                var remaining = containerRect.bottom - summaryH;
+                var newTop = remaining < TOP ? Math.max(remaining, containerRect.top) : TOP;
+                summary.style.top = newTop + 'px';
+            } else {
+                unstick();
+            }
+        }
+
+        function onResize() {
+            unstick();
+            setTimeout(function () {
+                captureNaturalPosition();
+                onScroll();
+            }, 50);
+        }
+
+        captureNaturalPosition();
+        onScroll();
+        window.addEventListener('scroll', onScroll, { passive: true });
+        window.addEventListener('resize', onResize);
+    })();
 
 });
 

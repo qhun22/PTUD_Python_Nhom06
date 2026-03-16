@@ -614,6 +614,7 @@ document.addEventListener('DOMContentLoaded', function () {
     const bannerImagesSection = document.getElementById('banner-images-section');
     const productContentSection = document.getElementById('product-content-section');
     const reviewsSection = document.getElementById('reviews-section');
+    const blogPostsSection = document.getElementById('blog-posts-section');
     const qrApprovalSection = document.getElementById('qr-approval-section');
     const adminOrdersSection = document.getElementById('admin-orders-section');
     const couponsSection = document.getElementById('coupons-section');
@@ -634,6 +635,9 @@ document.addEventListener('DOMContentLoaded', function () {
     }
     if (reviewsSection) {
         reviewsSection.style.display = (currentSection === 'reviews') ? 'block' : 'none';
+    }
+    if (blogPostsSection) {
+        blogPostsSection.style.display = (currentSection === 'blog-posts') ? 'block' : 'none';
     }
     if (qrApprovalSection) {
         qrApprovalSection.style.display = (currentSection === 'qr-approval') ? 'block' : 'none';
@@ -793,6 +797,11 @@ document.addEventListener('DOMContentLoaded', function () {
     // Init phần Nội dung sản phẩm
     if (sectionParam === 'product-content') {
         initProductContentSection();
+    }
+
+    // Init phần Blog Sản Phẩm
+    if (sectionParam === 'blog-posts') {
+        initBlogPostsSection();
     }
 });
 
@@ -4458,6 +4467,257 @@ function deleteReview(reviewId) {
         } else {
             if (window.QHToast) {
                 window.QHToast.show(data.message || 'Lỗi xóa đánh giá', 'error');
+            }
+        }
+    })
+    .catch(function() {
+        if (window.QHToast) {
+            window.QHToast.show('Lỗi kết nối', 'error');
+        }
+    });
+}
+
+// ==================== Blog Posts Management ====================
+var _blogData = [];
+var _blogPage = 1;
+var _blogPerPage = 9;
+var _blogTotalPages = 1;
+var blogPreviewImage = null;
+
+function initBlogPostsSection() {
+    loadBlogRows(1);
+}
+
+function loadBlogRows(page) {
+    page = page || _blogPage;
+
+    fetch('/blog-posts/list/', {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            _blogData = data.blogs || [];
+            _blogPage = page;
+            _blogTotalPages = Math.ceil(_blogData.length / _blogPerPage) || 1;
+            renderBlogGrid();
+            renderBlogPagination();
+        }
+    })
+    .catch(function(err) {
+        console.error('Error loading blogs:', err);
+    });
+}
+
+function renderBlogGrid() {
+    var grid = document.getElementById('blogGrid');
+    if (!grid) return;
+
+    var start = (_blogPage - 1) * _blogPerPage;
+    var end = start + _blogPerPage;
+    var pageData = _blogData.slice(start, end);
+
+    if (pageData.length === 0) {
+        grid.innerHTML = '<div style="grid-column: 1/-1; padding: 40px; text-align: center; color: #94a3b8;">Chưa có bài viết nào. Bấm "Thêm bài viết" để tạo.</div>';
+        return;
+    }
+
+    var html = '';
+    pageData.forEach(function(blog) {
+        var imageHtml = blog.image_url
+            ? '<img src="' + blog.image_url + '" alt="' + blog.title + '" style="width: 100%; height: 140px; object-fit: cover;">'
+            : '<div style="width: 100%; height: 140px; background: #e2e8f0; display: flex; align-items: center; justify-content: center; color: #94a3b8; font-size: 14px;">Chưa có ảnh</div>';
+
+        var statusBadge = blog.is_active
+            ? '<span style="padding: 4px 10px; background: #22c55e; color: white; border-radius: 6px; font-size: 11px; font-weight: 600;">Hiển thị</span>'
+            : '<span style="padding: 4px 10px; background: #94a3b8; color: white; border-radius: 6px; font-size: 11px; font-weight: 600;">Ẩn</span>';
+
+        html +=
+            '<div style="position: relative; background: white; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 15px rgba(0,0,0,0.1); border: 1px solid #e2e8f0; transition: all 0.3s ease;">' +
+                '<div style="position: relative; aspect-ratio: 16/9; overflow: hidden; cursor: pointer;" onclick="openEditBlogModal(' + blog.id + ')">' +
+                    imageHtml +
+                    '<div style="position: absolute; inset: 0; background: rgba(0,0,0,0.4); display: none; align-items: center; justify-content: center; gap: 10px; opacity: 0; transition: opacity 0.3s;" class="blog-hover-overlay">' +
+                        '<button type="button" style="padding: 10px 20px; background: linear-gradient(135deg, #A9CCF0 0%, #8BB8E0 100%); color: #333; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Sửa</button>' +
+                        '<button type="button" onclick="event.stopPropagation(); deleteBlogItem(' + blog.id + ')" style="padding: 10px 20px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600;">Xóa</button>' +
+                    '</div>' +
+                '</div>' +
+                '<div style="padding: 16px;">' +
+                    '<h4 style="margin: 0 0 8px 0; font-size: 15px; font-weight: 700; color: #1e293b; font-family: \'Signika\', sans-serif; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">' + blog.title + '</h4>' +
+                    '<p style="margin: 0 0 12px 0; font-size: 12px; color: #64748b; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">' + (blog.summary || 'Không có mô tả') + '</p>' +
+                    '<div style="display: flex; justify-content: space-between; align-items: center;">' +
+                        statusBadge +
+                        '<span style="font-size: 11px; color: #94a3b8;">' + blog.created_at + '</span>' +
+                    '</div>' +
+                '</div>' +
+            '</div>';
+    });
+
+    grid.innerHTML = html;
+
+    // Add hover effects
+    document.querySelectorAll('[class*="blog-hover-overlay"]').forEach(function(overlay) {
+        overlay.parentElement.addEventListener('mouseenter', function() {
+            overlay.style.display = 'flex';
+            overlay.style.opacity = '1';
+        });
+        overlay.parentElement.addEventListener('mouseleave', function() {
+            overlay.style.display = 'none';
+            overlay.style.opacity = '0';
+        });
+    });
+}
+
+function renderBlogPagination() {
+    var pagination = document.getElementById('blogPagination');
+    if (!pagination) return;
+
+    if (_blogTotalPages <= 1) {
+        pagination.innerHTML = '';
+        return;
+    }
+
+    var html = '';
+    for (var i = 1; i <= _blogTotalPages; i++) {
+        var active = i === _blogPage ? 'background: #dc2626; color: white; border-color: #dc2626;' : 'background: white; color: #1e293b; border-color: #e2e8f0;';
+        html += '<button onclick="loadBlogRows(' + i + ')" style="min-width: 36px; height: 36px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; color: #1e293b; cursor: pointer; font-size: 13px; font-weight: 500; display: flex; align-items: center; justify-content: center;' + (i === _blogPage ? active : '') + '">' + i + '</button>';
+    }
+    pagination.innerHTML = html;
+}
+
+function openAddBlogModal() {
+    document.getElementById('blogModalTitle').textContent = 'Thêm bài viết blog';
+    document.getElementById('blogIdInput').value = '';
+    document.getElementById('blogTitleInput').value = '';
+    document.getElementById('blogSummaryInput').value = '';
+    document.getElementById('blogContentInput').value = '';
+    document.getElementById('blogActiveInput').checked = true;
+    document.getElementById('blogFileName').textContent = '';
+    document.getElementById('blogPreviewGrid').innerHTML = '';
+    blogPreviewImage = null;
+    document.getElementById('addBlogModal').style.display = 'flex';
+}
+
+function openEditBlogModal(blogId) {
+    var blog = _blogData.find(function(b) { return b.id === blogId; });
+    if (!blog) return;
+
+    document.getElementById('blogModalTitle').textContent = 'Sửa bài viết blog';
+    document.getElementById('blogIdInput').value = blog.id;
+    document.getElementById('blogTitleInput').value = blog.title || '';
+    document.getElementById('blogSummaryInput').value = blog.summary || '';
+    document.getElementById('blogContentInput').value = blog.content || '';
+    document.getElementById('blogActiveInput').checked = blog.is_active !== false;
+
+    document.getElementById('blogFileName').textContent = '';
+    document.getElementById('blogPreviewGrid').innerHTML = '';
+    blogPreviewImage = null;
+
+    if (blog.image_url) {
+        document.getElementById('blogPreviewGrid').innerHTML =
+            '<div style="position: relative;">' +
+                '<img src="' + blog.image_url + '" style="width: 100px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0;">' +
+            '</div>';
+    }
+
+    document.getElementById('addBlogModal').style.display = 'flex';
+}
+
+function closeAddBlogModal() {
+    document.getElementById('addBlogModal').style.display = 'none';
+}
+
+function handleBlogFileChange(event) {
+    var file = event.target.files[0];
+    if (!file) return;
+
+    document.getElementById('blogFileName').textContent = file.name;
+    blogPreviewImage = file;
+
+    var reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById('blogPreviewGrid').innerHTML =
+            '<div style="position: relative;">' +
+                '<img src="' + e.target.result + '" style="width: 100px; height: 70px; object-fit: cover; border-radius: 8px; border: 1px solid #e2e8f0;">' +
+            '</div>';
+    };
+    reader.readAsDataURL(file);
+}
+
+function saveBlog() {
+    var blogId = document.getElementById('blogIdInput').value;
+    var title = document.getElementById('blogTitleInput').value.trim();
+    var summary = document.getElementById('blogSummaryInput').value.trim();
+    var content = document.getElementById('blogContentInput').value.trim();
+    var isActive = document.getElementById('blogActiveInput').checked;
+
+    if (!title) {
+        if (window.QHToast) {
+            window.QHToast.show('Vui lòng nhập tiêu đề!', 'error');
+        }
+        return;
+    }
+
+    var formData = new FormData();
+    if (blogId) {
+        formData.append('blog_id', blogId);
+    }
+    formData.append('title', title);
+    formData.append('summary', summary);
+    formData.append('content', content);
+    formData.append('is_active', isActive ? 'true' : 'false');
+    if (blogPreviewImage) {
+        formData.append('image', blogPreviewImage);
+    }
+
+    var url = blogId ? '/blog-posts/update/' : '/blog-posts/add/';
+
+    fetch(url, {
+        method: 'POST',
+        headers: { 'X-CSRFToken': window.csrfToken },
+        body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            if (window.QHToast) {
+                window.QHToast.show(data.message || 'Đã lưu bài viết!', 'success');
+            }
+            closeAddBlogModal();
+            loadBlogRows(_blogPage);
+        } else {
+            if (window.QHToast) {
+                window.QHToast.show(data.message || 'Lỗi lưu bài viết', 'error');
+            }
+        }
+    })
+    .catch(function() {
+        if (window.QHToast) {
+            window.QHToast.show('Lỗi kết nối', 'error');
+        }
+    });
+}
+
+function deleteBlogItem(blogId) {
+    if (!confirm('Bạn có chắc chắn muốn xóa bài viết này?')) return;
+
+    var formData = new FormData();
+    formData.append('blog_id', blogId);
+
+    fetch('/blog-posts/delete/', {
+        method: 'POST',
+        headers: { 'X-CSRFToken': window.csrfToken },
+        body: formData
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+        if (data.success) {
+            if (window.QHToast) {
+                window.QHToast.show(data.message || 'Đã xóa bài viết', 'success');
+            }
+            loadBlogRows(_blogPage);
+        } else {
+            if (window.QHToast) {
+                window.QHToast.show(data.message || 'Lỗi xóa bài viết', 'error');
             }
         }
     })

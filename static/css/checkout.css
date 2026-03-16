@@ -9,6 +9,7 @@
     grid-template-columns: 1fr 380px;
     gap: 24px;
     align-items: start;
+    position: relative;
 }
 
 .qh-checkout-left {

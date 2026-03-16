@@ -10,3 +10,4 @@ from .coupon_views import coupon_add, coupon_apply, coupon_delete, coupon_edit, 
 from .order_views import address_add, address_delete, address_set_default, cancel_order, checkout_view, order_success, order_tracking, place_order, refund_detail, refund_history, refund_pending, wishlist, wishlist_toggle
 from .payment_views import qr_payment_approve, qr_payment_cancel, qr_payment_create, qr_payment_detail, qr_payment_list, qr_payment_status, vietqr_create_order, vietqr_expire, vietqr_page_status, vietqr_payment_page, vnpay_create, vnpay_ipn, vnpay_return, momo_create, momo_return, momo_ipn
 from .product_views import compare_view, home, newsletter_subscribe, product_autocomplete, product_detail_view, product_filter_json, product_list_json, product_search, submit_review
+from .blog_views import blog_list, blog_add, blog_update, blog_delete

@@ -23,9 +23,7 @@
 
         const playPromise = video.play();
         if (playPromise !== undefined) {
-            playPromise.catch(error => {
-                console.log('Video autoplay was prevented:', error);
-            });
+            playPromise.catch(() => { });
         }
     }
 

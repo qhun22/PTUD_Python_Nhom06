@@ -85,6 +85,12 @@ urlpatterns = [
     path('banner-images/add/', views.banner_add, name='banner_add'),
     path('banner-images/replace/', views.banner_replace, name='banner_replace'),
     path('banner-images/delete/', views.banner_delete, name='banner_delete'),
+
+    # Blog Posts
+    path('blog-posts/list/', views.blog_list, name='blog_list'),
+    path('blog-posts/add/', views.blog_add, name='blog_add'),
+    path('blog-posts/update/', views.blog_update, name='blog_update'),
+    path('blog-posts/delete/', views.blog_delete, name='blog_delete'),
     # Product Content Management
     path('product-content/list/', views.product_content_list, name='product_content_list'),
     path('product-content/add/', views.product_content_add, name='product_content_add'),

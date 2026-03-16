@@ -732,8 +732,8 @@ body {
 /* ==================== USP SECTION ==================== */
 .qh-usp-section {
     background: #f8fafc;
-    padding: 36px 0 48px;
-    margin-top: 28px;
+    padding: 24px 0 32px;
+    margin-top: 10px;
     width: 100vw;
     position: relative;
     left: 50%;
@@ -750,7 +750,7 @@ body {
 
 /* Cách xa nhẹ tiêu đề "TẠI SAO NÊN CHỌN CHÚNG TÔI?" với grid bên dưới */
 .qh-usp-container .qh-featured-title-wrap {
-    margin-bottom: 24px;
+    margin-bottom: 18px;
 }
 
 .qh-usp-title {
@@ -831,7 +831,7 @@ body {
 
 /* ----- Top: NHẬN TƯ VẤN | LIÊN HỆ | KẾT NỐI (đồng bộ: nền đen, 3 cột) ----- */
 .qh-footer-top {
-    padding: 40px 0;
+    padding: 30px 0;
     background: #000;
     border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
@@ -1304,8 +1304,8 @@ body {
 
 @media (max-width: 640px) {
     .qh-usp-section {
-        padding: 28px 0 36px;
-        margin-top: 20px;
+        padding: 22px 0 28px;
+        margin-top: 10px;
     }
 
     .qh-usp-title {

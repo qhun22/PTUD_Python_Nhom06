@@ -625,6 +625,27 @@ class Banner(models.Model):
         return f"Banner {self.banner_id}"
 
 
+class BlogPost(models.Model):
+    """
+    Model lưu trữ bài viết blog sản phẩm
+    """
+    title = models.CharField(max_length=255, verbose_name='Tiêu đề')
+    summary = models.TextField(blank=True, verbose_name='Tóm tắt ngắn')
+    content = models.TextField(blank=True, verbose_name='Nội dung')
+    image = models.ImageField(upload_to='blog/%Y/%m/', blank=True, null=True, verbose_name='Ảnh bìa')
+    is_active = models.BooleanField(default=True, verbose_name='Hiển thị')
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name='Ngày tạo')
+    updated_at = models.DateTimeField(auto_now=True, verbose_name='Ngày cập nhật')
+
+    class Meta:
+        verbose_name = 'Bài viết Blog'
+        verbose_name_plural = 'Blog Sản Phẩm'
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return self.title
+
+
 class Address(models.Model):
     """
     Sổ địa chỉ giao hàng của người dùng

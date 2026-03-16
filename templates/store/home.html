@@ -868,6 +868,171 @@ function toggleWishlist(button, productId) {
 </script>
 {% endblock %}
 
+<!-- Phần REVIEW SẢN PHẨM (style giống Sản Phẩm Bán Chạy, video Shorts 9:16) -->
+<section class="qh-review-section">
+    <div class="qh-review-header">
+        <div class="qh-review-header-left">
+            <span class="qh-review-icon"><i class="ri-play-circle-fill"></i></span>
+            <h2 class="qh-review-title">Review Sản Phẩm</h2>
+        </div>
+    </div>
+    <div class="qh-review-inner">
+        <div class="qh-review-grid">
+            <div class="qh-review-card">
+                <div class="qh-review-video">
+                    <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/l-FBAfNRoCo" title="Redmi 9 Power Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+                {% comment %} <div class="qh-review-info">
+                    <h3 class="qh-review-product-name">Redmi 9 Power - Review pin trâu, giá rẻ</h3>
+                </div> {% endcomment %}
+            </div>
+            <div class="qh-review-card">
+                <div class="qh-review-video">
+                    <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/WoRySc2P4KM" title="Nothing Phone 3a Unboxing" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="qh-review-card">
+                <div class="qh-review-video">
+                    <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/Pc1P-Xch0YU" title="Review điện thoại Shorts" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="qh-review-card">
+                <div class="qh-review-video">
+                    <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/HCHKwLL5VQw" title="iPhone 13 vs Samsung A53" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+            </div>
+            <div class="qh-review-card">
+                <div class="qh-review-video">
+                    <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/hzz9qEh0W8g" title="Xiaomi 17 Pro Max Quick Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 2 BOX NGANG: ƯU ĐÃI ĐA NỀN TẢNG (4 banner) + Blog — mỗi box style giống Review Sản Phẩm -->
+<div class="qh-two-boxes-wrap">
+    <!-- BOX 1: ƯU ĐÃI ĐA NỀN TẢNG -->
+    <section class="qh-review-section qh-box-offer">
+        <div class="qh-review-header">
+            <div class="qh-review-header-left">
+                <span class="qh-review-icon"><i class="ri-coupon-3-fill"></i></span>
+                <h2 class="qh-review-title">ƯU ĐÃI ĐA NỀN TẢNG</h2>
+            </div>
+        </div>
+        <div class="qh-review-inner">
+            <div class="qh-offer-blog-grid" id="qhMultiPlatformGrid">
+                {% for bid in multi_platform_ids %}
+                <a href="#" class="qh-review-card qh-offer-blog-card" data-banner-id="{{ bid }}" aria-label="Ưu đãi {{ forloop.counter }}">
+                    <span class="qh-offer-blog-card-img-wrap">
+                        <img src="" alt="Ưu đãi {{ forloop.counter }}" loading="lazy" data-banner-slot>
+                    </span>
+                </a>
+                {% endfor %}
+            </div>
+        </div>
+    </section>
+    <!-- BOX 2: Blog -->
+    <section class="qh-review-section qh-box-blog">
+        <div class="qh-review-header">
+            <div class="qh-review-header-left">
+                <span class="qh-review-icon"><i class="ri-article-line"></i></span>
+                <h2 class="qh-review-title">Blog</h2>
+            </div>
+        </div>
+        <div class="qh-review-inner">
+            <div class="qh-offer-blog-list">
+                {% for blog in blog_posts %}
+                <article class="qh-offer-blog-item">
+                    {% if blog.image %}
+                    <div class="qh-offer-blog-item-thumb" style="background-image: url('{{ blog.image.url }}'); background-size: cover; background-position: center;"></div>
+                    {% else %}
+                    <div class="qh-offer-blog-item-thumb"></div>
+                    {% endif %}
+                    <div class="qh-offer-blog-item-body">
+                        <h3 class="qh-offer-blog-item-title">{{ blog.title|truncatechars:50 }}</h3>
+                        <p class="qh-offer-blog-item-desc">{{ blog.summary|default:blog.content|truncatechars:60 }}</p>
+                    </div>
+                </article>
+                {% endfor %}
+                {% if not blog_posts %}
+                <article class="qh-offer-blog-item">
+                    <div class="qh-offer-blog-item-thumb"></div>
+                    <div class="qh-offer-blog-item-body">
+                        <h3 class="qh-offer-blog-item-title">Chưa có bài viết</h3>
+                        <p class="qh-offer-blog-item-desc">Thêm bài viết từ Dashboard</p>
+                    </div>
+                </article>
+                {% for i in "123" %}
+                <article class="qh-offer-blog-item qh-offer-blog-item-placeholder">
+                    <div class="qh-offer-blog-item-thumb"></div>
+                    <div class="qh-offer-blog-item-body"><h3 class="qh-offer-blog-item-title">—</h3><p class="qh-offer-blog-item-desc">—</p></div>
+                </article>
+                {% endfor %}
+                {% else %}
+                {% for i in "1234" %}
+                {% if forloop.counter > blog_posts|length %}
+                <article class="qh-offer-blog-item qh-offer-blog-item-placeholder">
+                    <div class="qh-offer-blog-item-thumb"></div>
+                    <div class="qh-offer-blog-item-body"><h3 class="qh-offer-blog-item-title">—</h3><p class="qh-offer-blog-item-desc">—</p></div>
+                </article>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </section>
+</div>
+<script>
+(function () {
+    // Lấy IDs từ template (thay vì hardcode)
+    var ids = [{% for bid in multi_platform_ids %}'{{ bid }}'{% if not forloop.last %},{% endif %}{% endfor %}];
+
+    if (ids.length === 0) {
+        return;
+    }
+
+    fetch('/banner-images/list/')
+        .then(function (r) { return r.json(); })
+        .then(function (data) {
+            if (!data.success || !data.banners || !data.banners.length) {
+                return;
+            }
+
+            var grid = document.getElementById('qhMultiPlatformGrid');
+            if (!grid) {
+                return;
+            }
+
+            var cards = grid.querySelectorAll('[data-banner-id]');
+
+            ids.forEach(function (bid, i) {
+                var card = cards[i];
+                if (!card) {
+                    return;
+                }
+
+                var banner = data.banners.find(function (b) { 
+                    return String(b.banner_id) === String(bid); 
+                });
+
+                if (!banner) {
+                    return;
+                }
+
+                var img = card.querySelector('img[data-banner-slot]');
+                if (img && banner && banner.image_url) {
+                    img.src = banner.image_url;
+                    img.removeAttribute('data-banner-slot');
+                }
+            });
+        })
+        .catch(function (err) { 
+            console.error('Lỗi khi tải banner:', err); 
+        });
+})();
+</script>
+
 <!-- Phần USP -->
 <section class="qh-usp-section">
     <div class="qh-usp-container">

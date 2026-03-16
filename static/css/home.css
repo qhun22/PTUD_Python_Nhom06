@@ -351,6 +351,7 @@
     margin: 0 auto 28px auto;
     overflow: hidden;
     border-radius: 12px;
+    z-index: 1;
 }
 
 /* Fade overlay on left and right using pseudo-elements */
@@ -382,11 +383,12 @@
     padding: 0 20px;
     animation: scrollToLeft 25s linear infinite;
     width: fit-content;
+    pointer-events: auto;
 }
 
-/* Pause animation on hover */
+/* Hover: vẫn chạy tiếp, không dừng */
 .qh-carousel-track:hover {
-    animation-play-state: paused;
+    animation-play-state: running;
 }
 
 /* Animation: Smooth infinite scroll from right to left */
@@ -413,8 +415,9 @@
     min-width: 110px;
     min-height: 56px;
     cursor: pointer;
-    /* Flex-shrink: 0 ensures consistent sizing in flex container */
     flex-shrink: 0;
+    position: relative;
+    z-index: 5;
 }
 
 .qh-featured-brand:hover {
@@ -488,6 +491,342 @@
     }
 }
 
+/* ==================== REVIEW SẢN PHẨM (style giống Sản Phẩm Bán Chạy, video Shorts 9:16) ==================== */
+.qh-review-section {
+    margin: 32px 0;
+    background: #fff;
+    border: 1px solid #ffdddd;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.qh-review-header {
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 12px;
+    border-bottom: 1px solid #ffdddd;
+    background: linear-gradient(135deg, #fff5f5 0%, #fff 100%);
+}
+
+.qh-review-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.qh-review-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    color: #fff;
+}
+
+.qh-review-section .qh-review-title {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: #dc2626;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    font-family: 'Signika', sans-serif;
+    background: none;
+    -webkit-text-fill-color: #dc2626;
+}
+
+.qh-review-section .qh-review-title::before,
+.qh-review-section .qh-review-title::after {
+    display: none;
+}
+
+.qh-review-inner {
+    background: #fff;
+    padding: 20px;
+}
+
+.qh-review-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 16px;
+}
+
+.qh-review-card {
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.qh-review-card:hover {
+    border-color: #dc2626;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+/* Shorts tỉ lệ 9:16 */
+.qh-review-video {
+    position: relative;
+    width: 100%;
+    padding-bottom: 177.78%;
+    background: #000;
+    overflow: hidden;
+}
+
+.qh-review-video iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+.qh-review-info {
+    padding: 12px 14px;
+}
+
+.qh-review-product-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #222;
+    margin: 0;
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+@media (max-width: 1200px) {
+    .qh-review-grid {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
+
+@media (max-width: 992px) {
+    .qh-review-grid {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 768px) {
+    .qh-review-header {
+        padding: 12px 16px;
+    }
+
+    .qh-review-inner {
+        padding: 16px;
+    }
+
+    .qh-review-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+    }
+
+    .qh-review-section .qh-review-title {
+        font-size: 1.25rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .qh-review-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==================== 2 BOX NGANG: ƯU ĐÃI ĐA NỀN TẢNG + Blog (mỗi box style giống Review Sản Phẩm) ==================== */
+.qh-two-boxes-wrap {
+    display: flex;
+    gap: 14px;
+    align-items: stretch;
+    margin: 8px 0 20px;
+}
+
+.qh-two-boxes-wrap .qh-review-section {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+}
+
+.qh-two-boxes-wrap .qh-box-offer {
+    flex: 7 1 0;
+}
+
+.qh-two-boxes-wrap .qh-box-blog {
+    flex: 3 1 0;
+}
+
+.qh-two-boxes-wrap .qh-review-inner {
+    padding: 10px;
+    flex: 1;
+    min-height: 0;
+}
+
+.qh-two-boxes-wrap .qh-review-header {
+    padding: 10px 14px;
+}
+
+.qh-two-boxes-wrap .qh-review-icon {
+    width: 34px;
+    height: 34px;
+    font-size: 18px;
+}
+
+.qh-two-boxes-wrap .qh-review-title {
+    font-size: 1.25rem;
+}
+
+/* Grid 4 ảnh trong box ƯU ĐÃI (2x2) */
+.qh-offer-blog-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.qh-offer-blog-card {
+    display: block;
+    position: relative;
+    border-radius: 10px;
+    overflow: hidden;
+    background: #fff;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    transition: transform 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+    aspect-ratio: 2.6 / 1;
+}
+
+.qh-offer-blog-card:hover {
+    border-color: #dc2626;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+}
+
+.qh-offer-blog-card-img-wrap {
+    position: absolute;
+    inset: 0;
+    background: #f1f5f9;
+}
+
+.qh-offer-blog-card img {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.qh-offer-blog-card img[data-banner-slot] {
+    opacity: 0;
+}
+
+/* Blog list trong box 2 */
+.qh-offer-blog-list {
+    display: grid;
+    grid-template-rows: repeat(4, 1fr);
+    gap: 8px;
+    height: 100%;
+    width: 100%;
+}
+
+.qh-offer-blog-item {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px solid #f1f5f9;
+    min-height: 0;
+    height: 100%;
+}
+
+.qh-offer-blog-item:last-child {
+    border-bottom: none;
+}
+
+.qh-offer-blog-item-thumb {
+    width: 64px;
+    height: 44px;
+    flex-shrink: 0;
+    background: #e2e8f0;
+    border-radius: 8px;
+}
+
+.qh-offer-blog-item-body {
+    flex: 1;
+    min-width: 0;
+}
+
+.qh-offer-blog-item-title {
+    margin: 0 0 4px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    font-family: 'Signika', sans-serif;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+}
+
+.qh-offer-blog-item-desc {
+    margin: 0;
+    font-size: 11px;
+    color: #64748b;
+    line-height: 1.4;
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    text-overflow: ellipsis;
+}
+
+.qh-offer-blog-item-placeholder .qh-offer-blog-item-title,
+.qh-offer-blog-item-placeholder .qh-offer-blog-item-desc {
+    color: #cbd5e1;
+}
+
+@media (max-width: 992px) {
+    .qh-two-boxes-wrap {
+        flex-direction: column;
+    }
+
+    .qh-two-boxes-wrap .qh-box-offer,
+    .qh-two-boxes-wrap .qh-box-blog {
+        flex: 1 1 auto;
+    }
+}
+
+@media (max-width: 576px) {
+    .qh-two-boxes-wrap .qh-review-inner {
+        padding: 10px;
+    }
+
+    .qh-offer-blog-grid {
+        gap: 6px;
+    }
+
+    .qh-offer-blog-card {
+        border-radius: 8px;
+        aspect-ratio: 2.2 / 1;
+    }
+
+    .qh-offer-blog-item-thumb {
+        width: 64px;
+        height: 48px;
+    }
+}
+
 /* ==================== SẢN PHẨM BÁN CHẠY (style trắng + viền đỏ nhẹ như TGDD/CellphoneS) ==================== */
 .qh-bestseller-section {
     margin: 32px 0;
@@ -528,7 +867,7 @@
 
 .qh-bestseller-title {
     margin: 0;
-    font-size: 1.5rem;
+    font-size: 1.25rem;
     font-weight: 800;
     color: #dc2626;
     letter-spacing: 0.5px;
@@ -697,7 +1036,7 @@
 }
 
 /* Đẩy nút So sánh xuống sát đáy để tránh khoảng trống thừa khi giá 1 dòng vs 2 dòng */
-.qh-hotsale-section .qh-hotsale-card .qh-product-info > div:last-of-type {
+.qh-hotsale-section .qh-hotsale-card .qh-product-info>div:last-of-type {
     margin-top: auto;
 }
 
@@ -1487,6 +1826,22 @@
     padding: 0;
     border-radius: 50%;
     font-size: 15px;
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #fff;
+    border: none;
+    transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.qh-pagination a.qh-pagination-btn:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    color: #fff;
+    box-shadow: 0 4px 12px rgba(220, 38, 38, 0.4);
+}
+
+.qh-pagination .qh-pagination-current {
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(185, 28, 28, 0.5);
 }
 
 .qh-pagination .qh-pagination-icon {

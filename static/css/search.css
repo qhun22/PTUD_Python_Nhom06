@@ -21,7 +21,7 @@
     border-radius: 12px;
     padding: 20px;
     margin-bottom: 24px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .qh-search-info h2 {
@@ -39,10 +39,10 @@
 /* Brand Badge */
 .qh-brand-badge {
     display: inline-block;
-    background: linear-gradient(135deg, var(--qh-primary), var(--qh-secondary));
+    background: #8bb8e0;
     color: var(--qh-text);
     padding: 6px 16px;
-    border-radius: 20px;
+    border-radius: 50px;
     font-size: 14px;
     font-weight: 600;
     margin-left: 8px;
@@ -61,7 +61,7 @@
     background: var(--qh-card-bg);
     border-radius: 12px;
     overflow: hidden;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
     transition: transform 0.3s, box-shadow 0.3s;
     text-decoration: none;
     color: inherit;
@@ -71,7 +71,7 @@
 
 .qh-product-card:hover {
     transform: translateY(-4px);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
 }
 
 .qh-product-card:hover .qh-product-image img {
@@ -110,7 +110,7 @@
     font-weight: 700;
     z-index: 10;
     border-radius: 0 0 8px 0;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
     line-height: 1;
 }
 
@@ -139,7 +139,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     transition: all 0.3s ease;
     z-index: 10;
     opacity: 0;
@@ -173,7 +173,7 @@
 .qh-product-card .out-of-stock-overlay {
     position: absolute;
     inset: 0;
-    background: rgba(0,0,0,0.5);
+    background: rgba(0, 0, 0, 0.5);
     z-index: 5;
 }
 
@@ -317,7 +317,7 @@
     padding: 60px 20px;
     background: var(--qh-white);
     border-radius: 12px;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .qh-no-results svg {
