@@ -256,14 +256,17 @@
         </div>
     </div>
 
-    <!-- SẢN PHẨM BÁN CHẠY Section -->
+    <!-- SẢN PHẨM BÁN CHẠY Section (style giống Hot Sale) -->
     {% if best_sellers %}
-    
-<div class="qh-featured-title-wrap">
-        <span class="qh-featured-title">SẢN PHẨM BÁN CHẠY</span>
-    </div>
-    
-    <div class="qh-product-grid">
+    <section class="qh-bestseller-section">
+        <div class="qh-bestseller-header">
+            <div class="qh-bestseller-header-left">
+                <span class="qh-bestseller-icon"><i class="ri-star-smile-fill"></i></span>
+                <h2 class="qh-bestseller-title">Sản Phẩm Bán Chạy</h2>
+            </div>
+        </div>
+        <div class="qh-bestseller-inner">
+        <div class="qh-bestseller-grid">
         {% for item in best_sellers %}
         {% with product=item.product %}
         <a href="{% url 'store:product_detail' product.id %}" class="qh-product-card {% if product.stock == 0 %}out-of-stock{% endif %}" style="text-decoration: none; color: inherit; display: block; background: var(--qh-white); border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s;">
@@ -360,7 +363,9 @@
         </a>
         {% endwith %}
         {% endfor %}
-    </div>
+        </div>
+        </div>
+    </section>
     {% endif %}
     
     {% if products %}
