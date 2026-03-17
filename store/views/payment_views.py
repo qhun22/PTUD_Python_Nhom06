@@ -236,20 +236,23 @@ def vietqr_page_status(request):
         return JsonResponse({'success': True, 'status': 'expired'})
     
     if qr.is_expired:
-        # Không xóa trực tiếp, để cleanup_expired() xử lý theo lịt
+        # Không xóa trực tiếp, để cleanup_expired() xử lý theo lịch
         return JsonResponse({'success': True, 'status': 'expired'})
+
+    if qr.status == 'approved':
         try:
             order = Order.objects.get(order_code=order_code, user=request.user)
             if order.status == 'awaiting_payment':
                 order.status = 'processing'
-                order.save()
-                
+                order.save(update_fields=['status', 'updated_at'])
+
                 from store.telegram_utils import notify_order_success
+                from store.email_utils import send_order_invoice_email
                 vqr_items = list(order.items.values('product_name', 'quantity', 'storage', 'color_name'))
                 notify_order_success(order_code, 'vietqr', vqr_items)
+                send_order_invoice_email(order, base_url=request.build_absolute_uri('/'))
         except Order.DoesNotExist:
             pass
-        # Giữ lại record để lưu lịch sử duyệt QR
         return JsonResponse({'success': True, 'status': 'approved'})
     
     if qr.status == 'cancelled':
@@ -617,8 +620,10 @@ def vnpay_return(request):
                     pass
             
             from store.telegram_utils import notify_order_success
+            from store.email_utils import send_order_invoice_email
             vnpay_items = list(order.items.values('product_name', 'quantity', 'storage', 'color_name'))
             notify_order_success(tracking_code, 'vnpay', vnpay_items)
+            send_order_invoice_email(order, base_url=request.build_absolute_uri('/'))
             
             return redirect('store:order_success', order_code=tracking_code)
         else:
@@ -848,8 +853,10 @@ def momo_return(request):
                     pass
 
             from store.telegram_utils import notify_order_success
+            from store.email_utils import send_order_invoice_email
             momo_items = list(order.items.values('product_name', 'quantity', 'storage', 'color_name'))
             notify_order_success(tracking_code, 'momo', momo_items)
+            send_order_invoice_email(order, base_url=request.build_absolute_uri('/'))
 
             return render(request, 'store/payment_success.html', {
                 'order': order,

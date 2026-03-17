@@ -702,6 +702,7 @@ def place_order(request):
     
     if payment_method == 'cod':
         from store.telegram_utils import notify_order_success
+        from store.email_utils import send_order_invoice_email
         items_info = [
             {
                 'product_name': ci.product.name if ci.product else 'Sản phẩm',
@@ -712,6 +713,7 @@ def place_order(request):
             for ci in cart_items
         ]
         notify_order_success(tracking_code, 'cod', items_info)
+        send_order_invoice_email(order, base_url=request.build_absolute_uri('/'))
     
     return JsonResponse({
         'success': True,
