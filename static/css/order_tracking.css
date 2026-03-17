@@ -116,12 +116,17 @@
 
 /* ========== Status badges ========== */
 .qh-ot-badge {
-    display: inline-block;
-    padding: 4px 10px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 108px;
+    height: 34px;
+    padding: 0 10px;
     border-radius: 20px;
     font-size: 12px;
     font-weight: 600;
     white-space: nowrap;
+    text-align: center;
 }
 
 .qh-ot-badge.awaiting_payment {
@@ -157,6 +162,52 @@
 .qh-ot-badge.refunding {
     background: #fce7f3;
     color: #9d174d;
+}
+
+/* ========== Pagination ========== */
+.qh-ot-pagination {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 36px;
+    flex-wrap: wrap;
+}
+
+.qh-ot-page-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 700;
+    font-family: 'Signika', sans-serif;
+    border: 1px solid var(--qh-border);
+    color: var(--qh-text);
+    background: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.qh-ot-page-btn:hover {
+    border-color: var(--qh-primary);
+    color: var(--qh-primary);
+    transform: translateY(-1px);
+}
+
+.qh-ot-page-btn.is-active {
+    border-color: transparent;
+    background: linear-gradient(135deg, var(--qh-price) 0%, var(--qh-primary) 100%);
+    color: #ffffff;
+    box-shadow: 0 6px 16px rgba(185, 28, 28, 0.28);
+    cursor: default;
+    pointer-events: none;
+}
+
+.qh-ot-page-btn svg {
+    width: 16px;
+    height: 16px;
 }
 
 /* ========== Detail button ========== */

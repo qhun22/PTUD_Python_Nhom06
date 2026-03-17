@@ -49,7 +49,7 @@
                         <td class="code" rowspan="{{ all_items|length }}" style="vertical-align:middle;">{{ order.order_code }}</td>
                         <td class="center" rowspan="{{ all_items|length }}" style="vertical-align:middle;">
                             {% if order.status == 'cancelled' and order.refund_status == 'pending' %}
-                            <span class="qh-ot-badge refunding">Chờ hoàn tiền</span>
+                            <span class="qh-ot-badge refunding">Hoàn tiền</span>
                             {% elif order.status == 'cancelled' and order.refund_status == 'completed' %}
                             <span class="qh-ot-badge delivered">Đã tất toán</span>
                             {% elif order.status == 'cancelled' %}
@@ -75,7 +75,7 @@
                         <td class="code">{{ order.order_code }}</td>
                         <td class="center">
                             {% if order.status == 'cancelled' and order.refund_status == 'pending' %}
-                            <span class="qh-ot-badge refunding">Chờ hoàn tiền</span>
+                            <span class="qh-ot-badge refunding">Hoàn tiền</span>
                             {% elif order.status == 'cancelled' and order.refund_status == 'completed' %}
                             <span class="qh-ot-badge delivered">Đã tất toán</span>
                             {% elif order.status == 'cancelled' %}
@@ -97,10 +97,10 @@
 
     <!-- Phân trang -->
     {% if orders.has_other_pages %}
-    <div class="qh-pagination" style="display: flex; justify-content: center; gap: 8px; margin-top: 40px; flex-wrap: wrap;">
+    <div class="qh-ot-pagination">
         {% if orders.has_previous %}
-        <a href="?page={{ orders.previous_page_number }}" class="qh-btn qh-btn-secondary" style="padding: 8px 16px; text-decoration: none;">
-            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="?page={{ orders.previous_page_number }}" class="qh-ot-page-btn" aria-label="Trang trước">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
             </svg>
         </a>
@@ -108,15 +108,15 @@
         
         {% for num in orders.paginator.page_range %}
             {% if orders.number == num %}
-            <span class="qh-btn qh-btn-primary" style="padding: 8px 16px; cursor: default;">{{ num }}</span>
+            <span class="qh-ot-page-btn is-active">{{ num }}</span>
             {% elif num > orders.number|add:'-3' and num < orders.number|add:'3' %}
-            <a href="?page={{ num }}" class="qh-btn qh-btn-secondary" style="padding: 8px 16px; text-decoration: none;">{{ num }}</a>
+            <a href="?page={{ num }}" class="qh-ot-page-btn">{{ num }}</a>
             {% endif %}
         {% endfor %}
         
         {% if orders.has_next %}
-        <a href="?page={{ orders.next_page_number }}" class="qh-btn qh-btn-secondary" style="padding: 8px 16px; text-decoration: none;">
-            <svg style="width: 16px; height: 16px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <a href="?page={{ orders.next_page_number }}" class="qh-ot-page-btn" aria-label="Trang sau">
+            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
             </svg>
         </a>
@@ -138,7 +138,7 @@
     <div class="qh-ot-modal-overlay" id="otDetailModal" onclick="closeOtDetailOnClickOutside(event)">
         <div class="qh-ot-modal" onclick="event.stopPropagation()">
             <div class="qh-ot-modal-header">
-                <h3>Chi tiết đơn hàng</h3>
+                <h3>CHI TIẾT ĐƠN HÀNG</h3>
                 <button class="qh-ot-modal-close" onclick="closeOtDetail()">Đóng</button>
             </div>
             <div class="qh-ot-modal-body" id="otDetailBody">
@@ -169,8 +169,8 @@
             <svg class="qh-ot-confirm-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: #3b82f6;">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"/>
             </svg>
-            <h3 class="qh-ot-confirm-title">Thông tin hoàn tiền</h3>
-            <p class="qh-ot-confirm-text">Đơn hàng thanh toán qua VNPay/VietQR. Vui lòng nhập thông tin để hoàn tiền.</p>
+            <h3 class="qh-ot-confirm-title">THÔNG TIN HOÀN TIỀN</h3>
+            <p class="qh-ot-confirm-text">Đơn hàng này bạn đã thanh toán trực tuyến.<br> Vui lòng nhập thông tin để chúng tớ hoàn lại tiền nhé!</p>
             <div style="text-align: left; margin-bottom: 20px;">
                 <label style="display: block; font-size: 13px; font-weight: 600; color: #334155; margin-bottom: 6px;">Số tài khoản</label>
                 <input type="text" id="otRefundAccount" placeholder="Nhập số tài khoản" style="width: 100%; padding: 10px 12px; border: 1px solid #e2e8f0; border-radius: 8px; font-size: 14px; box-sizing: border-box; font-family: 'Signika', sans-serif;">

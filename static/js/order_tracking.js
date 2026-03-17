@@ -88,8 +88,8 @@ function openOtDetail(code) {
     html += '<div class="qh-ot-detail-block">';
     html += '<div class="qh-ot-info-grid">';
     html += otInfoRow('Mã đơn hàng', '<span style="color:#3b82f6;font-weight:600;font-family:monospace;">' + escOtHtml(o.order_code) + '</span>');
-    html += otInfoRow('Hình thức TT', otPayBadge(o.payment_method, o.payment_display));
     html += otInfoRow('Ngày đặt', escOtHtml(o.created_at));
+    html += otInfoRow('Hình thức TT', otPayBadge(o.payment_method, o.payment_display));
 
     // Mã giảm giá
     if (o.coupon_code) {
@@ -100,7 +100,7 @@ function openOtDetail(code) {
     // Trạng thái
     var statusHtml = '';
     if (o.status === 'cancelled' && o.refund_status === 'pending') {
-        statusHtml = '<span class="qh-ot-badge refunding">Chờ hoàn tiền</span>';
+        statusHtml = '<span class="qh-ot-badge refunding">Hoàn tiền</span>';
     } else if (o.status === 'cancelled' && o.refund_status === 'completed') {
         statusHtml = '<span class="qh-ot-badge delivered">Đã tất toán</span>';
     } else if (o.status === 'cancelled') {
@@ -306,8 +306,19 @@ function doCancelOtOrder(orderCode, btn, refundInfo) {
     .then(function(response) { return response.json(); })
     .then(function(data) {
         if (data.success) {
-            QHToast.success('Đã hủy đơn hàng và yêu cầu hoàn tiền thành công!');
-            location.reload();
+            closeOtDetail();
+            if (window.QHToast) {
+                setTimeout(function() {
+                    if (refundInfo) {
+                        QHToast.show('Đã xác nhận hoàn tiền. Đơn hàng sẽ sớm được hoàn tiền.', 'success');
+                    } else {
+                        QHToast.show(data.message || 'Đã hủy đơn hàng thành công!', 'success');
+                    }
+                }, 120);
+            }
+            setTimeout(function() {
+                location.reload();
+            }, 1100);
         } else {
             QHToast.show(data.message || 'Có lỗi xảy ra', 'error');
             btn.disabled = false;
