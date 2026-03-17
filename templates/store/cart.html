@@ -1,16 +1,1069 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block title %}GIỎ HÀNG - QHUN22 Mobile{% endblock %}
 
 {% block content %}
+{% load static %}
+<style>
+/* ==================== CART PAGE - Card Layout ==================== */
+.qh-cart-page {
+    /* Inherits from .qh-main */
+}
+
+/* Cart Layout: 2 columns */
+.qh-cart-container {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 24px;
+    align-items: start;
+}
+@media (max-width: 992px) {
+    .qh-cart-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Left Column - Cart Items */
+.qh-cart-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* Select All Header */
+.qh-cart-select-all {
+    background: var(--qh-card-bg);
+    border-radius: 12px;
+    padding: 16px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 12px;
+}
+.qh-cart-select-all label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--qh-text);
+    user-select: none;
+}
+.qh-cart-select-all .qh-cart-delete-all {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    transition: all 0.2s;
+}
+.qh-cart-select-all .qh-cart-delete-all:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* Custom Checkbox */
+.qh-cart-checkbox {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #d1d5db;
+    border-radius: 4px;
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+.qh-cart-checkbox:checked {
+    background: var(--qh-primary);
+    border-color: var(--qh-primary);
+}
+.qh-cart-checkbox:checked::after {
+    content: '✓';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: white;
+    font-size: 13px;
+    font-weight: 700;
+}
+
+/* Cart Item Card */
+.qh-cart-item {
+    background: var(--qh-card-bg);
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 12px;
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    transition: box-shadow 0.2s;
+}
+.qh-cart-item:hover {
+    box-shadow: 0 4px 16px rgba(0,0,0,0.1);
+}
+
+/* Item Checkbox */
+.qh-cart-item-check {
+    padding-top: 24px;
+    flex-shrink: 0;
+}
+
+/* Item Image */
+.qh-cart-item-img {
+    width: 100px;
+    height: 100px;
+    border-radius: 10px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background: #f5f5f5;
+}
+.qh-cart-item-img img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+.qh-cart-item-img .qh-cart-no-img {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+}
+
+/* Item Details (middle section) */
+.qh-cart-item-details {
+    flex: 1;
+    min-width: 0;
+}
+.qh-cart-item-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--qh-text);
+    text-decoration: none;
+    display: block;
+    margin-bottom: 10px;
+    line-height: 1.4;
+}
+.qh-cart-item-name:hover {
+    color: var(--qh-primary);
+}
+
+/* Color Dropdown */
+.qh-cart-color-dropdown {
+    position: relative;
+    display: block;
+    margin-bottom: 8px;
+}
+.qh-cart-color-selected {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--qh-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--qh-text);
+    background: white;
+    transition: border-color 0.2s;
+    user-select: none;
+    font-family: 'Signika', sans-serif;
+}
+.qh-cart-color-selected:hover {
+    border-color: var(--qh-primary);
+}
+.qh-cart-color-selected svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s;
+}
+.qh-cart-color-dropdown.open .qh-cart-color-selected svg {
+    transform: rotate(180deg);
+}
+
+/* Color Options (shown below the item when dropdown is open) */
+.qh-cart-color-options {
+    display: none;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0 4px;
+}
+.qh-cart-color-dropdown.open .qh-cart-color-options {
+    display: flex;
+}
+.qh-cart-color-opt {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    border: 2px solid var(--qh-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--qh-text);
+    background: white;
+    transition: all 0.2s;
+    font-family: 'Signika', sans-serif;
+}
+.qh-cart-color-opt:hover {
+    border-color: var(--qh-primary);
+}
+.qh-cart-color-opt.selected {
+    border-color: var(--qh-primary);
+    background: rgba(var(--qh-primary-rgb, 79, 70, 229), 0.05);
+}
+.qh-cart-color-opt img {
+    width: 32px;
+    height: 32px;
+    border-radius: 4px;
+    object-fit: cover;
+}
+
+/* Storage Dropdown (reuses color dropdown pattern) */
+.qh-cart-storage-dropdown {
+    position: relative;
+    display: block;
+    margin-bottom: 8px;
+}
+.qh-cart-storage-selected {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border: 1px solid var(--qh-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 14px;
+    color: var(--qh-text);
+    background: white;
+    transition: border-color 0.2s;
+    user-select: none;
+    font-family: 'Signika', sans-serif;
+}
+.qh-cart-storage-selected:hover {
+    border-color: var(--qh-primary);
+}
+.qh-cart-storage-selected svg {
+    width: 14px;
+    height: 14px;
+    transition: transform 0.2s;
+}
+.qh-cart-storage-dropdown.open .qh-cart-storage-selected svg {
+    transform: rotate(180deg);
+}
+.qh-cart-storage-options {
+    display: none;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 10px 0 4px;
+}
+.qh-cart-storage-dropdown.open .qh-cart-storage-options {
+    display: flex;
+}
+.qh-cart-storage-opt {
+    padding: 6px 16px;
+    border: 2px solid var(--qh-border);
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--qh-text);
+    background: white;
+    transition: all 0.2s;
+    font-family: 'Signika', sans-serif;
+}
+.qh-cart-storage-opt:hover {
+    border-color: var(--qh-primary);
+}
+.qh-cart-storage-opt.selected {
+    border-color: var(--qh-primary);
+    background: rgba(var(--qh-primary-rgb, 79, 70, 229), 0.05);
+}
+
+/* Price + Quantity + Delete (right section) */
+.qh-cart-item-right {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 12px;
+    flex-shrink: 0;
+    min-width: 200px;
+}
+
+/* Price Area */
+.qh-cart-item-price {
+    text-align: right;
+}
+.qh-cart-item-current-price {
+    font-size: 18px;
+    font-weight: 700;
+    color: #dc2626;
+}
+.qh-cart-item-original-price {
+    font-size: 14px;
+    color: #9ca3af;
+    text-decoration: line-through;
+    margin-top: 2px;
+}
+
+/* Quantity + Delete Row */
+.qh-cart-item-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Quantity Controls */
+.qh-cart-qty {
+    display: flex;
+    align-items: center;
+    border: 1px solid var(--qh-border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+.qh-cart-qty-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: #f9fafb;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--qh-text);
+    transition: background 0.2s;
+    font-family: 'Signika', sans-serif;
+}
+.qh-cart-qty-btn:hover:not(:disabled) {
+    background: #e5e7eb;
+}
+.qh-cart-qty-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+}
+.qh-cart-qty-input {
+    width: 44px;
+    height: 36px;
+    text-align: center;
+    border: none;
+    border-left: 1px solid var(--qh-border);
+    border-right: 1px solid var(--qh-border);
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--qh-text);
+    outline: none;
+    font-family: 'Signika', sans-serif;
+    -moz-appearance: textfield;
+}
+.qh-cart-qty-input::-webkit-outer-spin-button,
+.qh-cart-qty-input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+/* Delete Button */
+.qh-cart-delete-btn {
+    width: 36px;
+    height: 36px;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #9ca3af;
+    transition: all 0.2s;
+}
+.qh-cart-delete-btn:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* ==================== CART SUMMARY ==================== */
+.qh-cart-summary {
+    background: var(--qh-card-bg);
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 100px;
+}
+.qh-cart-summary-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--qh-text);
+    margin-bottom: 20px;
+}
+.qh-cart-voucher-input {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+.qh-cart-voucher-input input {
+    flex: 1;
+    padding: 12px 16px;
+    border: 1px solid var(--qh-border);
+    border-radius: 8px;
+    font-size: 14px;
+    outline: none;
+    font-family: 'Signika', sans-serif;
+}
+.qh-cart-voucher-input input:focus {
+    border-color: var(--qh-primary);
+}
+.qh-cart-voucher-input button {
+    padding: 12px 20px;
+    background: var(--qh-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Signika', sans-serif;
+}
+.qh-cart-voucher-input button:hover {
+    opacity: 0.9;
+}
+.qh-cart-summary-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+    font-size: 14px;
+    color: var(--qh-text-light);
+}
+.qh-cart-summary-row.total {
+    border-top: 2px solid var(--qh-border);
+    margin-top: 12px;
+    padding-top: 16px;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--qh-text);
+}
+.qh-cart-summary-row .qh-cart-value {
+    color: var(--qh-text);
+    font-weight: 600;
+}
+.qh-cart-summary-row.total .qh-cart-value {
+    color: var(--qh-primary);
+    font-size: 22px;
+}
+.qh-cart-checkout-btn {
+    width: 100%;
+    padding: 16px;
+    background: var(--qh-primary);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    margin-top: 20px;
+    transition: all 0.3s;
+    font-family: 'Signika', sans-serif;
+}
+.qh-cart-checkout-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-2px);
+}
+
+/* Empty State */
+.qh-empty-cart-icon {
+    width: 120px;
+    height: 120px;
+    color: #d1d5db;
+    margin-bottom: 24px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .qh-cart-item {
+        flex-wrap: wrap;
+    }
+    .qh-cart-item-right {
+        min-width: unset;
+        flex-direction: row;
+        align-items: center;
+        width: 100%;
+        justify-content: space-between;
+    }
+    .qh-cart-item-img {
+        width: 80px;
+        height: 80px;
+    }
+}
+</style>
+
 <div class="qh-cart-page">
-    <h1 class="qh-page-title">Giỏ hàng của bạn</h1>
-    
-    <div class="qh-card" style="padding: 40px; text-align: center;">
-        <p style="color: var(--qh-text-light); margin-bottom: 16px;">Giỏ hàng trống</p>
-        <a href="{% url 'store:home' %}" class="qh-btn qh-btn-primary">
+    <h1 class="qh-page-title">GIỎ HÀNG CỦA BẠN</h1>
+
+    {% if cart_items %}
+    <div class="qh-cart-container">
+        <!-- Left: Cart Items -->
+        <div class="qh-cart-list">
+            <!-- Select All Header -->
+            <div class="qh-cart-select-all">
+                <label>
+                    <input type="checkbox" class="qh-cart-checkbox" id="selectAll" onchange="toggleSelectAll(this)">
+                    Chọn tất cả (<span id="selectedCount">0</span>)
+                </label>
+                <button class="qh-cart-delete-all" onclick="deleteSelected()" title="Xóa các sản phẩm đã chọn">
+                    <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                </button>
+            </div>
+
+            <!-- Cart Item Cards -->
+            {% for item in cart_items %}
+            <div class="qh-cart-item" data-item-id="{{ item.id }}">
+                <!-- Checkbox -->
+                <div class="qh-cart-item-check">
+                    <input type="checkbox" class="qh-cart-checkbox cart-item-check" data-item-id="{{ item.id }}" onchange="updateSelectedCount()">
+                </div>
+
+                <!-- Image -->
+                <div class="qh-cart-item-img">
+                    {% if item.color_thumbnail %}
+                    <a href="{% url 'store:product_detail' item.product.id %}">
+                        <img src="{{ item.color_thumbnail }}" alt="{{ item.product.name }}" id="itemImg_{{ item.id }}">
+                    </a>
+                    {% elif item.product.image %}
+                    <a href="{% url 'store:product_detail' item.product.id %}">
+                        <img src="{{ item.product.image.url }}" alt="{{ item.product.name }}" id="itemImg_{{ item.id }}">
+                    </a>
+                    {% else %}
+                    <div class="qh-cart-no-img">
+                        <svg style="width:40px;height:40px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                        </svg>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Details -->
+                <div class="qh-cart-item-details">
+                    <a href="{% url 'store:product_detail' item.product.id %}" class="qh-cart-item-name">
+                        {{ item.product.name }}
+                    </a>
+
+                    <!-- Color Dropdown -->
+                    {% if item.color_name %}
+                    <div class="qh-cart-color-dropdown" data-item-id="{{ item.id }}">
+                        <div class="qh-cart-color-selected" onclick="toggleColorDropdown(this)">
+                            <span>Màu: {{ item.color_name }}</span>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                        <!-- Color Options (inside the dropdown so toggle controls both) -->
+                        {% if item.color_options %}
+                        <div class="qh-cart-color-options" id="colorOptions_{{ item.id }}">
+                            {% for opt in item.color_options %}
+                            <button class="qh-cart-color-opt{% if opt.is_selected %} selected{% endif %}"
+                                    data-item-id="{{ item.id }}"
+                                    data-color="{{ opt.color_name }}"
+                                    data-thumbnail="{{ opt.thumbnail }}"
+                                    onclick="changeColor(this, {{ item.id }}, '{{ opt.color_name }}')">
+                                {% if opt.thumbnail %}
+                                <img src="{{ opt.thumbnail }}" alt="{{ opt.color_name }}">
+                                {% endif %}
+                                <span>{{ opt.color_name }}</span>
+                            </button>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+
+                    <!-- Storage Dropdown -->
+                    {% if item.storage %}
+                    <div class="qh-cart-storage-dropdown" data-item-id="{{ item.id }}">
+                        <div class="qh-cart-storage-selected" onclick="toggleStorageDropdown(this)">
+                            <span>Dung lượng: {{ item.storage }}</span>
+                            <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
+                            </svg>
+                        </div>
+                        <!-- Storage Options (inside the dropdown) -->
+                        {% if item.storage_options and item.storage_options|length > 1 %}
+                        <div class="qh-cart-storage-options" id="storageOptions_{{ item.id }}">
+                            {% for opt in item.storage_options %}
+                            <button class="qh-cart-storage-opt{% if opt.is_selected %} selected{% endif %}"
+                                    data-item-id="{{ item.id }}"
+                                    data-storage="{{ opt.storage }}"
+                                    onclick="changeStorage(this, {{ item.id }}, '{{ opt.storage }}')">
+                                {{ opt.storage }}
+                            </button>
+                            {% endfor %}
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Right: Price + Quantity + Delete -->
+                <div class="qh-cart-item-right">
+                    <div class="qh-cart-item-price">
+                        <div class="qh-cart-item-current-price" id="itemPrice_{{ item.id }}">
+                            {{ item.price_at_add|format_price_with_unit }}
+                        </div>
+                        {% if item.original_price %}
+                        <div class="qh-cart-item-original-price" id="itemOrigPrice_{{ item.id }}">
+                            {{ item.original_price|format_price_with_unit }}
+                        </div>
+                        {% else %}
+                        <div class="qh-cart-item-original-price" id="itemOrigPrice_{{ item.id }}" style="display:none;"></div>
+                        {% endif %}
+                    </div>
+
+                    <div class="qh-cart-item-actions">
+                        <div class="qh-cart-qty">
+                            <button class="qh-cart-qty-btn qh-cart-qty-minus" data-item-id="{{ item.id }}" {% if item.quantity <= 1 %}disabled{% endif %} onclick="updateCartQuantity({{ item.id }}, parseInt(document.getElementById('qtyInput_{{ item.id }}').value) - 1)">−</button>
+                            <input type="number" class="qh-cart-qty-input" id="qtyInput_{{ item.id }}" value="{{ item.quantity }}" min="1" onchange="updateCartQuantity({{ item.id }}, this.value)">
+                            <button class="qh-cart-qty-btn" onclick="updateCartQuantity({{ item.id }}, parseInt(document.getElementById('qtyInput_{{ item.id }}').value) + 1)">+</button>
+                        </div>
+                        <button class="qh-cart-delete-btn" onclick="removeFromCart({{ item.id }})" title="Xóa sản phẩm">
+                            <svg style="width:20px;height:20px;" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                            </svg>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Right: Cart Summary -->
+        <div class="qh-cart-summary">
+            <h2 class="qh-cart-summary-title">Thông tin đơn hàng</h2>
+
+            <!-- Voucher Input -->
+            <div class="qh-cart-voucher-input">
+                <input type="text" placeholder="Nhập mã ưu đãi">
+                <button type="button">Áp dụng</button>
+            </div>
+
+            <!-- Order Info -->
+            <div class="qh-cart-summary-row">
+                <span>Tổng tiền</span>
+                <span class="qh-cart-value" id="summarySubtotal">0 đ</span>
+            </div>
+            <div class="qh-cart-summary-row">
+                <span>Voucher đang áp dụng</span>
+                <span class="qh-cart-value">-</span>
+            </div>
+            <div class="qh-cart-summary-row">
+                <span>Số tiền đã chiết khấu</span>
+                <span class="qh-cart-value">0 đ</span>
+            </div>
+            <div class="qh-cart-summary-row total">
+                <span>Cần thanh toán</span>
+                <span class="qh-cart-value" id="summaryTotal">0 đ</span>
+            </div>
+
+            <button class="qh-cart-checkout-btn" onclick="checkout()">
+                XÁC NHẬN
+            </button>
+        </div>
+    </div>
+
+    {% else %}
+    <!-- Empty State -->
+    <div class="qh-card" style="padding: 60px; text-align: center;">
+        <svg class="qh-empty-cart-icon" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"/>
+        </svg>
+        <h3 style="color: var(--qh-text); margin-bottom: 12px; font-size: 24px; font-weight: 600;">Giỏ hàng của bạn đang trống</h3>
+        <p style="color: var(--qh-text-light); margin-bottom: 24px; font-size: 16px;">Hãy thêm sản phẩm vào giỏ hàng để tiếp tục mua sắm nhé!</p>
+        <a href="{% url 'store:home' %}" class="qh-btn qh-btn-primary" style="padding: 12px 32px; font-size: 16px; font-weight: 600;">
             Tiếp tục mua sắm
         </a>
     </div>
+    {% endif %}
 </div>
+
+<!-- Cart JavaScript -->
+<script>
+/* ==================== CSRF Token ==================== */
+function getCsrfToken() {
+    var name = 'csrftoken';
+    var cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        var cookies = document.cookie.split(';');
+        for (var i = 0; i < cookies.length; i++) {
+            var cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function formatPrice(value) {
+    if (!value) return '0';
+    return parseInt(value).toLocaleString('vi-VN').replace(/,/g, '.');
+}
+
+/* ==================== Cart Badge ==================== */
+function updateCartBadge(count) {
+    var badge = document.getElementById('qh-cart-count');
+    if (badge) badge.textContent = count;
+}
+
+/* ==================== Select All / Checkbox ==================== */
+function toggleSelectAll(checkbox) {
+    var items = document.querySelectorAll('.cart-item-check');
+    items.forEach(function(item) {
+        item.checked = checkbox.checked;
+    });
+    updateSelectedCount();
+}
+
+function updateSelectedCount() {
+    var checked = document.querySelectorAll('.cart-item-check:checked');
+    var total = document.querySelectorAll('.cart-item-check').length;
+    document.getElementById('selectedCount').textContent = checked.length;
+    document.getElementById('selectAll').checked = (checked.length === total && total > 0);
+    
+    // Tính tổng tiền của các sản phẩm đã chọn
+    var selectedTotal = 0;
+    checked.forEach(function(cb) {
+        var itemId = cb.getAttribute('data-item-id');
+        var priceEl = document.getElementById('itemPrice_' + itemId);
+        var qtyInput = document.getElementById('qtyInput_' + itemId);
+        if (priceEl && qtyInput) {
+            var priceText = priceEl.textContent.replace(/[.\s]/g, '');
+            var price = parseInt(priceText) || 0;
+            var quantity = parseInt(qtyInput.value) || 1;
+            selectedTotal += price * quantity;
+        }
+    });
+    
+    // Cập nhật hiển thị tổng tiền
+    var formattedTotal = formatPrice(selectedTotal) + ' đ';
+    document.getElementById('summarySubtotal').textContent = formattedTotal;
+    document.getElementById('summaryTotal').textContent = formattedTotal;
+}
+
+/* ==================== Delete Selected ==================== */
+function deleteSelected() {
+    var checked = document.querySelectorAll('.cart-item-check:checked');
+    if (checked.length === 0) {
+        if (window.QHToast) {
+            QHToast.show('Vui lòng chọn sản phẩm cần xóa', 'error');
+        }
+        return;
+    }
+    QHConfirm.show('Bạn có chắc muốn xóa ' + checked.length + ' sản phẩm đã chọn?', function() {
+        var promises = [];
+        checked.forEach(function(cb) {
+            var itemId = cb.getAttribute('data-item-id');
+            promises.push(
+                fetch('/cart/remove/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'X-CSRFToken': getCsrfToken()
+                    },
+                    body: 'item_id=' + itemId
+                })
+            );
+        });
+        Promise.all(promises).then(function() {
+            location.reload();
+        });
+    });
+}
+
+/* ==================== Color Dropdown ==================== */
+function toggleColorDropdown(el) {
+    var dropdown = el.closest('.qh-cart-color-dropdown');
+    var itemId = dropdown.getAttribute('data-item-id');
+
+    // Close all other color dropdowns
+    document.querySelectorAll('.qh-cart-color-dropdown.open').forEach(function(d) {
+        if (d !== dropdown) d.classList.remove('open');
+    });
+
+    // Close all storage dropdowns
+    document.querySelectorAll('.qh-cart-storage-dropdown.open').forEach(function(d) {
+        d.classList.remove('open');
+    });
+
+    dropdown.classList.toggle('open');
+}
+
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+    if (!e.target.closest('.qh-cart-color-dropdown')) {
+        document.querySelectorAll('.qh-cart-color-dropdown.open').forEach(function(d) {
+            d.classList.remove('open');
+        });
+    }
+    if (!e.target.closest('.qh-cart-storage-dropdown')) {
+        document.querySelectorAll('.qh-cart-storage-dropdown.open').forEach(function(d) {
+            d.classList.remove('open');
+        });
+    }
+});
+
+/* ==================== Change Color ==================== */
+function changeColor(btn, itemId, colorName) {
+    // Visual feedback
+    var options = document.getElementById('colorOptions_' + itemId);
+    options.querySelectorAll('.qh-cart-color-opt').forEach(function(o) {
+        o.classList.remove('selected');
+    });
+    btn.classList.add('selected');
+
+    fetch('/cart/change-color/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: 'item_id=' + itemId + '&color_name=' + encodeURIComponent(colorName)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            // Update color label
+            var dropdown = document.querySelector('.qh-cart-color-dropdown[data-item-id="' + itemId + '"]');
+            if (dropdown) {
+                var label = dropdown.querySelector('.qh-cart-color-selected span');
+                if (label) label.textContent = 'Màu: ' + data.new_color;
+            }
+
+            // Update product image with the color thumbnail
+            if (data.new_thumbnail) {
+                var imgEl = document.getElementById('itemImg_' + itemId);
+                if (imgEl) imgEl.src = data.new_thumbnail;
+            }
+
+            // Update price
+            var priceEl = document.getElementById('itemPrice_' + itemId);
+            if (priceEl) priceEl.textContent = formatPrice(data.item_price) + 'đ';
+
+            var origPriceEl = document.getElementById('itemOrigPrice_' + itemId);
+            if (origPriceEl) {
+                if (data.original_price > 0) {
+                    origPriceEl.textContent = formatPrice(data.original_price) + 'đ';
+                    origPriceEl.style.display = 'block';
+                } else {
+                    origPriceEl.style.display = 'none';
+                }
+            }
+
+            // Update totals
+            updateSummaryPrices(data.total_price);
+            updateCartBadge(data.total_items);
+
+            if (window.QHToast) QHToast.show(data.message, 'success');
+
+            // Reload after short delay to get fresh data
+            setTimeout(function() { location.reload(); }, 800);
+        } else {
+            if (window.QHToast) QHToast.show(data.message, 'error');
+        }
+    })
+    .catch(function(err) {
+        console.error('Error:', err);
+        if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
+    });
+}
+
+/* ==================== Storage Dropdown ==================== */
+function toggleStorageDropdown(el) {
+    var dropdown = el.closest('.qh-cart-storage-dropdown');
+    var itemId = dropdown.getAttribute('data-item-id');
+
+    // Close all other storage dropdowns
+    document.querySelectorAll('.qh-cart-storage-dropdown.open').forEach(function(d) {
+        if (d !== dropdown) d.classList.remove('open');
+    });
+
+    // Close all color dropdowns
+    document.querySelectorAll('.qh-cart-color-dropdown.open').forEach(function(d) {
+        d.classList.remove('open');
+    });
+
+    dropdown.classList.toggle('open');
+}
+
+/* ==================== Change Storage ==================== */
+function changeStorage(btn, itemId, storage) {
+    // Visual feedback
+    var options = document.getElementById('storageOptions_' + itemId);
+    options.querySelectorAll('.qh-cart-storage-opt').forEach(function(o) {
+        o.classList.remove('selected');
+    });
+    btn.classList.add('selected');
+
+    fetch('/cart/change-storage/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: 'item_id=' + itemId + '&storage=' + encodeURIComponent(storage)
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            // Update storage label
+            var dropdown = document.querySelector('.qh-cart-storage-dropdown[data-item-id="' + itemId + '"]');
+            if (dropdown) {
+                var label = dropdown.querySelector('.qh-cart-storage-selected span');
+                if (label) label.textContent = 'Dung lượng: ' + data.new_storage;
+            }
+
+            // Update price
+            var priceEl = document.getElementById('itemPrice_' + itemId);
+            if (priceEl) priceEl.textContent = formatPrice(data.item_price) + 'đ';
+
+            var origPriceEl = document.getElementById('itemOrigPrice_' + itemId);
+            if (origPriceEl) {
+                if (data.original_price > 0) {
+                    origPriceEl.textContent = formatPrice(data.original_price) + 'đ';
+                    origPriceEl.style.display = 'block';
+                } else {
+                    origPriceEl.style.display = 'none';
+                }
+            }
+
+            // Update totals
+            updateSummaryPrices(data.total_price);
+            updateCartBadge(data.total_items);
+
+            if (window.QHToast) QHToast.show(data.message, 'success');
+
+            // Reload after short delay to get fresh data
+            setTimeout(function() { location.reload(); }, 800);
+        } else {
+            if (window.QHToast) QHToast.show(data.message, 'error');
+        }
+    })
+    .catch(function(err) {
+        console.error('Error:', err);
+        if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
+    });
+}
+
+/* ==================== Update Quantity ==================== */
+function updateCartQuantity(itemId, quantity) {
+    quantity = parseInt(quantity);
+    if (isNaN(quantity) || quantity < 1) {
+        if (window.QHToast) QHToast.show('Số lượng tối thiểu là 1', 'error');
+        return;
+    }
+    fetch('/cart/update/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': getCsrfToken()
+        },
+        body: 'item_id=' + itemId + '&quantity=' + quantity
+    })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            updateCartBadge(data.total_items);
+
+            // Update quantity input
+            var qtyInput = document.getElementById('qtyInput_' + itemId);
+            if (qtyInput) qtyInput.value = data.item_quantity;
+
+            // Enable/disable minus button
+            var minusBtn = document.querySelector('.qh-cart-qty-minus[data-item-id="' + itemId + '"]');
+            if (minusBtn) minusBtn.disabled = (data.item_quantity <= 1);
+
+            // Cập nhật tổng tiền cho các sản phẩm đã chọn
+            updateSelectedCount();
+
+            if (window.QHToast) QHToast.show(data.message, 'success');
+        } else if (data.require_login) {
+            QHConfirm.show(data.message + '. Bạn có muốn đăng nhập không?', function() {
+                window.location.href = '/login/';
+            });
+        } else {
+            if (window.QHToast) QHToast.show(data.message, 'error');
+        }
+    })
+    .catch(function(err) {
+        console.error('Error:', err);
+        if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
+    });
+}
+
+/* ==================== Remove Item ==================== */
+function removeFromCart(itemId) {
+    QHConfirm.show('Bạn có chắc muốn xóa sản phẩm này khỏi giỏ hàng?', function() {
+        fetch('/cart/remove/', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: 'item_id=' + itemId
+        })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+        if (data.success) {
+            updateCartBadge(data.total_items);
+            if (window.QHToast) QHToast.show(data.message, 'success');
+            setTimeout(function() { location.reload(); }, 500);
+        } else if (data.require_login) {
+            QHConfirm.show(data.message + '. Bạn có muốn đăng nhập không?', function() {
+                window.location.href = '/login/';
+            });
+        } else {
+            if (window.QHToast) QHToast.show(data.message, 'error');
+        }
+    })
+    .catch(function(err) {
+        console.error('Error:', err);
+        if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
+    });
+    }); // end QHConfirm callback
+}
+
+/* ==================== Summary Updates ==================== */
+function updateSummaryPrices(totalPrice) {
+    var subtotalEl = document.getElementById('summarySubtotal');
+    var totalEl = document.getElementById('summaryTotal');
+    var formatted = formatPrice(totalPrice) + 'đ';
+    if (subtotalEl) subtotalEl.textContent = formatted;
+    if (totalEl) totalEl.textContent = formatted;
+}
+
+/* ==================== Checkout ==================== */
+function checkout() {
+    if (window.QHToast) {
+        QHToast.show('Chức năng thanh toán đang được phát triển!', 'error');
+    } else {
+        alert('Chức năng thanh toán đang được phát triển!');
+    }
+}
+</script>
 {% endblock %}

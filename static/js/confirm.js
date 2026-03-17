@@ -50,3 +50,6 @@ const QHConfirm = {
         });
     }
 };
+
+// Gán vào window để có thể gọi từ template
+window.QHConfirm = QHConfirm;

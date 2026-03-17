@@ -1,0 +1,489 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}QUẢN LÝ HÃNG - QHUN22 Admin{% endblock %}
+
+{% block extra_css %}
+<style>
+    .qh-brand-container {
+        padding: 20px;
+    }
+    
+    .qh-brand-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 24px;
+    }
+    
+    .qh-brand-title {
+        font-size: 24px;
+        font-weight: 700;
+        color: #333;
+    }
+    
+    .qh-brand-search {
+        display: flex;
+        gap: 10px;
+    }
+    
+    .qh-brand-search input {
+        padding: 10px 16px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        width: 250px;
+    }
+    
+    .qh-brand-search input:focus {
+        outline: none;
+        border-color: #3b82f6;
+    }
+    
+    .qh-brand-btn {
+        padding: 10px 20px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .qh-brand-btn:hover {
+        background: #2563eb;
+    }
+    
+    .qh-brand-table {
+        width: 100%;
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+    }
+    
+    .qh-brand-table th,
+    .qh-brand-table td {
+        padding: 14px 20px;
+        text-align: left;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    
+    .qh-brand-table th {
+        background: #f8fafc;
+        font-weight: 600;
+        color: #64748b;
+        font-size: 13px;
+    }
+    
+    .qh-brand-table tr:hover {
+        background: #f8fafc;
+    }
+    
+    .qh-brand-actions {
+        display: flex;
+        gap: 8px;
+    }
+    
+    .qh-brand-btn-edit {
+        padding: 6px 12px;
+        background: #fef3c7;
+        color: #b45309;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    
+    .qh-brand-btn-edit:hover {
+        background: #fde68a;
+    }
+    
+    .qh-brand-btn-delete {
+        padding: 6px 12px;
+        background: #fee2e2;
+        color: #dc2626;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+    }
+    
+    .qh-brand-btn-delete:hover {
+        background: #fecaca;
+    }
+    
+    .qh-brand-pagination {
+        display: flex;
+        justify-content: center;
+        gap: 8px;
+        margin-top: 24px;
+    }
+    
+    .qh-brand-pagination a,
+    .qh-brand-pagination span {
+        padding: 8px 14px;
+        background: #f1f5f9;
+        color: #334155;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 13px;
+    }
+    
+    .qh-brand-pagination .active {
+        background: #3b82f6;
+        color: white;
+    }
+    
+    /* Modal */
+    .qh-modal {
+        display: none;
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0,0,0,0.5);
+        z-index: 1000;
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .qh-modal.active {
+        display: flex;
+    }
+    
+    .qh-modal-content {
+        background: white;
+        border-radius: 12px;
+        padding: 24px;
+        width: 400px;
+        max-width: 90%;
+    }
+    
+    .qh-modal-title {
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 20px;
+    }
+    
+    .qh-modal-close {
+        float: right;
+        cursor: pointer;
+        font-size: 24px;
+        color: #999;
+    }
+    
+    .qh-form-group {
+        margin-bottom: 16px;
+    }
+    
+    .qh-form-group label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .qh-form-group input,
+    .qh-form-group textarea {
+        width: 100%;
+        padding: 10px 14px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        font-size: 14px;
+        box-sizing: border-box;
+    }
+    
+    .qh-form-group textarea {
+        min-height: 80px;
+        resize: vertical;
+    }
+    
+    .qh-form-group input:focus,
+    .qh-form-group textarea:focus {
+        outline: none;
+        border-color: #3b82f6;
+    }
+    
+    .qh-form-actions {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-end;
+        margin-top: 20px;
+    }
+    
+    .qh-btn-cancel {
+        padding: 10px 20px;
+        background: #f1f5f9;
+        color: #334155;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    
+    .qh-btn-save {
+        padding: 10px 20px;
+        background: #3b82f6;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    
+    .qh-empty {
+        text-align: center;
+        padding: 40px;
+        color: #64748b;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="qh-brand-container">
+    <div class="qh-brand-header">
+        <h1 class="qh-brand-title">QUẢN LÝ HÃNG SẢN PHẨM</h1>
+        <div class="qh-brand-search">
+            <form method="GET" style="display: flex; gap: 10px;">
+                <input type="text" name="search" placeholder="Tìm kiếm hãng..." value="{{ search }}">
+                <button type="submit" class="qh-brand-btn">
+                    <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+                    </svg>
+                    Tìm
+                </button>
+            </form>
+            <button class="qh-brand-btn" onclick="openAddModal()">
+                <svg width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Thêm hãng
+            </button>
+        </div>
+    </div>
+    
+    <table class="qh-brand-table">
+        <thead>
+            <tr>
+                <th>STT</th>
+                <th>Tên hãng</th>
+                <th>Mô tả</th>
+                <th>Trạng thái</th>
+                <th>Ngày tạo</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for brand in brands_paginated %}
+            <tr>
+                <td>{{ forloop.counter0|add:brands_paginated.start_index }}</td>
+                <td><strong>{{ brand.name }}</strong></td>
+                <td>{{ brand.description|truncatechars:50 }}</td>
+                <td>
+                    {% if brand.is_active %}
+                    <span style="background: #d1fae5; color: #047857; padding: 4px 10px; border-radius: 12px; font-size: 12px;">Hoạt động</span>
+                    {% else %}
+                    <span style="background: #fee2e2; color: #dc2626; padding: 4px 10px; border-radius: 12px; font-size: 12px;">Không hoạt động</span>
+                    {% endif %}
+                </td>
+                <td>{{ brand.created_at|date:"d/m/Y" }}</td>
+                <td>
+                    <div class="qh-brand-actions">
+                        <button class="qh-brand-btn-edit" onclick="openEditModal({{ brand.id }}, '{{ brand.name }}', '{{ brand.description|escapejs }}')">Sửa</button>
+                        <button class="qh-brand-btn-delete" onclick="deleteBrand({{ brand.id }}, '{{ brand.name }}')">Xóa</button>
+                    </div>
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="6" class="qh-empty">Chưa có hãng nào. Thêm hãng mới!</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+    {% if brands_paginated.has_other_pages %}
+    <div class="qh-brand-pagination">
+        {% if brands_paginated.has_previous %}
+        <a href="?brand_page={{ brands_paginated.previous_page_number }}{% if search %}&search={{ search }}{% endif %}">&laquo; Trước</a>
+        {% endif %}
+        
+        {% for num in brands_paginated.paginator.page_range %}
+            {% if brands_paginated.number == num %}
+            <span class="active">{{ num }}</span>
+            {% elif num > brands_paginated.number|add:'-2' and num < brands_paginated.number|add:'2' %}
+            <a href="?brand_page={{ num }}{% if search %}&search={{ search }}{% endif %}">{{ num }}</a>
+            {% endif %}
+        {% endfor %}
+        
+        {% if brands_paginated.has_next %}
+        <a href="?brand_page={{ brands_paginated.next_page_number }}{% if search %}&search={{ search }}{% endif %}">Sau &raquo;</a>
+        {% endif %}
+    </div>
+    {% endif %}
+</div>
+
+<!-- Add Modal -->
+<div class="qh-modal" id="addModal">
+    <div class="qh-modal-content">
+        <span class="qh-modal-close" onclick="closeAddModal()">&times;</span>
+        <h3 class="qh-modal-title">Thêm hãng mới</h3>
+        <form id="addBrandForm">
+            <div class="qh-form-group">
+                <label>Tên hãng *</label>
+                <input type="text" name="name" required placeholder="Nhập tên hãng...">
+            </div>
+            <div class="qh-form-group">
+                <label>Mô tả</label>
+                <textarea name="description" placeholder="Mô tả hãng (tùy chọn)..."></textarea>
+            </div>
+            <div class="qh-form-actions">
+                <button type="button" class="qh-btn-cancel" onclick="closeAddModal()">Hủy</button>
+                <button type="submit" class="qh-btn-save">Thêm</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="qh-modal" id="editModal">
+    <div class="qh-modal-content">
+        <span class="qh-modal-close" onclick="closeEditModal()">&times;</span>
+        <h3 class="qh-modal-title">Sửa hãng</h3>
+        <form id="editBrandForm">
+            <input type="hidden" name="brand_id" id="editBrandId">
+            <div class="qh-form-group">
+                <label>Tên hãng *</label>
+                <input type="text" name="name" id="editBrandName" required placeholder="Nhập tên hãng...">
+            </div>
+            <div class="qh-form-group">
+                <label>Mô tả</label>
+                <textarea name="description" id="editBrandDesc" placeholder="Mô tả hãng (tùy chọn)..."></textarea>
+            </div>
+            <div class="qh-form-actions">
+                <button type="button" class="qh-btn-cancel" onclick="closeEditModal()">Hủy</button>
+                <button type="submit" class="qh-btn-save">Lưu</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function openAddModal() {
+    document.getElementById('addModal').classList.add('active');
+}
+
+function closeAddModal() {
+    document.getElementById('addModal').classList.remove('active');
+    document.getElementById('addBrandForm').reset();
+}
+
+function openEditModal(id, name, desc) {
+    document.getElementById('editBrandId').value = id;
+    document.getElementById('editBrandName').value = name;
+    document.getElementById('editBrandDesc').value = desc || '';
+    document.getElementById('editModal').classList.add('active');
+}
+
+function closeEditModal() {
+    document.getElementById('editModal').classList.remove('active');
+    document.getElementById('editBrandForm').reset();
+}
+
+// Add Brand
+document.getElementById('addBrandForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('{% url "store:brand_add" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            window.QHToast.show(data.message, 'success');
+            closeAddModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            window.QHToast.show(data.message, 'error');
+        }
+    })
+    .catch(err => {
+        window.QHToast.show('Có lỗi xảy ra!', 'error');
+    });
+});
+
+// Edit Brand
+document.getElementById('editBrandForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    
+    fetch('{% url "store:brand_edit" %}', {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': '{{ csrf_token }}'
+        }
+    })
+    .then(res => res.json())
+    .then(data => {
+        if (data.success) {
+            window.QHToast.show(data.message, 'success');
+            closeEditModal();
+            setTimeout(() => location.reload(), 1000);
+        } else {
+            window.QHToast.show(data.message, 'error');
+        }
+    })
+    .catch(err => {
+        window.QHToast.show('Có lỗi xảy ra!', 'error');
+    });
+});
+
+// Delete Brand
+function deleteBrand(id, name) {
+    if (confirm(`Bạn có chắc muốn xóa hãng "${name}"?`)) {
+        const formData = new FormData();
+        formData.append('brand_id', id);
+        
+        fetch('{% url "store:brand_delete" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.QHToast.show(data.message, 'success');
+                setTimeout(() => location.reload(), 1000);
+            } else {
+                window.QHToast.show(data.message, 'error');
+            }
+        })
+        .catch(err => {
+            window.QHToast.show('Có lỗi xảy ra!', 'error');
+        });
+    }
+}
+
+// Close modal when clicking outside
+document.querySelectorAll('.qh-modal').forEach(modal => {
+    modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+            this.classList.remove('active');
+        }
+    });
+});
+</script>
+{% endblock %}

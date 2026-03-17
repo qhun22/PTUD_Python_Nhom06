@@ -1,0 +1,260 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}{{ product.name }} - QHUN22 Mobile{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/product_detail.css' %}">
+
+<div class="pd-page">
+    <!-- Breadcrumb -->
+    <div class="pd-breadcrumb">
+        <a href="/">Trang chủ</a> <span>›</span>
+        <a href="/">Điện thoại</a> <span>›</span>
+        {% if product.brand %}<a href="/">{{ product.brand.name }}</a> <span>›</span>{% endif %}
+        <span class="current">{{ product.name }}</span>
+    </div>
+
+    <!-- Product Name -->
+    <h1 class="pd-product-name">{{ product.name }}</h1>
+
+    <div class="pd-grid">
+        <!-- ===== LEFT: Images ===== -->
+        <div class="pd-images">
+            <div class="pd-main-image"
+                 onmouseenter="pauseAutoSlide()"
+                 onmouseleave="resumeAutoSlide()">
+                <button class="pd-img-nav prev" onclick="prevImage()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+                </button>
+                <img id="pdMainImg" src="{{ product.image.url|default:'/static/logos/sean.gif' }}" alt="{{ product.name }}" data-fallback="{{ product.image.url|default:'/static/logos/sean.gif' }}">
+                <button class="pd-img-nav next" onclick="nextImage()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </button>
+            </div>
+
+            <!-- Bottom tabs (mini thumbnails + spec/info/gallery) -->
+            <div class="pd-bottom-tabs" id="pdBottomTabs"></div>
+        </div>
+
+        <!-- ===== RIGHT: Info ===== -->
+        <div class="pd-info">
+            <!-- Price -->
+            <div class="pd-price-section">
+                <span class="pd-price-current" id="pdPrice">
+                    {% if first_variant %}{{ first_variant.price|format_price }} đ{% else %}Liên hệ{% endif %}
+                </span>
+                <span class="pd-price-original" id="pdOriginalPrice">
+                    {% if first_variant and first_variant.original_price > first_variant.price %}{{ first_variant.original_price|format_price }} đ{% endif %}
+                </span>
+                <span class="pd-sku-inline">SKU: <strong id="pdSku">{{ first_variant.sku|default:'-' }}</strong></span>
+            </div>
+
+            <!-- Installment -->
+            <div class="pd-installment" id="pdInstallment"></div>
+
+            <!-- Storage Selection -->
+            <div class="pd-variant-section">
+                <div class="pd-variant-label">Lựa chọn dung lượng</div>
+                <div class="pd-storage-options" id="pdStorageOptions">
+                    {% for storage in storage_list %}
+                    <button class="pd-storage-btn{% if forloop.first %} selected{% endif %}" data-storage="{{ storage }}" onclick="selectStorage(this)">
+                        <div class="pd-storage-name">{{ storage }}</div>
+                        <div class="pd-storage-price" id="storagePrice_{{ forloop.counter }}"></div>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Color Selection -->
+            <div class="pd-variant-section">
+                <div class="pd-variant-label">Lựa chọn màu</div>
+                <div class="pd-color-options" id="pdColorOptions">
+                    {% for c in color_list %}
+                    <button class="pd-color-btn{% if forloop.first %} selected{% endif %}" data-color="{{ c.color_name }}" data-sku="{{ c.sku }}" onclick="selectColor(this)">
+                        <div class="pd-color-thumb" id="colorThumb_{{ forloop.counter0 }}"></div>
+                        <div class="pd-color-info">
+                            <div class="pd-color-name">{{ c.color_name }}</div>
+                        </div>
+                    </button>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <!-- Buy Section -->
+            <div class="pd-buy-section">
+                <button class="pd-btn-cart" onclick="addToCart()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 100 4 2 2 0 000-4z"/></svg>
+                    Thêm vào giỏ hàng
+                </button>
+                <button class="pd-btn-buy" onclick="buyNow()">
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z"/></svg>
+                    Mua ngay
+                </button>
+            </div>
+
+            <!-- Promo Banner -->
+            {% if promo_banner %}
+            <div class="pd-promo-banner">
+                <div class="pd-promo-banner-img">
+                    <img src="{{ promo_banner.image.url }}" alt="Ưu đãi học sinh sinh viên">
+                </div>
+                <a href="#" class="pd-promo-banner-btn">
+                    Xác thực ngay
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24" width="16" height="16"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+                </a>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Product Description Section -->
+    <div class="pd-spec-section" id="pdDescSection" style="display: none;">
+        <h2 class="pd-spec-title">Thông tin sản phẩm</h2>
+        <div id="pdDescContent" style="font-size: 14px; color: #334155; line-height: 1.7; white-space: pre-line;"></div>
+    </div>
+
+    <!-- Video về sản phẩm & Cam kết sản phẩm -->
+    {% if youtube_id %}
+    <div class="pd-extra-row">
+        <!-- Box Video YouTube -->
+        <div class="pd-extra-box">
+            <h2 class="pd-extra-title">
+                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                Video về sản phẩm
+            </h2>
+            <div class="pd-video-wrapper">
+                <div id="pdYoutubePlayer"></div>
+            </div>
+        </div>
+        <!-- Box Cam kết sản phẩm -->
+        <div class="pd-extra-box">
+            <h2 class="pd-extra-title">
+                <svg width="22" height="22" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+                Cam kết sản phẩm
+            </h2>
+            <div class="pd-commit-content">
+                <ul class="pd-commit-list">
+                    <li>
+                        <span class="pd-commit-icon"><i class="ri-truck-line"></i></span>
+                        <span>Miễn phí vận chuyển toàn quốc – Giao hỏa tốc 2H nội thành</span>
+                    </li>
+                    <li>
+                        <span class="pd-commit-icon"><i class="ri-shield-check-line"></i></span>
+                        <span>Bảo hành chính hãng Apple 12 tháng toàn quốc</span>
+                    </li>
+                    <li>
+                        <span class="pd-commit-icon"><i class="ri-box-3-line"></i></span>
+                        <span>Máy mới 100% nguyên Seal – Chưa Active – Lỗi đổi mới trong 12 tháng</span>
+                    </li>
+                    <li>
+                        <span class="pd-commit-icon"><i class="ri-file-list-3-line"></i></span>
+                        <span>Giá đã bao gồm VAT – Xuất hóa đơn đầy đủ</span>
+                    </li>
+                    <li>
+                        <span class="pd-commit-icon"><i class="ri-search-eye-line"></i></span>
+                        <span>Hỗ trợ kiểm tra IMEI/Serial chính hãng trước khi nhận hàng</span>
+                    </li>
+                    <li>
+                        <span class="pd-commit-icon"><i class="ri-bank-card-line"></i></span>
+                        <span>Hỗ trợ trả góp 0% – Thu cũ đổi mới giá cao</span>
+                    </li>
+                    <li>
+                        <span class="pd-commit-icon"><i class="ri-checkbox-circle-line"></i></span>
+                        <span>Kiểm tra hàng trước khi thanh toán – Hỗ trợ kỹ thuật trọn đời</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Product Content Panel (slide from right, y hệt Thông số kỹ thuật) -->
+<div class="pd-spec-overlay" id="pdContentOverlay" onclick="closeContentModal(event)">
+    <div class="pd-spec-panel" id="pdContentPanel" onclick="event.stopPropagation()">
+        <div class="pd-spec-panel-header">
+            <h2 class="pd-spec-panel-title">Thông tin sản phẩm</h2>
+            <button class="pd-spec-panel-close" onclick="closeContentModalBtn()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="pd-spec-panel-body pd-content-body" id="pdContentModalBody">
+            {% if product_content and product_content.content_text %}
+                {{ product_content.content_text|safe }}
+            {% else %}
+                <p style="padding: 24px; color: #94a3b8; text-align: center; font-family: 'Signika', sans-serif;">Chưa có thông tin sản phẩm.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Spec Panel (slide from right) -->
+<div class="pd-spec-overlay" id="pdSpecOverlay" onclick="closeSpecModal(event)">
+    <div class="pd-spec-panel" id="pdSpecPanel" onclick="event.stopPropagation()">
+        <div class="pd-spec-panel-header">
+            <h2 class="pd-spec-panel-title">Thông số kỹ thuật</h2>
+            <button class="pd-spec-panel-close" onclick="closeSpecModalBtn()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+            </button>
+        </div>
+        <div class="pd-spec-tabs" id="pdSpecTabs"></div>
+        <div class="pd-spec-panel-body" id="pdSpecModalBody"></div>
+    </div>
+</div>
+
+<!-- Gallery Lightbox -->
+<div class="pd-gallery-overlay" id="pdGalleryOverlay" onclick="closeGalleryOverlay(event)">
+    <div class="pd-gallery-box" onclick="event.stopPropagation()">
+        <div class="pd-gallery-color-tabs" id="pdGalleryColorTabs"></div>
+        <div class="pd-gallery-main-area">
+            <button class="pd-gallery-nav prev" onclick="galleryPrev()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            <img class="pd-gallery-main-img" id="pdGalleryMainImg" src="" alt="" draggable="false">
+            <button class="pd-gallery-nav next" onclick="galleryNext()">
+                <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/></svg>
+            </button>
+        </div>
+        <div class="pd-gallery-thumbs" id="pdGalleryThumbs"></div>
+    </div>
+</div>
+
+<script>
+const productId = {{ product.id }};
+const variantsData = {{ variants_json|safe }};
+const colorImagesData = {{ color_images_json|safe }};
+const specData = {{ spec_data_json|safe }};
+const productDescription = '{{ product.description|escapejs }}';
+const hasProductContent = {% if product_content and product_content.content_text %}true{% else %}false{% endif %};
+const youtubeVideoId = '{{ youtube_id|escapejs }}';
+</script>
+
+{% if youtube_id %}
+<script>
+var tag = document.createElement('script');
+tag.src = 'https://www.youtube.com/iframe_api';
+var firstScriptTag = document.getElementsByTagName('script')[0];
+firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+function onYouTubeIframeAPIReady() {
+    new YT.Player('pdYoutubePlayer', {
+        videoId: youtubeVideoId,
+        playerVars: {
+            'autoplay': 1,
+            'mute': 1,
+            'rel': 0,
+            'modestbranding': 1,
+            'playsinline': 1,
+            'origin': window.location.origin
+        },
+        events: {
+            'onReady': function(event) { event.target.playVideo(); }
+        }
+    });
+}
+</script>
+{% endif %}
+<script src="{% static 'js/pd_page.js' %}"></script>
+{% endblock %}
