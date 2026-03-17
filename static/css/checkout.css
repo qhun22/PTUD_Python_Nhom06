@@ -21,7 +21,8 @@
 /* ==================== Section Card ==================== */
 /* Đồng bộ: var(--qh-card-bg), border-radius: 12px, box-shadow giống cart/order_tracking */
 .qh-checkout-section {
-    background: var(--qh-card-bg);
+    background: #ffffff;
+    border: 1px solid #eeeeee;
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
@@ -56,7 +57,7 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    border: 2px solid var(--qh-border);
+    border: 1px solid #eeeeee;
     border-radius: 12px;
     background: var(--qh-white);
 }
@@ -103,8 +104,8 @@
 
 .qh-checkout-addr-change {
     background: none;
-    border: 1px solid var(--qh-primary);
-    color: var(--qh-primary);
+    border: 1px solid #d1d5db;
+    color: #1f2937;
     font-size: 13px;
     font-weight: 600;
     padding: 6px 16px;
@@ -116,8 +117,9 @@
 }
 
 .qh-checkout-addr-change:hover {
-    background: var(--qh-primary);
-    color: #fff;
+    background: var(--qh-primary-light);
+    border-color: var(--qh-primary);
+    color: var(--qh-primary);
 }
 
 /* ==================== Products Section ==================== */
@@ -197,7 +199,7 @@
 .qh-checkout-item-current {
     font-size: 16px;
     font-weight: 700;
-    color: var(--qh-text);
+    color: var(--qh-price);
 }
 
 .qh-checkout-item-original {
@@ -220,7 +222,7 @@
     align-items: center;
     gap: 12px;
     padding: 14px 16px;
-    border: 2px solid var(--qh-border);
+    border: 1px solid #eeeeee;
     border-radius: 8px;
     background: var(--qh-white);
     cursor: pointer;
@@ -230,11 +232,12 @@
 
 .qh-checkout-pay-opt:hover:not(.disabled) {
     border-color: var(--qh-primary);
+    background: #ffffff;
 }
 
 .qh-checkout-pay-opt.selected {
     border-color: var(--qh-primary);
-    background: rgba(169, 204, 240, 0.08);
+    box-shadow: none;
 }
 
 .qh-checkout-pay-opt.disabled {
@@ -251,8 +254,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 8px;
-    background: var(--qh-card-bg);
-    border: 1px solid var(--qh-border);
+    background: #ffffff;
+    border: 1px solid #eeeeee;
 }
 
 .qh-checkout-pay-icon i {
@@ -292,7 +295,7 @@
     position: absolute;
     top: 6px;
     right: 8px;
-    background: #ef4444;
+    background: var(--qh-primary);
     color: #fff;
     font-size: 10px;
     font-weight: 700;
@@ -305,8 +308,7 @@
     color: var(--qh-text);
     padding: 10px 14px;
     border-radius: 8px;
-    background: rgba(169, 204, 240, 0.1);
-    border: 1px dashed var(--qh-primary);
+    border: 1px solid #eeeeee;
 }
 
 .qh-checkout-pay-selected-text strong {
@@ -317,7 +319,7 @@
 .qh-checkout-qr-box {
     margin-top: 16px;
     background: var(--qh-white);
-    border: 2px solid var(--qh-primary);
+    border: 1px solid #eeeeee;
     border-radius: 12px;
     overflow: hidden;
     animation: qhQrSlideIn 0.3s ease;
@@ -336,7 +338,7 @@
 }
 
 .qh-checkout-qr-header {
-    background: rgba(169, 204, 240, 0.12);
+    background: var(--qh-primary-light);
     padding: 14px 20px;
     font-size: 15px;
     font-weight: 700;
@@ -416,7 +418,7 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    background: rgba(169, 204, 240, 0.06);
+    background: #ffffff;
 }
 
 .qh-checkout-qr-timer {
@@ -433,7 +435,7 @@
 
 .qh-checkout-qr-timer span {
     font-weight: 700;
-    color: #ef4444;
+    color: var(--qh-primary);
     font-size: 16px;
     font-variant-numeric: tabular-nums;
 }
@@ -509,7 +511,8 @@
 }
 
 .qh-checkout-summary {
-    background: var(--qh-card-bg);
+    background: #ffffff;
+    border: 1px solid #eeeeee;
     border-radius: 12px;
     padding: 24px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
@@ -546,7 +549,7 @@
 }
 
 .qh-checkout-summary-row.total .qh-checkout-summary-val {
-    color: var(--qh-primary);
+    color: var(--qh-price);
     font-size: 22px;
 }
 
@@ -566,7 +569,7 @@
 }
 
 .qh-checkout-submit-btn:hover {
-    opacity: 0.9;
+    background: var(--qh-primary-hover);
     transform: translateY(-2px);
 }
 
@@ -631,8 +634,8 @@
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: rgba(169, 204, 240, 0.15);
-    border: 2px solid var(--qh-primary);
+    background: var(--qh-primary-light);
+    border: 1px solid #eeeeee;
 }
 
 .qh-checkout-noaddr-icon i {
@@ -672,7 +675,7 @@
 }
 
 .qh-checkout-noaddr-btn:hover {
-    opacity: 0.9;
+    background: var(--qh-primary-hover);
     transform: translateY(-2px);
 }
 
