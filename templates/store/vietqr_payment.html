@@ -11,8 +11,6 @@
 {% block content %}
 <div class="qh-vqr-page">
 
-    <h1 class="qh-page-title">THANH TOÁN CHUYỂN KHOẢN</h1>
-
     <div class="qh-vqr-wrapper" id="vqrCard">
 
         <!-- ==================== TRẠNG THÁI ĐANG CHỜ THANH TOÁN ==================== -->
@@ -40,31 +38,53 @@
                         <img id="vqrQrImage" src="" alt="VietQR">
                     </div>
                     <div class="qh-vqr-qr-hint">Dùng app ngân hàng quét mã</div>
+                    <div class="qh-vqr-pill-list">
+                        <span class="qh-vqr-pill"><i class="ri-shield-check-line"></i> VietQR chính thức</span>
+                        <span class="qh-vqr-pill"><i class="ri-repeat-line"></i> Tự động cập nhật</span>
+                    </div>
                 </div>
 
                 <div class="qh-vqr-info">
                     <div class="qh-vqr-info-title">
                         <i class="ri-bank-line"></i> Thông tin chuyển khoản
                     </div>
-                    <div class="qh-vqr-row">
-                        <span class="lbl">Ngân hàng</span>
-                        <span class="val">TECHCOMBANK</span>
+
+                    <div class="qh-vqr-amount-box">
+                        <span>Tổng cần thanh toán</span>
+                        <strong>{{ order.total_amount|format_price_with_unit }}</strong>
                     </div>
-                    <div class="qh-vqr-row">
-                        <span class="lbl">Chủ tài khoản</span>
-                        <span class="val">{{ bank_account_name }}</span>
-                    </div>
-                    <div class="qh-vqr-row">
-                        <span class="lbl">Số tài khoản</span>
-                        <span class="val">{{ bank_account_no }}</span>
-                    </div>
-                    <div class="qh-vqr-row">
-                        <span class="lbl">Số tiền</span>
-                        <span class="val amount">{{ order.total_amount|format_price_with_unit }}</span>
-                    </div>
-                    <div class="qh-vqr-row">
-                        <span class="lbl">Nội dung: </span>
-                        <span class="val code">{{ transfer_code }}</span>
+
+                    <div class="qh-vqr-info-list">
+                        <div class="qh-vqr-row">
+                            <span class="lbl">Ngân hàng</span>
+                            <span class="val">TECHCOMBANK</span>
+                        </div>
+                        <div class="qh-vqr-row">
+                            <span class="lbl">Chủ tài khoản</span>
+                            <span class="val">{{ bank_account_name }}</span>
+                        </div>
+                        <div class="qh-vqr-row">
+                            <span class="lbl">Số tài khoản</span>
+                            <span class="val val-action">
+                                <span id="vqrAccountNo">{{ bank_account_no }}</span>
+                                <button type="button" class="qh-vqr-copy-btn" data-copy-target="vqrAccountNo">
+                                    <i class="ri-file-copy-line"></i> Sao chép
+                                </button>
+                            </span>
+                        </div>
+                        <div class="qh-vqr-row">
+                            <span class="lbl">Số tiền</span>
+                            <span class="val amount">{{ order.total_amount|format_price_with_unit }}</span>
+                        </div>
+                        <div class="qh-vqr-row">
+                            <span class="lbl">Nội dung</span>
+                            <span class="val val-action">
+                                <span class="code" id="vqrTransferCode">{{ transfer_code }}</span>
+                                <button type="button" class="qh-vqr-copy-btn" data-copy-target="vqrTransferCode">
+                                    <i class="ri-file-copy-line"></i> Sao chép
+                                </button>
+                            </span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -75,12 +95,17 @@
                     <i class="ri-error-warning-line"></i>
                     <div>Vui lòng chuyển khoản <strong>đúng số tiền</strong> và <strong>đúng nội dung</strong>. Sau khi chuyển, hệ thống sẽ xác nhận.</div>
                 </div>
-                <div class="qh-vqr-status" id="vqrStatusBox">
-                    <i class="ri-refresh-line"></i>
-                    <span>Chờ xác nhận</span>
-                    <div class="dot-pulse">
-                        <span></span><span></span><span></span>
+                <div class="qh-vqr-actions">
+                    <div class="qh-vqr-status" id="vqrStatusBox">
+                        <i class="ri-refresh-line"></i>
+                        <span>Chờ xác nhận</span>
+                        <div class="dot-pulse">
+                            <span></span><span></span><span></span>
+                        </div>
                     </div>
+                    <button type="button" class="qh-vqr-cancel-btn" id="vqrCancelBtn">
+                        <i class="ri-close-circle-line"></i> Hủy thanh toán
+                    </button>
                 </div>
             </div>
 
@@ -107,6 +132,26 @@
         </div>
         <!-- Kết thúc trạng thái hết hạn -->
 
+        <!-- ==================== TRẠNG THÁI ĐÃ HỦY ==================== -->
+        <div class="qh-vqr-cancelled" id="vqrCancelled">
+            <div class="qh-vqr-expired-hero">
+                <div class="qh-vqr-cancelled-icon">
+                    <i class="ri-close-circle-line"></i>
+                </div>
+                <h2>ĐƠN HÀNG ĐÃ ĐƯỢC HỦY</h2>
+                <p>Bạn đã hủy thanh toán cho đơn hàng này.<br>Vui lòng quay lại giỏ hàng để tiếp tục mua sắm.</p>
+            </div>
+            <div class="qh-vqr-expired-actions">
+                <a href="{% url 'store:cart_detail' %}" class="qh-vqr-btn primary">
+                    <i class="ri-shopping-cart-line"></i> Quay lại giỏ hàng
+                </a>
+                <a href="{% url 'store:home' %}" class="qh-vqr-btn">
+                    <i class="ri-home-line"></i> Về trang chủ
+                </a>
+            </div>
+        </div>
+        <!-- Kết thúc trạng thái đã hủy -->
+
     </div>
     <!-- Kết thúc thẻ QR -->
 
@@ -124,9 +169,11 @@
     var TIMEOUT_SECONDS = {{ timeout_seconds }};
     var TRANSFER_CODE = '{{ transfer_code }}';
     var ORDER_CODE = '{{ order.order_code }}';
+    var ORDER_STATUS = '{{ order_status|default:"" }}';
     var STATUS_URL = '{% url "store:vietqr_page_status" %}';
     var EXPIRE_URL = '{% url "store:vietqr_expire" %}';
     var SUCCESS_URL = '{% url "store:order_success" order_code=order.order_code %}';
+    var CART_URL = '{% url "store:cart_detail" %}';
     var CSRF_TOKEN = '{{ csrf_token }}';
     var TOTAL_AMOUNT = {{ order.total_amount }};
 
@@ -134,12 +181,17 @@
     var timerEl = document.getElementById('vqrTimer');
     var pendingEl = document.getElementById('vqrPending');
     var expiredEl = document.getElementById('vqrExpired');
+    var cancelledEl = document.getElementById('vqrCancelled');
+    var cardEl = document.getElementById('vqrCard');
     var qrImgEl = document.getElementById('vqrQrImage');
+    var copyButtons = document.querySelectorAll('.qh-vqr-copy-btn');
+    var cancelBtn = document.getElementById('vqrCancelBtn');
 
     // ==================== STATE ====================
     var timerInterval = null;
     var pollInterval = null;
     var remaining = TIMEOUT_SECONDS;
+    var finalState = '';
 
     // ==================== QR URL BUILDER ====================
     /**
@@ -198,7 +250,9 @@
                     if (!data.success) return;
                     if (data.status === 'approved') {
                         onSuccess();
-                    } else if (data.status === 'cancelled' || data.status === 'expired') {
+                    } else if (data.status === 'cancelled') {
+                        onCancelled({ callExpireApi: false, notify: true });
+                    } else if (data.status === 'expired') {
                         onExpired();
                     }
                 })
@@ -221,6 +275,38 @@
         }
     }
 
+    function setFinalState(state) {
+        if (finalState) return false;
+        finalState = state;
+        stopAll();
+
+        pendingEl.style.display = 'none';
+        if (expiredEl) expiredEl.style.display = state === 'expired' ? 'block' : 'none';
+        if (cancelledEl) cancelledEl.style.display = state === 'cancelled' ? 'block' : 'none';
+
+        if (cardEl) {
+            cardEl.classList.remove('is-expired', 'is-cancelled');
+            if (state === 'expired') cardEl.classList.add('is-expired');
+            if (state === 'cancelled') cardEl.classList.add('is-cancelled');
+        }
+
+        return true;
+    }
+
+    function notifyExpireApi() {
+        return fetch(EXPIRE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': CSRF_TOKEN
+            },
+            body: JSON.stringify({
+                order_code: ORDER_CODE,
+                transfer_code: TRANSFER_CODE
+            })
+        }).catch(function() {});
+    }
+
     // ==================== EVENT HANDLERS ====================
     /**
      * Handle successful payment
@@ -236,28 +322,47 @@
     /**
      * Handle expired payment
      */
-    function onExpired() {
-        stopAll();
+    function onExpired(options) {
+        var opts = options || {};
 
-        // Call expire API
-        fetch(EXPIRE_URL, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': CSRF_TOKEN
-            },
-            body: JSON.stringify({
-                order_code: ORDER_CODE,
-                transfer_code: TRANSFER_CODE
-            })
-        }).catch(function() {});
-
-        // Show expired state
-        pendingEl.style.display = 'none';
-        expiredEl.style.display = 'block';
+        if (!setFinalState('expired')) return;
+        if (opts.callExpireApi !== false) {
+            notifyExpireApi();
+        }
 
         if (window.QHToast) {
             QHToast.show('Hết thời gian thanh toán. Đơn hàng đã bị huỷ.', 'error');
+        }
+    }
+
+    function onCancelled(options) {
+        var opts = options || {};
+
+        if (!setFinalState('cancelled')) return;
+        if (opts.callExpireApi !== false) {
+            notifyExpireApi();
+        }
+
+        if (opts.notify !== false && window.QHToast) {
+            QHToast.show('Đơn hàng đã được hủy.', 'error');
+        }
+    }
+
+    /**
+     * Handle manual payment cancellation
+     */
+    function onManualCancel() {
+        var message = 'Bạn chắc chắn muốn hủy thanh toán đơn ' + ORDER_CODE + '?';
+
+        if (window.QHConfirm && typeof window.QHConfirm.show === 'function') {
+            window.QHConfirm.show(message, function() {
+                onCancelled({ callExpireApi: true, notify: true });
+            });
+            return;
+        }
+
+        if (window.QHToast) {
+            QHToast.show('Không tìm thấy hộp thoại xác nhận hệ thống.', 'error');
         }
     }
 
@@ -270,9 +375,62 @@
         }
     }
 
+    /**
+     * Copy text from an element id
+     * @param {string} targetId - Element id containing text
+     * @param {HTMLElement} btn - Trigger button
+     */
+    function copyTextById(targetId, btn) {
+        var targetEl = document.getElementById(targetId);
+        if (!targetEl) return;
+
+        var text = (targetEl.textContent || '').trim();
+        if (!text) return;
+
+        navigator.clipboard.writeText(text)
+            .then(function() {
+                var oldHtml = btn.innerHTML;
+                btn.innerHTML = '<i class="ri-check-line"></i> Đã chép';
+                btn.classList.add('copied');
+                setTimeout(function() {
+                    btn.innerHTML = oldHtml;
+                    btn.classList.remove('copied');
+                }, 1400);
+                if (window.QHToast) {
+                    QHToast.show('Đã sao chép: ' + text, 'success');
+                }
+            })
+            .catch(function() {
+                if (window.QHToast) {
+                    QHToast.show('Không thể sao chép. Vui lòng thử lại.', 'error');
+                }
+            });
+    }
+
+    function bindCopyActions() {
+        if (!copyButtons || !copyButtons.length) return;
+        copyButtons.forEach(function(btn) {
+            btn.addEventListener('click', function() {
+                copyTextById(btn.getAttribute('data-copy-target'), btn);
+            });
+        });
+    }
+
+    function bindCancelAction() {
+        if (!cancelBtn) return;
+        cancelBtn.addEventListener('click', onManualCancel);
+    }
+
     // ==================== INITIALIZATION ====================
     // Load QR code
     loadQR();
+    bindCopyActions();
+    bindCancelAction();
+
+    if (ORDER_STATUS === 'cancelled') {
+        onCancelled({ callExpireApi: false, notify: false });
+        return;
+    }
 
     // Start timer and polling if not expired
     if (remaining > 0) {

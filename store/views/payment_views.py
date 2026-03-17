@@ -10,6 +10,7 @@ import time
 import traceback
 import requests
 from decimal import Decimal
+import logging
 from django.shortcuts import render, redirect
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
@@ -19,11 +20,13 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
-from django.db import models
+from django.db import models, transaction, IntegrityError
 from django.db.models import Q, Count, Sum, Max
 from django.utils import timezone
 from django.urls import reverse
 import datetime
+
+logger = logging.getLogger(__name__)
 
 
 @csrf_exempt
@@ -96,64 +99,95 @@ def vietqr_create_order(request):
         return JsonResponse({'success': False, 'message': 'Không tìm thấy sản phẩm trong giỏ'}, status=400)
     
     total_amount = sum(item.price_at_add * item.quantity for item in cart_items)
-    
-    tracking_code = 'QHUN' + str(_rand.randint(10000, 99999))
-    
-    digits = '0123456789'
-    transfer_code = 'QHUN'
-    for _ in range(5):
-        transfer_code += digits[_rand.randint(0, 9)]
-    
-    order = Order.objects.create(
-        user=request.user,
-        order_code=tracking_code,
-        total_amount=total_amount,
-        payment_method='vietqr',
-        status='awaiting_payment'
-    )
-    
-    for ci in cart_items:
-        thumb_url = ''
-        try:
-            if ci.product and ci.product.brand_id:
-                detail = ProductDetail.objects.get(product=ci.product)
-                variant = detail.variants.filter(
-                    is_active=True, color_name=ci.color_name
-                ).first()
-                if variant and variant.sku:
-                    img = FolderColorImage.objects.filter(
-                        brand_id=ci.product.brand_id,
-                        sku=variant.sku
-                    ).order_by('order').first()
-                    if img:
-                        thumb_url = img.image.url
-            if not thumb_url and ci.product and ci.product.image:
-                thumb_url = ci.product.image.url
-        except Exception:
-            pass
-        
-        OrderItem.objects.create(
-            order=order,
-            product=ci.product,
-            product_name=ci.product.name if ci.product else 'Sản phẩm',
-            color_name=ci.color_name,
-            storage=ci.storage,
-            quantity=ci.quantity,
-            price=ci.price_at_add,
-            thumbnail=thumb_url,
-        )
-    
-    cart.items.filter(id__in=item_ids).delete()
-    
-    PendingQRPayment.objects.create(
-        user=request.user,
-        amount=total_amount,
-        transfer_code=transfer_code,
-    )
-    
+
+    def generate_unique_order_code(max_attempts=20):
+        for _ in range(max_attempts):
+            code = 'QHUN' + str(_rand.randint(10000, 99999))
+            if not Order.objects.filter(order_code=code).exists():
+                return code
+        return None
+
+    def generate_unique_transfer_code(max_attempts=20):
+        for _ in range(max_attempts):
+            code = 'QHUN' + ''.join(str(_rand.randint(0, 9)) for _ in range(5))
+            if not PendingQRPayment.objects.filter(transfer_code=code).exists():
+                return code
+        return None
+
+    tracking_code = generate_unique_order_code()
+    transfer_code = generate_unique_transfer_code()
+
+    if not tracking_code or not transfer_code:
+        return JsonResponse({
+            'success': False,
+            'message': 'Hệ thống đang bận tạo mã thanh toán. Vui lòng thử lại sau vài giây.'
+        }, status=503)
+
+    try:
+        with transaction.atomic():
+            order = Order.objects.create(
+                user=request.user,
+                order_code=tracking_code,
+                total_amount=total_amount,
+                payment_method='vietqr',
+                status='awaiting_payment'
+            )
+
+            for ci in cart_items:
+                thumb_url = ''
+                try:
+                    if ci.product and ci.product.brand_id:
+                        detail = ProductDetail.objects.get(product=ci.product)
+                        variant = detail.variants.filter(
+                            is_active=True, color_name=ci.color_name
+                        ).first()
+                        if variant and variant.sku:
+                            img = FolderColorImage.objects.filter(
+                                brand_id=ci.product.brand_id,
+                                sku=variant.sku
+                            ).order_by('order').first()
+                            if img:
+                                thumb_url = img.image.url
+                    if not thumb_url and ci.product and ci.product.image:
+                        thumb_url = ci.product.image.url
+                except Exception:
+                    pass
+
+                OrderItem.objects.create(
+                    order=order,
+                    product=ci.product,
+                    product_name=ci.product.name if ci.product else 'Sản phẩm',
+                    color_name=ci.color_name,
+                    storage=ci.storage,
+                    quantity=ci.quantity,
+                    price=ci.price_at_add,
+                    thumbnail=thumb_url,
+                )
+
+            PendingQRPayment.objects.create(
+                user=request.user,
+                amount=total_amount,
+                transfer_code=transfer_code,
+            )
+
+            cart.items.filter(id__in=item_ids).delete()
+
+    except IntegrityError:
+        logger.warning('VietQR create order integrity error for user=%s', request.user.id, exc_info=True)
+        return JsonResponse({
+            'success': False,
+            'message': 'Mã giao dịch vừa trùng, vui lòng bấm đặt hàng lại.'
+        }, status=409)
+    except Exception:
+        logger.exception('VietQR create order unexpected error for user=%s', request.user.id)
+        return JsonResponse({
+            'success': False,
+            'message': 'Lỗi hệ thống khi tạo đơn VietQR. Vui lòng thử lại.'
+        }, status=500)
+
     from store.telegram_utils import notify_payment_created
     notify_payment_created('vietqr', tracking_code, request.user.username, total_amount)
-    
+
     return JsonResponse({
         'success': True,
         'redirect_url': '/vietqr-payment/?order=' + tracking_code + '&code=' + transfer_code,
@@ -181,7 +215,7 @@ def vietqr_payment_page(request):
         messages.error(request, 'Không tìm thấy đơn hàng')
         return redirect('store:cart_detail')
     
-    if order.status not in ('awaiting_payment', 'processing'):
+    if order.status not in ('awaiting_payment', 'processing', 'cancelled'):
         return redirect('store:order_success', order_code=order_code)
     
     qr = PendingQRPayment.objects.filter(
@@ -197,9 +231,15 @@ def vietqr_payment_page(request):
         order.status = 'cancelled'
         order.save()
         # Không xóa PendingQRPayment — giữ lại lịch sử
+
+    # Nếu đơn đã hủy thì luôn khởi tạo trang ở trạng thái hết hạn,
+    # tránh hiện tượng F5 quay về luồng thành công.
+    if order.status == 'cancelled':
+        timeout_seconds = 0
     
     context = {
         'order': order,
+        'order_status': order.status,
         'transfer_code': transfer_code,
         'timeout_seconds': timeout_seconds,
         'bank_id': settings.BANK_ID,
@@ -225,12 +265,22 @@ def vietqr_page_status(request):
         return JsonResponse({'success': False, 'status': 'error'})
     
     try:
+        order = Order.objects.get(order_code=order_code, user=request.user)
+        if order.status == 'cancelled':
+            return JsonResponse({'success': True, 'status': 'cancelled'})
+    except Order.DoesNotExist:
+        order = None
+
+    try:
         qr = PendingQRPayment.objects.get(transfer_code=code, user=request.user)
     except PendingQRPayment.DoesNotExist:
         try:
-            order = Order.objects.get(order_code=order_code, user=request.user)
+            if order is None:
+                order = Order.objects.get(order_code=order_code, user=request.user)
             if order.status in ('processing', 'pending', 'delivered'):
                 return JsonResponse({'success': True, 'status': 'approved'})
+            if order.status == 'cancelled':
+                return JsonResponse({'success': True, 'status': 'cancelled'})
         except Order.DoesNotExist:
             pass
         return JsonResponse({'success': True, 'status': 'expired'})
@@ -241,7 +291,12 @@ def vietqr_page_status(request):
 
     if qr.status == 'approved':
         try:
-            order = Order.objects.get(order_code=order_code, user=request.user)
+            if order is None:
+                order = Order.objects.get(order_code=order_code, user=request.user)
+
+            if order.status == 'cancelled':
+                return JsonResponse({'success': True, 'status': 'cancelled'})
+
             if order.status == 'awaiting_payment':
                 order.status = 'processing'
                 order.save(update_fields=['status', 'updated_at'])
@@ -253,6 +308,10 @@ def vietqr_page_status(request):
                 send_order_invoice_email(order, base_url=request.build_absolute_uri('/'))
         except Order.DoesNotExist:
             pass
+
+        if order is not None and order.status == 'cancelled':
+            return JsonResponse({'success': True, 'status': 'cancelled'})
+
         return JsonResponse({'success': True, 'status': 'approved'})
     
     if qr.status == 'cancelled':

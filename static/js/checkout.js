@@ -19,6 +19,68 @@ document.addEventListener('DOMContentLoaded', function () {
         return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, '.') + 'đ';
     }
 
+    function requestJson(url, options, retryCount) {
+        var baseOptions = options || {};
+        var retries = typeof retryCount === 'number' ? retryCount : 0;
+        var timeoutMs = 15000;
+        var controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+        var timeoutId = null;
+        var requestOptions = {
+            method: baseOptions.method,
+            headers: baseOptions.headers,
+            body: baseOptions.body
+        };
+
+        if (controller) {
+            requestOptions.signal = controller.signal;
+            timeoutId = setTimeout(function () {
+                controller.abort();
+            }, timeoutMs);
+        }
+
+        return fetch(url, requestOptions)
+            .then(function (res) {
+                if (timeoutId) clearTimeout(timeoutId);
+                return res.text().then(function (text) {
+                    var payload = null;
+                    try {
+                        payload = JSON.parse(text);
+                    } catch (e) {
+                        if (!res.ok) {
+                            var httpError = new Error('HTTP_' + res.status);
+                            httpError.status = res.status;
+                            throw httpError;
+                        }
+                        throw new Error('INVALID_JSON');
+                    }
+
+                    if (!res.ok) {
+                        var serverError = new Error('HTTP_' + res.status);
+                        serverError.status = res.status;
+                        serverError.serverMessage = payload && payload.message ? payload.message : '';
+                        throw serverError;
+                    }
+
+                    return payload;
+                });
+            })
+            .catch(function (err) {
+                if (timeoutId) clearTimeout(timeoutId);
+
+                var isRetriable = (
+                    err.name === 'AbortError' ||
+                    err.message === 'Failed to fetch' ||
+                    err.message.indexOf('HTTP_5') === 0
+                );
+
+                if (retries > 0 && isRetriable) {
+                    return requestJson(url, baseOptions, retries - 1);
+                }
+
+                throw err;
+            });
+    }
+
     /* ==================== Chọn phương thức thanh toán ==================== */
     function updatePaySelection(opt) {
         var shortLabel = opt.getAttribute('data-pay-short');
@@ -154,7 +216,7 @@ document.addEventListener('DOMContentLoaded', function () {
             submitBtn.textContent = 'Đang tạo đơn hàng...';
         }
 
-        fetch(window.QH_VIETQR_CREATE_ORDER_URL, {
+        requestJson(window.QH_VIETQR_CREATE_ORDER_URL, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -163,8 +225,7 @@ document.addEventListener('DOMContentLoaded', function () {
             body: JSON.stringify({
                 items_param: window.QH_CHECKOUT_ITEMS_PARAM || ''
             })
-        })
-            .then(function (res) { return res.json(); })
+        }, 1)
             .then(function (data) {
                 if (data.success && data.redirect_url) {
                     window.location.href = data.redirect_url;
@@ -181,7 +242,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(function (err) {
                 console.error('[VietQR Create Error]', err);
                 if (window.QHToast) {
-                    QHToast.show('Lỗi kết nối. Vui lòng thử lại.', 'error');
+                    QHToast.show(err.serverMessage || 'Lỗi kết nối đến VietQR. Vui lòng thử lại.', 'error');
                 }
                 if (submitBtn) {
                     submitBtn.disabled = false;
@@ -235,15 +296,14 @@ document.addEventListener('DOMContentLoaded', function () {
             coupon_code: window.QH_APPLIED_COUPON || ''
         };
 
-        fetch(window.QH_PLACE_ORDER_URL || '/order/place/', {
+        requestJson(window.QH_PLACE_ORDER_URL || '/order/place/', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
                 'X-CSRFToken': QH_CSRF_TOKEN
             },
             body: JSON.stringify(requestData)
-        })
-            .then(function (res) { return res.json(); })
+        }, 1)
             .then(function (data) {
                 if (data.success) {
                     if (window.QHToast) {
@@ -263,7 +323,7 @@ document.addEventListener('DOMContentLoaded', function () {
             .catch(function (err) {
                 console.error('[Place Order Error]', err);
                 if (window.QHToast) {
-                    QHToast.show('Lỗi kết nối. Vui lòng thử lại.', 'error');
+                    QHToast.show(err.serverMessage || 'Lỗi kết nối khi đặt hàng. Vui lòng thử lại.', 'error');
                 }
                 if (submitBtn) {
                     submitBtn.disabled = false;
