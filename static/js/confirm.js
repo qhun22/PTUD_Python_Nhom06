@@ -19,8 +19,8 @@ const QHConfirm = {
                 <h3 class="qh-modal-title">Xác nhận</h3>
                 <p class="qh-modal-text">${message}</p>
                 <div style="display: flex; gap: 12px; justify-content: flex-end;">
-                    <button class="qh-btn qh-btn-cancel" style="background: #E0E0E0; color: #333;">Hủy</button>
-                    <button class="qh-btn qh-btn-primary">Xác nhận</button>
+                    <button class="qh-btn qh-btn-cancel" style="background: #f3f4f6; color: #374151; border: 1px solid #d1d5db;">Hủy</button>
+                    <button class="qh-btn qh-btn-primary" style="background: #b91c1c; color: #ffffff; border: 1px solid #b91c1c; box-shadow: 0 6px 20px rgba(185, 28, 28, 0.25);">Xác nhận</button>
                 </div>
             </div>
         `;

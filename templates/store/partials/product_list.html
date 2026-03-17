@@ -82,6 +82,11 @@
             
             <!-- Các nút hành động -->
             <div style="display: flex; gap: 6px;">
+                <button class="qh-btn qh-cart-quick-btn"
+                        onclick="event.preventDefault();event.stopPropagation();quickAddToCart({{ product.id }})"
+                        style="flex: 1; padding: 8px 4px; font-size: 12px; border: 1px solid #b91c1c; background: #b91c1c; color: #fff; border-radius: 6px; cursor: pointer; transition: all 0.2s; display:flex; align-items:center; justify-content:center; gap:4px; {% if product.stock == 0 %}opacity: 0.5; pointer-events: none;{% endif %}">
+                    <i class="ri-shopping-cart-2-line"></i> Thêm giỏ
+                </button>
                 <button class="qh-btn qh-btn-outline qh-compare-btn"
                         data-product-id="{{ product.id }}"
                         data-product-name="{{ product.name }}"

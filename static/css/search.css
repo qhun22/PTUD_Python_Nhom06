@@ -103,7 +103,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    background: #ef4444;
+    background: #b91c1c;
     color: white;
     padding: 6px 12px;
     font-size: 14px;
@@ -121,7 +121,7 @@
     left: 0;
     width: 0;
     height: 0;
-    border-left: 10px solid #ef4444;
+    border-left: 10px solid #b91c1c;
     border-bottom: 6px solid transparent;
 }
 
@@ -267,6 +267,13 @@
     align-items: center;
     justify-content: center;
     gap: 4px;
+}
+
+.qh-product-card .qh-compare-btn.active {
+    background: #fee2e2 !important;
+    border-color: #b91c1c !important;
+    color: #b91c1c !important;
+    font-weight: 600;
 }
 
 /* Pagination */

@@ -236,6 +236,11 @@
                             {% endif %}
                         </div>
                         <div style="display: flex; gap: 6px;">
+                            <button class="qh-btn qh-cart-quick-btn"
+                                    onclick="event.preventDefault();event.stopPropagation();quickAddToCart({{ product.id }})"
+                                    style="flex: 1; padding: 8px 4px; font-size: 12px; border: 1px solid #b91c1c; background: #b91c1c; color: #fff; border-radius: 6px; cursor: pointer; transition: all 0.2s; display:flex; align-items:center; justify-content:center; gap:4px; {% if product.stock == 0 %}opacity: 0.5; pointer-events: none;{% endif %}">
+                                <i class="ri-shopping-cart-2-line"></i> Thêm giỏ
+                            </button>
                             <button class="qh-btn qh-btn-outline qh-compare-btn"
                                     data-product-id="{{ product.id }}"
                                     data-product-name="{{ product.name }}"
@@ -349,6 +354,11 @@
                 
                 <!-- Các nút hành động -->
                 <div style="display: flex; gap: 6px;">
+                    <button class="qh-btn qh-cart-quick-btn"
+                            onclick="event.preventDefault();event.stopPropagation();quickAddToCart({{ product.id }})"
+                            style="flex: 1; padding: 8px 4px; font-size: 12px; border: 1px solid #b91c1c; background: #b91c1c; color: #fff; border-radius: 6px; cursor: pointer; transition: all 0.2s; display:flex; align-items:center; justify-content:center; gap:4px; {% if product.stock == 0 %}opacity: 0.5; pointer-events: none;{% endif %}">
+                        <i class="ri-shopping-cart-2-line"></i> Thêm giỏ
+                    </button>
                     <button class="qh-btn qh-btn-outline qh-compare-btn"
                             data-product-id="{{ product.id }}"
                             data-product-name="{{ product.name }}"
@@ -411,15 +421,142 @@
         <!-- Nút tìm kiếm & reset -->
         <div class="qh-filter-actions">
             <button type="button" class="qh-filter-btn qh-filter-btn-search" id="qhFilterSubmit">
-                <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
-                Tìm kiếm
+                <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 01.8 1.6L14 13v5a1 1 0 01-1.447.894l-2-1A1 1 0 0110 17v-4L3.2 4.6A1 1 0 013 4z"/></svg>
+                Lọc nâng cao
             </button>
             <a href="{% url 'store:home' %}" class="qh-filter-btn qh-filter-btn-reset" id="qhFilterReset">
                 <svg style="width:16px;height:16px" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
                 Reset
             </a>
         </div>
+
+        <input type="hidden" name="os" id="qhAdvOs" value="{{ request.GET.os|default:'' }}">
+        <input type="hidden" name="rom" id="qhAdvRom" value="{{ request.GET.rom|default:'' }}">
+        <input type="hidden" name="connections" id="qhAdvConnections" value="{{ request.GET.connections|default:'' }}">
+        <input type="hidden" name="battery" id="qhAdvBattery" value="{{ request.GET.battery|default:'' }}">
+        <input type="hidden" name="network" id="qhAdvNetwork" value="{{ request.GET.network|default:'' }}">
+        <input type="hidden" name="ram" id="qhAdvRam" value="{{ request.GET.ram|default:'' }}">
+        <input type="hidden" name="memory_card" id="qhAdvMemoryCard" value="{{ request.GET.memory_card|default:'' }}">
+        <input type="hidden" name="screen_size" id="qhAdvScreenSize" value="{{ request.GET.screen_size|default:'' }}">
+        <input type="hidden" name="screen_standard" id="qhAdvScreenStandard" value="{{ request.GET.screen_standard|default:'' }}">
+        <input type="hidden" name="refresh_rate" id="qhAdvRefreshRate" value="{{ request.GET.refresh_rate|default:'' }}">
+        <input type="hidden" name="camera" id="qhAdvCamera" value="{{ request.GET.camera|default:'' }}">
+        <input type="hidden" name="special" id="qhAdvSpecial" value="{{ request.GET.special|default:'' }}">
     </form>
+
+    <div class="qh-advanced-filter-overlay" id="qhAdvancedFilterOverlay"></div>
+    <aside class="qh-advanced-filter-drawer" id="qhAdvancedFilterDrawer" aria-hidden="true">
+        <div class="qh-advanced-filter-head">
+            <h3>CHỌN THÔNG SỐ BẠN YÊU THÍCH</h3>
+            <button type="button" class="qh-advanced-filter-close" id="qhAdvancedFilterClose" aria-label="Đóng bộ lọc">×</button>
+        </div>
+        <div class="qh-advanced-filter-body" id="qhAdvancedFilterBody">
+            <section class="qh-af-group" data-group="os" data-mode="multi">
+                <h4>Hệ điều hành</h4>
+                <label><input type="checkbox" value="ios"> iOS</label>
+                <label><input type="checkbox" value="android"> Android</label>
+            </section>
+
+            <section class="qh-af-group" data-group="rom" data-mode="multi">
+                <h4>Dung lượng ROM</h4>
+                <label><input type="checkbox" value="lte128"> ≤128 GB</label>
+                <label><input type="checkbox" value="256"> 256 GB</label>
+                <label><input type="checkbox" value="512"> 512 GB</label>
+                <label><input type="checkbox" value="1tb"> 1 TB</label>
+            </section>
+
+            <section class="qh-af-group" data-group="connections" data-mode="multi">
+                <h4>Kết nối</h4>
+                <label><input type="checkbox" value="nfc"> NFC</label>
+                <label><input type="checkbox" value="bluetooth"> Bluetooth</label>
+                <label><input type="checkbox" value="infrared"> Hồng ngoại</label>
+            </section>
+
+            <section class="qh-af-group" data-group="battery" data-mode="single">
+                <h4>Hiệu năng và Pin</h4>
+                <label><input type="radio" name="qhAdvBatteryOpt" value="all"> Tất cả</label>
+                <label><input type="radio" name="qhAdvBatteryOpt" value="lt3000"> Dưới 3000 mAh</label>
+                <label><input type="radio" name="qhAdvBatteryOpt" value="3000_4000"> Pin từ 3000 - 4000 mAh</label>
+                <label><input type="radio" name="qhAdvBatteryOpt" value="4000_5500"> Pin từ 4000 - 5500 mAh</label>
+                <label><input type="radio" name="qhAdvBatteryOpt" value="gt5500"> Pin trâu: trên 5500 mAh</label>
+            </section>
+
+            <section class="qh-af-group" data-group="network" data-mode="multi">
+                <h4>Hỗ trợ mạng</h4>
+                <label><input type="checkbox" value="5g"> 5G</label>
+                <label><input type="checkbox" value="4g"> 4G</label>
+            </section>
+
+            <section class="qh-af-group" data-group="ram" data-mode="multi">
+                <h4>RAM</h4>
+                <label><input type="checkbox" value="16"> 16 GB</label>
+                <label><input type="checkbox" value="12"> 12 GB</label>
+                <label><input type="checkbox" value="8"> 8 GB</label>
+                <label><input type="checkbox" value="6"> 6 GB</label>
+                <label><input type="checkbox" value="4"> 4 GB</label>
+                <label><input type="checkbox" value="3"> 3 GB</label>
+            </section>
+
+            <section class="qh-af-group" data-group="memory_card" data-mode="single">
+                <h4>Thẻ nhớ</h4>
+                <label><input type="radio" name="qhAdvMemoryCardOpt" value="all"> Tất cả</label>
+                <label><input type="radio" name="qhAdvMemoryCardOpt" value="microsd"> MicroSD</label>
+                <label><input type="radio" name="qhAdvMemoryCardOpt" value="none"> Không</label>
+            </section>
+
+            <section class="qh-af-group" data-group="screen_size" data-mode="single">
+                <h4>Màn hình</h4>
+                <label><input type="radio" name="qhAdvScreenSizeOpt" value="all"> Tất cả</label>
+                <label><input type="radio" name="qhAdvScreenSizeOpt" value="small"> Màn hình nhỏ</label>
+                <label><input type="radio" name="qhAdvScreenSizeOpt" value="5_65"> Từ 5 - 6.5 inch</label>
+                <label><input type="radio" name="qhAdvScreenSizeOpt" value="65_68"> Từ 6.5 - 6.8 inch</label>
+                <label><input type="radio" name="qhAdvScreenSizeOpt" value="gt68"> Trên 6.8 inch</label>
+            </section>
+
+            <section class="qh-af-group" data-group="screen_standard" data-mode="multi">
+                <h4>Chuẩn màn hình</h4>
+                <label><input type="checkbox" value="retina"> Retina (iPhone)</label>
+                <label><input type="checkbox" value="2k"> 2K/2K+</label>
+                <label><input type="checkbox" value="1_5k"> 1.5K</label>
+                <label><input type="checkbox" value="fhd"> FHD/FHD+</label>
+                <label><input type="checkbox" value="hd"> HD/HD+</label>
+                <label><input type="checkbox" value="qxga"> QXGA</label>
+                <label><input type="checkbox" value="qvga"> QQVGA/QVGA</label>
+            </section>
+
+            <section class="qh-af-group" data-group="refresh_rate" data-mode="multi">
+                <h4>Tần số quét</h4>
+                <label><input type="checkbox" value="gt144"> Trên 144 Hz</label>
+                <label><input type="checkbox" value="120"> 120 Hz</label>
+                <label><input type="checkbox" value="90"> 90 Hz</label>
+                <label><input type="checkbox" value="60"> 60 Hz</label>
+            </section>
+
+            <section class="qh-af-group" data-group="camera" data-mode="multi">
+                <h4>Camera</h4>
+                <label><input type="checkbox" value="all"> Tất cả</label>
+                <label><input type="checkbox" value="slowmo"> Quay phim Slow Motion</label>
+                <label><input type="checkbox" value="ai_camera"> AI Camera</label>
+                <label><input type="checkbox" value="beauty"> Hiệu ứng làm đẹp</label>
+                <label><input type="checkbox" value="optical_zoom"> Zoom quang học</label>
+                <label><input type="checkbox" value="ois"> Chống rung OIS</label>
+                <label><input type="checkbox" value="macro"> Chụp macro</label>
+                <label><input type="checkbox" value="wide"> Chụp góc rộng</label>
+                <label><input type="checkbox" value="portrait"> Chụp xóa phông</label>
+            </section>
+
+            <section class="qh-af-group" data-group="special" data-mode="multi">
+                <h4>Tính năng đặc biệt</h4>
+                <label><input type="checkbox" value="all"> Tất cả</label>
+                <label><input type="checkbox" value="wireless_charge"> Sạc không dây</label>
+                <label><input type="checkbox" value="reverse_charge"> Sạc ngược cho thiết bị khác</label>
+            </section>
+        </div>
+        <div class="qh-advanced-filter-foot">
+            <button type="button" class="qh-filter-btn qh-filter-btn-reset" id="qhAdvancedFilterClear">Xóa lọc nâng cao</button>
+            <button type="button" class="qh-filter-btn qh-filter-btn-search" id="qhAdvancedFilterApply">Áp dụng bộ lọc</button>
+        </div>
+    </aside>
 
     <!-- Loading Spinner Overlay -->
     <div id="qhFilterLoading" class="qh-loading-overlay" style="display: none;">
@@ -513,6 +650,11 @@
                 
                 <!-- Các nút hành động -->
                 <div style="display: flex; gap: 6px;">
+                    <button class="qh-btn qh-cart-quick-btn"
+                            onclick="event.preventDefault();event.stopPropagation();quickAddToCart({{ product.id }})"
+                            style="flex: 1; padding: 8px 4px; font-size: 12px; border: 1px solid #b91c1c; background: #b91c1c; color: #fff; border-radius: 6px; cursor: pointer; transition: all 0.2s; display:flex; align-items:center; justify-content:center; gap:4px; {% if product.stock == 0 %}opacity: 0.5; pointer-events: none;{% endif %}">
+                        <i class="ri-shopping-cart-2-line"></i> Thêm giỏ
+                    </button>
                     <button class="qh-btn qh-btn-outline qh-compare-btn"
                             data-product-id="{{ product.id }}"
                             data-product-name="{{ product.name }}"
@@ -585,16 +727,152 @@ var QHProductFilter = (function() {
 
     // Lấy giá trị filter hiện tại
     function getFilterParams() {
-        var brand = document.getElementById('filterBrand');
-        var priceRange = document.getElementById('filterPriceRange');
-        var sortPrice = document.getElementById('filterSortPrice');
-
+        var form = document.getElementById('qhFilterBar');
         var params = new URLSearchParams();
-        if (brand && brand.value) params.append('brand', brand.value);
-        if (priceRange && priceRange.value) params.append('price_range', priceRange.value);
-        if (sortPrice && sortPrice.value) params.append('sort_price', sortPrice.value);
+
+        if (!form) {
+            return '';
+        }
+
+        var formData = new FormData(form);
+        formData.forEach(function(value, key) {
+            if (value !== null && String(value).trim() !== '') {
+                params.append(key, String(value).trim());
+            }
+        });
 
         return params.toString();
+    }
+
+    function setAdvancedDrawerOpen(isOpen) {
+        var drawer = document.getElementById('qhAdvancedFilterDrawer');
+        var overlay = document.getElementById('qhAdvancedFilterOverlay');
+        if (!drawer || !overlay) return;
+
+        drawer.classList.toggle('open', isOpen);
+        overlay.classList.toggle('open', isOpen);
+        drawer.setAttribute('aria-hidden', isOpen ? 'false' : 'true');
+        document.body.classList.toggle('qh-lock-scroll', isOpen);
+    }
+
+    function parseHiddenValues(value) {
+        if (!value) return [];
+        return String(value).split(',').map(function(item) {
+            return item.trim().toLowerCase();
+        }).filter(Boolean);
+    }
+
+    function syncAdvancedDrawerFromHidden() {
+        var groups = document.querySelectorAll('.qh-af-group');
+        groups.forEach(function(group) {
+            var groupName = group.getAttribute('data-group');
+            var mode = group.getAttribute('data-mode');
+            var hiddenInput = document.getElementById('qhAdv' + groupName.replace(/(^|_)([a-z])/g, function(_, p1, p2) {
+                return p2.toUpperCase();
+            }));
+            if (!hiddenInput) return;
+
+            var picked = parseHiddenValues(hiddenInput.value);
+            var inputs = group.querySelectorAll('input[type="checkbox"], input[type="radio"]');
+
+            inputs.forEach(function(input) {
+                input.checked = picked.indexOf(String(input.value).toLowerCase()) >= 0;
+            });
+
+            if (mode === 'single' && !picked.length) {
+                var defaultAll = group.querySelector('input[value="all"]');
+                if (defaultAll) defaultAll.checked = true;
+            }
+        });
+    }
+
+    function writeAdvancedHiddenFromDrawer() {
+        var groups = document.querySelectorAll('.qh-af-group');
+        groups.forEach(function(group) {
+            var groupName = group.getAttribute('data-group');
+            var mode = group.getAttribute('data-mode');
+            var hiddenInput = document.getElementById('qhAdv' + groupName.replace(/(^|_)([a-z])/g, function(_, p1, p2) {
+                return p2.toUpperCase();
+            }));
+            if (!hiddenInput) return;
+
+            var values = [];
+            if (mode === 'single') {
+                var checkedRadio = group.querySelector('input[type="radio"]:checked');
+                if (checkedRadio && checkedRadio.value !== 'all') {
+                    values.push(checkedRadio.value.toLowerCase());
+                }
+            } else {
+                var checkedBoxes = group.querySelectorAll('input[type="checkbox"]:checked');
+                checkedBoxes.forEach(function(box) {
+                    values.push(box.value.toLowerCase());
+                });
+                if (values.indexOf('all') >= 0) {
+                    values = [];
+                }
+            }
+
+            hiddenInput.value = values.join(',');
+        });
+    }
+
+    function clearAdvancedDrawerAndHidden() {
+        document.querySelectorAll('.qh-af-group input[type="checkbox"], .qh-af-group input[type="radio"]').forEach(function(input) {
+            input.checked = false;
+        });
+
+        document.querySelectorAll('#qhFilterBar input[type="hidden"]').forEach(function(input) {
+            input.value = '';
+        });
+
+        document.querySelectorAll('.qh-af-group[data-mode="single"]').forEach(function(group) {
+            var defaultAll = group.querySelector('input[value="all"]');
+            if (defaultAll) defaultAll.checked = true;
+        });
+    }
+
+    function initAdvancedFilterDrawer() {
+        var openBtn = document.getElementById('qhFilterSubmit');
+        var closeBtn = document.getElementById('qhAdvancedFilterClose');
+        var overlay = document.getElementById('qhAdvancedFilterOverlay');
+        var applyBtn = document.getElementById('qhAdvancedFilterApply');
+        var clearBtn = document.getElementById('qhAdvancedFilterClear');
+
+        if (!openBtn) return;
+
+        openBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            syncAdvancedDrawerFromHidden();
+            setAdvancedDrawerOpen(true);
+        });
+
+        if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+                setAdvancedDrawerOpen(false);
+            });
+        }
+
+        if (overlay) {
+            overlay.addEventListener('click', function() {
+                setAdvancedDrawerOpen(false);
+            });
+        }
+
+        if (applyBtn) {
+            applyBtn.addEventListener('click', function() {
+                writeAdvancedHiddenFromDrawer();
+                setAdvancedDrawerOpen(false);
+                loadFilter(1);
+            });
+        }
+
+        if (clearBtn) {
+            clearBtn.addEventListener('click', function() {
+                clearAdvancedDrawerAndHidden();
+                setAdvancedDrawerOpen(false);
+                loadFilter(1);
+            });
+        }
     }
 
     // Build URL với filter params
@@ -715,15 +993,15 @@ var QHProductFilter = (function() {
         });
     }
 
-    // Xử lý sự kiện khi nhấn nút tìm kiếm
-    function initFilterButton() {
-        var submitBtn = document.getElementById('qhFilterSubmit');
-        if (submitBtn) {
-            submitBtn.addEventListener('click', function(e) {
-                e.preventDefault();
+    // Xử lý filter cơ bản khi đổi select
+    function initBaseFilterSelects() {
+        ['filterBrand', 'filterPriceRange', 'filterSortPrice'].forEach(function(id) {
+            var control = document.getElementById(id);
+            if (!control) return;
+            control.addEventListener('change', function() {
                 loadFilter(1);
             });
-        }
+        });
     }
 
     // Load trang cụ thể (cho pagination)
@@ -733,7 +1011,9 @@ var QHProductFilter = (function() {
 
     // Khởi tạo
     function init() {
-        initFilterButton();
+        initAdvancedFilterDrawer();
+        initBaseFilterSelects();
+        syncAdvancedDrawerFromHidden();
 
         // Xử lý sự kiện browser back/forward
         window.addEventListener('popstate', function(e) {
@@ -760,6 +1040,48 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <!-- JavaScript điều khiển Wishlist -->
 <script>
+function updateCartBadge(count) {
+    const badge = document.getElementById('qh-cart-count');
+    if (badge) {
+        badge.textContent = count;
+    }
+}
+
+function quickAddToCart(productId) {
+    fetch('{% url "store:cart_add" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: 'product_id=' + productId + '&quantity=1'
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            updateCartBadge(data.total_items);
+            if (window.QHToast) {
+                QHToast.show(data.message, 'success');
+            }
+        } else if (data.require_login) {
+            if (window.QHConfirm) {
+                QHConfirm.show(data.message + '. Bạn có muốn đăng nhập không?', function() {
+                    window.location.href = '{% url "store:login" %}';
+                });
+            } else if (confirm(data.message + '. Bạn có muốn đăng nhập không?')) {
+                window.location.href = '{% url "store:login" %}';
+            }
+        } else if (window.QHToast) {
+            QHToast.show(data.message || 'Không thể thêm vào giỏ hàng', 'error');
+        }
+    })
+    .catch(() => {
+        if (window.QHToast) {
+            QHToast.show('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+        }
+    });
+}
+
 function updateWishlistBadge(count) {
     const badge = document.getElementById('qh-wishlist-count');
     if (badge) {

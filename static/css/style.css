@@ -42,15 +42,18 @@ body {
 
 /* CSS Variables - Brand Colors */
 :root {
-    --qh-primary: #A9CCF0;
-    --qh-secondary: #D3BAFF;
-    --qh-primary-dark: #8BB8E0;
-    --qh-secondary-dark: #C0A8E8;
+    --qh-primary: #b91c1c;
+    --qh-primary-hover: #991b1b;
+    --qh-primary-light: #fee2e2;
+    --qh-price: #b91c1c;
+    --qh-secondary: #fee2e2;
+    --qh-primary-dark: #991b1b;
+    --qh-secondary-dark: #991b1b;
     --qh-text: #333333;
     --qh-text-light: #666666;
-    --qh-bg: #FAFAFA;
+    --qh-bg: #F8F9FA;
     --qh-white: #FFFFFF;
-    --qh-border: #E0E0E0;
+    --qh-border: #EEEEEE;
     --qh-shadow: rgba(0, 0, 0, 0.08);
     --qh-radius: 12px;
     --qh-radius-sm: 8px;
@@ -128,46 +131,56 @@ body {
     width: 100%;
     display: flex;
     align-items: center;
+    border: 2px solid var(--qh-primary);
+    border-radius: var(--qh-radius-lg);
+    overflow: hidden;
+    background: #ffffff;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.qh-search-form:focus-within {
+    border-color: var(--qh-primary);
+    box-shadow: none;
 }
 
 .qh-search-input {
     width: 100%;
     height: 48px;
     padding: 0 20px;
-    border: 2px solid var(--qh-border);
-    border-right: none;
-    border-radius: var(--qh-radius-lg) 0 0 var(--qh-radius-lg);
+    border: none;
+    border-radius: 0;
     font-family: 'Signika', sans-serif;
     font-size: 15px;
-    background: var(--qh-bg);
+    background: #ffffff;
     transition: all 0.3s ease;
 }
 
 .qh-search-btn {
     height: 48px;
     padding: 0 16px;
-    border: 2px solid #b3c4d6;
-    border-left: none;
-    border-radius: 0 var(--qh-radius-lg) var(--qh-radius-lg) 0;
-    background: #8bb8e0;
-    color: white;
+    border: none;
+    border-left: 1px solid var(--qh-primary);
+    border-radius: 0;
+    background: var(--qh-primary);
+    color: #ffffff;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-}
-
-.qh-search-btn:hover {
-    background: var(--qh-primary-dark);
+    transition: none;
 }
 
 .qh-search-input:focus {
     outline: none;
-    border-color: var(--qh-primary);
-    border-right: none;
     background: var(--qh-white);
-    box-shadow: 0 4px 12px rgba(169, 204, 240, 0.3);
+    box-shadow: none;
+}
+
+.qh-search-input:focus-visible,
+.qh-search-btn:focus,
+.qh-search-btn:focus-visible {
+    outline: none;
+    box-shadow: none;
 }
 
 .qh-search-input::placeholder {
@@ -224,7 +237,7 @@ body {
 
 .qh-autocomplete-item:hover,
 .qh-autocomplete-item.active {
-    background: #f0f7ff;
+    background: #fef2f2;
 }
 
 .qh-autocomplete-product {
@@ -339,9 +352,8 @@ body {
 }
 
 .qh-header-icon:hover {
-    /* Không có background, chỉ nổi nhẹ lên */
-    transform: translateY(-3px);
-    box-shadow: 0 6px 16px rgba(169, 204, 240, 0.3);
+    transform: none;
+    box-shadow: none;
 }
 
 .qh-icon-circle {
@@ -376,13 +388,43 @@ body {
     background: #dc2626;
     color: #ffffff;
     font-size: 11px;
-    font-weight: 600;
-    width: 20px;
+    font-weight: 700;
+    line-height: 1;
+    min-width: 20px;
     height: 20px;
+    padding: 0 5px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
+    box-sizing: border-box;
+    font-variant-numeric: tabular-nums;
+    border: 2px solid var(--qh-white);
+}
+
+.qh-icon-badge:empty::before {
+    content: '0';
+}
+
+.qh-header-icon--stat {
+    min-width: 150px;
+}
+
+.qh-header-icon--stat .qh-icon-text {
+    min-width: 76px;
+}
+
+.qh-icon-badge--stat {
+    min-width: 20px;
+    height: 20px;
+    padding: 0 5px;
+    border-radius: 999px;
+}
+
+#qh-wishlist-count:empty::before,
+#qh-cart-count:empty::before,
+#qh-order-count:empty::before {
+    content: '0';
 }
 
 .qh-icon-text {
@@ -390,17 +432,29 @@ body {
     flex-direction: column;
     align-items: flex-start;
     min-width: 70px;
+    transition: transform 0.2s ease;
+}
+
+.qh-header-icon:hover .qh-icon-text {
+    transform: translateY(-2px);
 }
 
 .qh-icon-label {
     font-size: 11px;
     color: #999;
+    transition: color 0.2s ease;
 }
 
 .qh-icon-title {
     font-size: 14px;
     font-weight: 500;
     white-space: nowrap;
+    transition: color 0.2s ease;
+}
+
+.qh-header-icon:hover .qh-icon-label,
+.qh-header-icon:hover .qh-icon-title {
+    color: var(--qh-text);
 }
 
 /* ==================== BUTTON STYLES ==================== */
@@ -419,23 +473,31 @@ body {
 }
 
 .qh-btn-primary {
-    background: linear-gradient(135deg, var(--qh-primary) 0%, var(--qh-primary-dark) 100%);
-    color: var(--qh-text);
+    background: linear-gradient(135deg, var(--qh-primary) 0%, var(--qh-secondary) 100%);
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
 }
 
 .qh-btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(169, 204, 240, 0.4);
+    background: #b91c1c;
+    color: #ffffff;
+    border-color: #b91c1c;
+    box-shadow: 0 6px 20px rgba(185, 28, 28, 0.28);
 }
 
 .qh-btn-secondary {
-    background: #8BB8E0;
-    color: var(--qh-text);
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
 }
 
 .qh-btn-secondary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(211, 186, 255, 0.4);
+    background: #991b1b;
+    color: #ffffff;
+    border-color: #991b1b;
+    box-shadow: 0 6px 20px rgba(185, 28, 28, 0.3);
 }
 
 .qh-btn-danger {
@@ -483,7 +545,8 @@ body {
 .qh-otp-btn {
     padding: 12px 20px;
     background: linear-gradient(135deg, var(--qh-primary) 0%, var(--qh-secondary) 100%);
-    color: var(--qh-text);
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
     border: none;
     border-radius: var(--qh-radius);
     font-family: var(--qh-font);
@@ -496,7 +559,10 @@ body {
 
 .qh-otp-btn:hover:not(:disabled) {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(169, 204, 240, 0.4);
+    background: #b91c1c;
+    color: #ffffff;
+    border-color: #b91c1c;
+    box-shadow: 0 6px 20px rgba(185, 28, 28, 0.25);
 }
 
 .qh-otp-btn:disabled {
@@ -667,6 +733,10 @@ body {
 
     .qh-header-icon {
         padding: 10px;
+    }
+
+    .qh-header-icon--stat {
+        min-width: auto;
     }
 }
 
@@ -1232,7 +1302,7 @@ body {
     justify-content: center;
     font-size: 26px;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(169, 204, 240, 0.5);
+    box-shadow: 0 4px 16px rgba(185, 28, 28, 0.28);
     transition: transform 0.2s, opacity 0.3s, box-shadow 0.2s;
     z-index: 9999;
     opacity: 0;
@@ -1246,7 +1316,9 @@ body {
 
 .qh-scroll-top:hover {
     transform: scale(1.08);
-    box-shadow: 0 6px 24px rgba(169, 204, 240, 0.6);
+    background: #b91c1c;
+    color: #ffffff;
+    box-shadow: 0 6px 24px rgba(185, 28, 28, 0.35);
 }
 
 /* Nút Zalo: đồng bộ cùng style */
@@ -1265,7 +1337,7 @@ body {
     justify-content: center;
     font-size: 26px;
     cursor: pointer;
-    box-shadow: 0 4px 16px rgba(169, 204, 240, 0.5);
+    box-shadow: 0 4px 16px rgba(185, 28, 28, 0.28);
     transition: transform 0.2s, box-shadow 0.2s;
     z-index: 9998;
     text-decoration: none;
@@ -1273,8 +1345,9 @@ body {
 
 .qh-zalo-fab:hover {
     transform: scale(1.08);
-    box-shadow: 0 6px 24px rgba(169, 204, 240, 0.6);
-    color: var(--qh-text);
+    background: #b91c1c;
+    color: #ffffff;
+    box-shadow: 0 6px 24px rgba(185, 28, 28, 0.35);
 }
 
 @media (max-width: 768px) {
@@ -1400,7 +1473,7 @@ body {
 .qh-pf-student-header-icon {
     width: 64px;
     height: 64px;
-    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -1411,7 +1484,7 @@ body {
 .qh-pf-student-header-icon svg {
     width: 32px;
     height: 32px;
-    color: #0284c7;
+    color: #b91c1c;
 }
 
 .qh-pf-student-title {
@@ -1429,7 +1502,7 @@ body {
 }
 
 .qh-pf-student-desc strong {
-    color: #0284c7;
+    color: #b91c1c;
     font-weight: 600;
 }
 
@@ -1476,7 +1549,7 @@ body {
 }
 
 .qh-pf-student-desc strong {
-    color: #0284c7;
+    color: #b91c1c;
     font-weight: 600;
 }
 
@@ -1586,7 +1659,7 @@ body {
 
 /* Voucher Code Card */
 .qh-pf-student-voucher-code {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
     border-radius: 12px;
     padding: 20px;
     text-align: center;
@@ -1755,7 +1828,7 @@ body {
 .qh-pf-student-input:focus {
     outline: none;
     border-color: var(--qh-primary);
-    box-shadow: 0 0 0 3px rgba(169, 204, 240, 0.2);
+    box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.16);
 }
 
 .qh-pf-student-input::placeholder {
@@ -1781,7 +1854,7 @@ body {
 .qh-pf-student-input-otp:focus {
     outline: none;
     border-color: var(--qh-primary);
-    box-shadow: 0 0 0 3px rgba(169, 204, 240, 0.2);
+    box-shadow: 0 0 0 3px rgba(185, 28, 28, 0.16);
 }
 
 .qh-pf-student-input-otp::placeholder {
@@ -1813,11 +1886,11 @@ body {
 }
 
 .qh-pf-student-message.info {
-    color: #0284c7;
-    background: rgba(2, 132, 199, 0.1);
+    color: #b91c1c;
+    background: rgba(185, 28, 28, 0.1);
     padding: 8px 12px;
     border-radius: 6px;
-    border: 1px solid rgba(2, 132, 199, 0.2);
+    border: 1px solid rgba(185, 28, 28, 0.2);
 }
 
 /* Buttons */
@@ -1838,23 +1911,31 @@ body {
 }
 
 .qh-pf-student-btn-primary {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
+    background: linear-gradient(135deg, var(--qh-primary) 0%, var(--qh-secondary) 100%);
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
 }
 
 .qh-pf-student-btn-primary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+    background: #b91c1c;
+    color: #ffffff;
+    border-color: #b91c1c;
+    box-shadow: 0 6px 20px rgba(185, 28, 28, 0.35);
 }
 
 .qh-pf-student-btn-secondary {
     background: var(--qh-primary);
-    color: var(--qh-text);
+    color: #b91c1c;
+    border: 1px solid #fca5a5;
 }
 
 .qh-pf-student-btn-secondary:hover {
     transform: translateY(-2px);
-    box-shadow: 0 6px 20px rgba(169, 204, 240, 0.4);
+    background: #b91c1c;
+    color: #ffffff;
+    border-color: #b91c1c;
+    box-shadow: 0 6px 20px rgba(185, 28, 28, 0.28);
 }
 
 .qh-pf-student-btn:disabled {

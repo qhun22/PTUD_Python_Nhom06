@@ -63,13 +63,14 @@
                     </a>
 
                     <!-- Dropdown màu sắc -->
-                    {% if item.color_name %}
                     <div class="qh-cart-color-dropdown" data-item-id="{{ item.id }}">
-                        <div class="qh-cart-color-selected" onclick="toggleColorDropdown(this)">
-                            <span>Màu: {{ item.color_name|color_only }}</span>
+                        <div class="qh-cart-color-selected" {% if item.color_options %}onclick="toggleColorDropdown(this)"{% endif %}>
+                            <span>Màu: {{ item.display_color|color_only|default:'Mặc định' }}</span>
+                            {% if item.color_options %}
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
+                            {% endif %}
                         </div>
                         <!-- Tùy chọn màu sắc (bên trong dropdown) -->
                         {% if item.color_options %}
@@ -83,22 +84,22 @@
                                 {% if opt.thumbnail %}
                                 <img src="{{ opt.thumbnail }}" alt="{{ opt.color_name|color_only }}">
                                 {% endif %}
-                                <span>{{ opt.color_name|color_only }}</span>
+                                <span>{{ opt.color_name|color_only|default:'Mặc định' }}</span>
                             </button>
                             {% endfor %}
                         </div>
                         {% endif %}
                     </div>
-                    {% endif %}
 
                     <!-- Dropdown dung lượng -->
-                    {% if item.storage %}
                     <div class="qh-cart-storage-dropdown" data-item-id="{{ item.id }}">
-                        <div class="qh-cart-storage-selected" onclick="toggleStorageDropdown(this)">
-                            <span>Dung lượng: {{ item.storage }}</span>
+                        <div class="qh-cart-storage-selected" {% if item.storage_options and item.storage_options|length > 1 %}onclick="toggleStorageDropdown(this)"{% endif %}>
+                            <span>Dung lượng: {{ item.display_storage|default:'Mặc định' }}</span>
+                            {% if item.storage_options and item.storage_options|length > 1 %}
                             <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"/>
                             </svg>
+                            {% endif %}
                         </div>
                         <!-- Tùy chọn dung lượng (bên trong dropdown) -->
                         {% if item.storage_options and item.storage_options|length > 1 %}
@@ -114,14 +115,13 @@
                         </div>
                         {% endif %}
                     </div>
-                    {% endif %}
                 </div>
 
                 <!-- Phải: Giá + Số lượng + Xóa -->
                 <div class="qh-cart-item-right">
                     <div class="qh-cart-item-price">
                         <div class="qh-cart-item-current-price" id="itemPrice_{{ item.id }}">
-                            {{ item.price_at_add|format_price_with_unit }}
+                            {{ item.display_price|format_price_with_unit }}
                         </div>
                         {% if item.original_price %}
                         <div class="qh-cart-item-original-price" id="itemOrigPrice_{{ item.id }}">

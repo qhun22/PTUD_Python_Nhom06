@@ -78,7 +78,7 @@
 
 /* ── Header ──────────────────────────────────────────────── */
 .qh-chat-header {
-    background: linear-gradient(135deg, var(--qh-chat-primary), var(--qh-chat-primary-dark));
+    background: linear-gradient(135deg, #224560, #047857);
     color: #fff;
     padding: 14px 18px;
     display: flex;
@@ -115,27 +115,29 @@
 }
 
 .qh-chat-header-btn {
-    border: 1px solid rgba(255, 255, 255, .6);
-    background: rgba(255, 255, 255, .16);
-    color: #fff;
+    border: 1px solid #059669;
+    background: #d1fae5;
+    color: #059669;
     font-size: 13px;
     font-weight: 600;
+    font-family: 'Signika', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
     border-radius: 999px;
     padding: 5px 14px;
     line-height: 1.1;
     cursor: pointer;
-    transition: background .15s, color .15s, border-color .15s, transform .15s;
+    transition: background .15s, color .15s, border-color .15s, transform .15s, box-shadow .15s;
 }
 
 .qh-chat-header-btn:hover {
-    background: rgba(255, 255, 255, .95);
-    color: var(--qh-chat-primary-dark);
-    border-color: #fff;
+    background: #059669;
+    color: #d1fae5;
+    border-color: #059669;
+    box-shadow: 0 2px 8px rgba(5, 150, 105, .22);
     transform: translateY(-1px);
 }
 
 .qh-chat-header-btn--ghost {
-    background: transparent;
+    background: #d1fae5;
 }
 
 .qh-chat-header-info {

@@ -7,6 +7,7 @@ import json
 import uuid
 import random
 import time
+import re
 import traceback
 import requests
 from decimal import Decimal
@@ -21,9 +22,263 @@ from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods, require_POST
 from django.db import models
 from django.db.models import Q, Count, Sum, Max
+from django.db.models.functions import Cast
+from django.core.exceptions import ObjectDoesNotExist
 from django.utils import timezone
 from django.urls import reverse
 import datetime
+def _parse_multi_values(raw_value):
+    if not raw_value:
+        return []
+    values = []
+    for chunk in str(raw_value).split(','):
+        item = chunk.strip().lower()
+        if item and item not in values:
+            values.append(item)
+    return values
+
+
+def _build_spec_token_q(token_map, selected_values):
+    query = Q()
+    for key in selected_values:
+        tokens = token_map.get(key, [])
+        for token in tokens:
+            query |= Q(_spec_text__icontains=token)
+    return query
+
+
+def _extract_battery_mah_from_text(spec_text):
+    if not spec_text:
+        return []
+
+    normalized = str(spec_text).lower().replace(',', '.')
+    # Bắt các dạng: 4700 mAh, 4700mah, pin 5000
+    matches = re.findall(r'(\d{3,5})\s*(?:mah|m\s*a\s*h)', normalized)
+    if not matches:
+        matches = re.findall(r'pin[^\d]{0,20}(\d{3,5})', normalized)
+
+    values = []
+    for raw in matches:
+        try:
+            val = int(raw)
+            if 500 <= val <= 10000 and val not in values:
+                values.append(val)
+        except (TypeError, ValueError):
+            continue
+    return values
+
+
+def _battery_match(selected_battery_filters, spec_text):
+    if not selected_battery_filters or 'all' in selected_battery_filters:
+        return True
+
+    battery_values = _extract_battery_mah_from_text(spec_text)
+    if not battery_values:
+        return False
+
+    for battery in battery_values:
+        for selected in selected_battery_filters:
+            if selected == 'lt3000' and battery < 3000:
+                return True
+            if selected == '3000_4000' and 3000 <= battery <= 4000:
+                return True
+            if selected == '4000_5500' and 4000 <= battery <= 5500:
+                return True
+            if selected == 'gt5500' and battery > 5500:
+                return True
+    return False
+
+
+def _apply_advanced_product_filters(products_qs, request):
+    """Áp dụng bộ lọc nâng cao từ panel filter (query string)."""
+    selected = {
+        'os': _parse_multi_values(request.GET.get('os', '').strip()),
+        'rom': _parse_multi_values(request.GET.get('rom', '').strip()),
+        'connections': _parse_multi_values(request.GET.get('connections', '').strip()),
+        'battery': _parse_multi_values(request.GET.get('battery', '').strip()),
+        'network': _parse_multi_values(request.GET.get('network', '').strip()),
+        'ram': _parse_multi_values(request.GET.get('ram', '').strip()),
+        'memory_card': _parse_multi_values(request.GET.get('memory_card', '').strip()),
+        'screen_size': _parse_multi_values(request.GET.get('screen_size', '').strip()),
+        'screen_standard': _parse_multi_values(request.GET.get('screen_standard', '').strip()),
+        'refresh_rate': _parse_multi_values(request.GET.get('refresh_rate', '').strip()),
+        'camera': _parse_multi_values(request.GET.get('camera', '').strip()),
+        'special': _parse_multi_values(request.GET.get('special', '').strip()),
+    }
+
+    need_spec_text = any([
+        selected['os'],
+        selected['connections'],
+        selected['battery'],
+        selected['network'],
+        selected['ram'],
+        selected['memory_card'],
+        selected['screen_size'],
+        selected['screen_standard'],
+        selected['refresh_rate'],
+        selected['camera'],
+        selected['special'],
+    ])
+
+    if need_spec_text:
+        products_qs = products_qs.annotate(_spec_text=Cast('detail__specification__spec_json', models.TextField()))
+
+    if selected['os']:
+        os_token_map = {
+            'ios': ['ios', 'iphone'],
+            'android': ['android'],
+        }
+        products_qs = products_qs.filter(_build_spec_token_q(os_token_map, selected['os']))
+
+    if selected['rom']:
+        rom_q = Q()
+        for rom in selected['rom']:
+            if rom == 'lte128':
+                rom_q |= Q(detail__variants__storage__icontains='32')
+                rom_q |= Q(detail__variants__storage__icontains='64')
+                rom_q |= Q(detail__variants__storage__icontains='128')
+            elif rom == '256':
+                rom_q |= Q(detail__variants__storage__icontains='256')
+            elif rom == '512':
+                rom_q |= Q(detail__variants__storage__icontains='512')
+            elif rom == '1tb':
+                rom_q |= Q(detail__variants__storage__icontains='1tb')
+                rom_q |= Q(detail__variants__storage__icontains='1024')
+        if rom_q:
+            products_qs = products_qs.filter(rom_q)
+
+    if selected['connections']:
+        connection_map = {
+            'nfc': ['nfc'],
+            'bluetooth': ['bluetooth'],
+            'infrared': ['hồng ngoại', 'hong ngoai', 'infrared', 'ir'],
+        }
+        products_qs = products_qs.filter(_build_spec_token_q(connection_map, selected['connections']))
+
+    if selected['battery'] and 'all' not in selected['battery']:
+        battery_candidate_ids = []
+        battery_candidates = products_qs.select_related('detail__specification')
+        for product in battery_candidates:
+            spec_json = {}
+            detail = getattr(product, 'detail', None)
+            if detail:
+                try:
+                    specification = detail.specification
+                    spec_json = specification.spec_json or {}
+                except ObjectDoesNotExist:
+                    spec_json = {}
+
+            spec_text = json.dumps(spec_json, ensure_ascii=False)
+            if _battery_match(selected['battery'], spec_text):
+                battery_candidate_ids.append(product.id)
+
+        if not battery_candidate_ids:
+            return products_qs.none(), selected
+
+        products_qs = products_qs.filter(id__in=battery_candidate_ids)
+
+    if selected['network']:
+        network_map = {
+            '5g': ['5g'],
+            '4g': ['4g'],
+        }
+        products_qs = products_qs.filter(_build_spec_token_q(network_map, selected['network']))
+
+    if selected['ram']:
+        ram_map = {
+            '16': ['16 gb', '16gb'],
+            '12': ['12 gb', '12gb'],
+            '8': ['8 gb', '8gb'],
+            '6': ['6 gb', '6gb'],
+            '4': ['4 gb', '4gb'],
+            '3': ['3 gb', '3gb'],
+        }
+        products_qs = products_qs.filter(_build_spec_token_q(ram_map, selected['ram']))
+
+    if selected['memory_card'] and 'all' not in selected['memory_card']:
+        memory_map = {
+            'microsd': ['microsd', 'micro sd', 'thẻ nhớ'],
+            'none': ['không hỗ trợ thẻ nhớ', 'khong ho tro the nho', 'không có khe thẻ nhớ'],
+        }
+        products_qs = products_qs.filter(_build_spec_token_q(memory_map, selected['memory_card']))
+
+    if selected['screen_size'] and 'all' not in selected['screen_size']:
+        screen_size_map = {
+            'small': ['4.7', '5.0', '5.4', '5.5', '5.8', '6.0'],
+            '5_65': ['5.0', '5.5', '5.8', '6.1', '6.2', '6.3', '6.4', '6.5'],
+            '65_68': ['6.5', '6.6', '6.7', '6.8'],
+            'gt68': ['6.9', '7.0'],
+        }
+        products_qs = products_qs.filter(_build_spec_token_q(screen_size_map, selected['screen_size']))
+
+    if selected['screen_standard']:
+        screen_standard_map = {
+            'retina': ['retina'],
+            '2k': ['2k', '2k+'],
+            '1_5k': ['1.5k', '1,5k'],
+            'fhd': ['fhd', 'fhd+'],
+            'hd': ['hd', 'hd+'],
+            'qxga': ['qxga'],
+            'qvga': ['qqvga', 'qvga'],
+        }
+        products_qs = products_qs.filter(_build_spec_token_q(screen_standard_map, selected['screen_standard']))
+
+    if selected['refresh_rate']:
+        refresh_map = {
+            'gt144': ['144hz', '165hz', '240hz'],
+            '120': ['120hz'],
+            '90': ['90hz'],
+            '60': ['60hz'],
+        }
+        products_qs = products_qs.filter(_build_spec_token_q(refresh_map, selected['refresh_rate']))
+
+    if selected['camera'] and 'all' not in selected['camera']:
+        camera_map = {
+            'slowmo': ['slow motion', 'slowmo', 'quay chậm'],
+            'ai_camera': ['ai camera'],
+            'beauty': ['làm đẹp', 'lam dep', 'beauty'],
+            'optical_zoom': ['zoom quang', 'optical zoom'],
+            'ois': ['ois', 'chống rung quang học'],
+            'macro': ['macro'],
+            'wide': ['góc rộng', 'goc rong', 'ultrawide', 'wide'],
+            'portrait': ['xóa phông', 'xoa phong', 'portrait'],
+        }
+        products_qs = products_qs.filter(_build_spec_token_q(camera_map, selected['camera']))
+
+    if selected['special'] and 'all' not in selected['special']:
+        special_map = {
+            'wireless_charge': ['sạc không dây', 'sac khong day', 'wireless charge'],
+            'reverse_charge': ['sạc ngược', 'sac nguoc', 'reverse charge'],
+        }
+        products_qs = products_qs.filter(_build_spec_token_q(special_map, selected['special']))
+
+    return products_qs.distinct(), selected
+
+
+def _annotate_effective_price(products_qs):
+    """Giá hiển thị thực tế trên card để dùng cho lọc/sắp xếp."""
+    return products_qs.annotate(
+        _variant_min_price=models.Min('detail__variants__price'),
+        _effective_price=models.Case(
+            models.When(
+                detail__original_price__gt=0,
+                detail__discount_percent__gt=0,
+                then=models.F('detail__original_price') - (models.F('detail__original_price') * models.F('detail__discount_percent') / 100)
+            ),
+            models.When(
+                detail__original_price__gt=0,
+                then=models.F('detail__original_price')
+            ),
+            models.When(
+                _variant_min_price__gt=0,
+                then=models.F('_variant_min_price')
+            ),
+            default=models.F('price'),
+            output_field=models.DecimalField(max_digits=15, decimal_places=0)
+        )
+    )
+
+
 
 
 
@@ -332,6 +587,12 @@ def home(request):
     selected_brand = request.GET.get('brand', '').strip()
     if selected_brand:
         products_list = products_list.filter(brand__slug=selected_brand)
+
+    # Bộ lọc nâng cao
+    products_list, selected_advanced_filters = _apply_advanced_product_filters(products_list, request)
+
+    # Luôn có giá hiển thị thực tế để sort đúng với UI
+    products_list = _annotate_effective_price(products_list)
     
     # Bộ lọc: theo khoảng giá - SỬ DỤNG discounted_price từ ProductDetail
     selected_price_range = request.GET.get('price_range', '').strip()
@@ -345,43 +606,18 @@ def home(request):
     }
     if selected_price_range in price_ranges:
         min_p, max_p = price_ranges[selected_price_range]
-        # Lọc theo giá thực tế hiển thị trên card:
-        # 1) Giá giảm từ ProductDetail (nếu có)
-        # 2) Giá gốc ProductDetail
-        # 3) Giá nhỏ nhất của biến thể
-        # 4) Product.price (fallback cuối)
-        products_list = products_list.annotate(
-            _variant_min_price=models.Min('detail__variants__price'),
-            _discounted_price=models.Case(
-                models.When(
-                    detail__original_price__gt=0,
-                    detail__discount_percent__gt=0,
-                    then=models.F('detail__original_price') - (models.F('detail__original_price') * models.F('detail__discount_percent') / 100)
-                ),
-                models.When(
-                    detail__original_price__gt=0,
-                    then=models.F('detail__original_price')
-                ),
-                models.When(
-                    _variant_min_price__gt=0,
-                    then=models.F('_variant_min_price')
-                ),
-                default=models.F('price'),
-                output_field=models.DecimalField(max_digits=15, decimal_places=0)
-            )
-        )
         if max_p is not None:
-            products_list = products_list.filter(_discounted_price__gte=min_p, _discounted_price__lt=max_p)
+            products_list = products_list.filter(_effective_price__gte=min_p, _effective_price__lt=max_p)
         else:
-            products_list = products_list.filter(_discounted_price__gte=min_p)
+            products_list = products_list.filter(_effective_price__gte=min_p)
     
     # Sắp xếp theo giá
     selected_sort_price = request.GET.get('sort_price', '').strip()
     
     if selected_sort_price == 'asc':
-        products_list = products_list.order_by('stock_order', 'price')
+        products_list = products_list.order_by('stock_order', '_effective_price', 'id')
     elif selected_sort_price == 'desc':
-        products_list = products_list.order_by('stock_order', '-price')
+        products_list = products_list.order_by('stock_order', '-_effective_price', 'id')
     else:
         # Default: Random display (có hàng trước, sau đó hết hàng)
         # Split thành 2 group, random mỗi group riêng, sau đó ghép lại
@@ -471,6 +707,7 @@ def home(request):
         'selected_brand': selected_brand,
         'selected_price_range': selected_price_range,
         'selected_sort_price': selected_sort_price,
+        'selected_advanced_filters': selected_advanced_filters,
     }
     
     # Lấy danh sách brands cho header và featured brands
@@ -608,6 +845,12 @@ def product_filter_json(request):
     if selected_brand:
         products_list = products_list.filter(brand__slug=selected_brand)
 
+    # Bộ lọc nâng cao
+    products_list, _ = _apply_advanced_product_filters(products_list, request)
+
+    # Luôn có giá hiển thị thực tế để sort đúng với UI
+    products_list = _annotate_effective_price(products_list)
+
     # Lọc theo khoảng giá - SỬ DỤNG discounted_price từ ProductDetail
     price_ranges = {
         '0-2': (0, 2000000),
@@ -620,35 +863,10 @@ def product_filter_json(request):
 
     if selected_price_range in price_ranges:
         min_p, max_p = price_ranges[selected_price_range]
-        # Lọc theo giá thực tế hiển thị trên card:
-        # 1) Giá giảm từ ProductDetail (nếu có)
-        # 2) Giá gốc ProductDetail
-        # 3) Giá nhỏ nhất của biến thể
-        # 4) Product.price (fallback cuối)
-        products_list = products_list.annotate(
-            _variant_min_price=models.Min('detail__variants__price'),
-            _discounted_price=models.Case(
-                models.When(
-                    detail__original_price__gt=0,
-                    detail__discount_percent__gt=0,
-                    then=models.F('detail__original_price') - (models.F('detail__original_price') * models.F('detail__discount_percent') / 100)
-                ),
-                models.When(
-                    detail__original_price__gt=0,
-                    then=models.F('detail__original_price')
-                ),
-                models.When(
-                    _variant_min_price__gt=0,
-                    then=models.F('_variant_min_price')
-                ),
-                default=models.F('price'),
-                output_field=models.DecimalField(max_digits=15, decimal_places=0)
-            )
-        )
         if max_p is not None:
-            products_list = products_list.filter(_discounted_price__gte=min_p, _discounted_price__lt=max_p)
+            products_list = products_list.filter(_effective_price__gte=min_p, _effective_price__lt=max_p)
         else:
-            products_list = products_list.filter(_discounted_price__gte=min_p)
+            products_list = products_list.filter(_effective_price__gte=min_p)
 
     # Sắp xếp
     from django.db.models import Case, When, IntegerField
@@ -661,9 +879,9 @@ def product_filter_json(request):
     )
 
     if selected_sort_price == 'asc':
-        products_list = products_list.order_by('stock_order', 'price')
+        products_list = products_list.order_by('stock_order', '_effective_price', 'id')
     elif selected_sort_price == 'desc':
-        products_list = products_list.order_by('stock_order', '-price')
+        products_list = products_list.order_by('stock_order', '-_effective_price', 'id')
     else:
         # Default: Random display giống hàm home
         import random

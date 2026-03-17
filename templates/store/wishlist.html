@@ -86,6 +86,11 @@
 
                 <!-- Các nút hành động -->
                 <div style="display: flex; gap: 6px;">
+                    <button class="qh-btn qh-cart-quick-btn"
+                            onclick="event.preventDefault();event.stopPropagation();quickAddToCart({{ product.id }})"
+                            style="flex: 1; padding: 8px 4px; font-size: 12px; border: 1px solid #b91c1c; background: #b91c1c; color: #fff; border-radius: 6px; cursor: pointer; transition: all 0.2s; display:flex; align-items:center; justify-content:center; gap:4px; {% if product.stock == 0 %}opacity: 0.5; pointer-events: none;{% endif %}">
+                        <i class="ri-shopping-cart-2-line"></i> Thêm giỏ
+                    </button>
                     <button class="qh-btn qh-btn-outline qh-compare-btn"
                             data-product-id="{{ product.id }}"
                             data-product-name="{{ product.name }}"
@@ -149,6 +154,50 @@
 {% block extra_js %}
 <!-- JavaScript điều khiển Wishlist -->
 <script>
+function updateCartBadge(count) {
+    var badge = document.getElementById('qh-cart-count');
+    if (badge) {
+        badge.textContent = count;
+    }
+}
+
+function quickAddToCart(productId) {
+    fetch('{% url "store:cart_add" %}', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: 'product_id=' + productId + '&quantity=1'
+    })
+    .then(function(response) {
+        return response.json();
+    })
+    .then(function(data) {
+        if (data.success) {
+            updateCartBadge(data.total_items);
+            if (window.QHToast) {
+                QHToast.show(data.message, 'success');
+            }
+        } else if (data.require_login) {
+            if (window.QHConfirm) {
+                QHConfirm.show(data.message + '. Bạn có muốn đăng nhập không?', function() {
+                    window.location.href = '{% url "store:login" %}';
+                });
+            } else if (confirm(data.message + '. Bạn có muốn đăng nhập không?')) {
+                window.location.href = '{% url "store:login" %}';
+            }
+        } else if (window.QHToast) {
+            QHToast.show(data.message || 'Không thể thêm vào giỏ hàng', 'error');
+        }
+    })
+    .catch(function() {
+        if (window.QHToast) {
+            QHToast.show('Có lỗi xảy ra. Vui lòng thử lại.', 'error');
+        }
+    });
+}
+
 function updateWishlistBadge(count) {
     var badge = document.getElementById('qh-wishlist-count');
     if (badge) {

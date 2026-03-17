@@ -248,6 +248,14 @@ def product_detail_view(request, product_id):
             .select_related('detail')
             .order_by('?')[:5]
         )
+
+    # Danh sách sản phẩm đã yêu thích (để hiển thị trạng thái tim ở card related)
+    wishlist_product_ids = []
+    if request.user.is_authenticated:
+        from store.models import Wishlist
+        wishlist = Wishlist.get_or_create_for_user(request.user)
+        if wishlist:
+            wishlist_product_ids = list(wishlist.products.values_list('id', flat=True))
     
     context = {
         'product': product,
@@ -268,6 +276,7 @@ def product_detail_view(request, product_id):
         'can_review': can_review,
         'must_login': must_login,
         'related_products': related_products,
+        'wishlist_product_ids': wishlist_product_ids,
     }
     
     return render(request, 'store/product_detail.html', context)
@@ -541,18 +550,116 @@ def cart_detail(request):
             item.original_price = None
             item.color_thumbnail = ''  # Ảnh màu hiện tại
 
+            # Tự vá dữ liệu cũ: item thiếu màu/dung lượng -> gán 1 biến thể hợp lệ
+            # CHỈ chạy khi thực sự thiếu dữ liệu (sau khi strip)
+            needs_save = False
+            item_color_name = (item.color_name or '').strip()
+            item_storage = (item.storage or '').strip()
+            if not item_color_name or not item_storage:
+                fallback_variants = ProductVariant.objects.filter(
+                    detail__product=product,
+                    is_active=True
+                )
+                if not fallback_variants.exists():
+                    fallback_variants = ProductVariant.objects.filter(detail__product=product)
+
+                fallback_variant = fallback_variants.order_by('-stock_quantity', 'color_name', 'storage').first()
+                if fallback_variant:
+                    if not item_color_name:
+                        item.color_name = fallback_variant.color_name or ''
+                        item_color_name = (item.color_name or '').strip()
+                        needs_save = True
+                    if not item.color_code:
+                        item.color_code = fallback_variant.color_hex or ''
+                        needs_save = True
+                    if not item_storage:
+                        item.storage = fallback_variant.storage or ''
+                        item_storage = (item.storage or '').strip()
+                        needs_save = True
+                    if (not item.price_at_add or item.price_at_add <= 0) and fallback_variant.price:
+                        item.price_at_add = fallback_variant.price
+                        needs_save = True
+
+            # Nếu vẫn còn giá 0 (legacy item hoặc sản phẩm không có variant), fallback theo detail/product
+            if not item.price_at_add or item.price_at_add <= 0:
+                fallback_price = Decimal('0')
+                try:
+                    detail_for_price = ProductDetail.objects.get(product=product)
+                    if detail_for_price.discounted_price:
+                        fallback_price = Decimal(detail_for_price.discounted_price)
+                except ProductDetail.DoesNotExist:
+                    pass
+
+                if fallback_price <= 0 and product.price:
+                    fallback_price = Decimal(product.price)
+                if fallback_price <= 0 and product.original_price:
+                    fallback_price = Decimal(product.original_price)
+
+                if fallback_price > 0:
+                    item.price_at_add = fallback_price
+                    needs_save = True
+
+            if needs_save:
+                item.save(update_fields=['color_name', 'color_code', 'storage', 'price_at_add', 'updated_at'])
+
+            # Dữ liệu hiển thị an toàn (không để trống trên UI)
+            item.display_color = item.color_name if item.color_name else 'Mặc định'
+            item.display_storage = item.storage if item.storage else 'Mặc định'
+            item.display_price = item.price_at_add if (item.price_at_add and item.price_at_add > 0) else Decimal('0')
+
+            # Nếu chưa có giá thì fallback hiển thị trực tiếp từ detail/product
+            if item.display_price <= 0:
+                try:
+                    detail_for_display = ProductDetail.objects.get(product=product)
+                    if detail_for_display.discounted_price:
+                        item.display_price = Decimal(detail_for_display.discounted_price)
+                    elif detail_for_display.summary_original_price:
+                        item.display_price = Decimal(detail_for_display.summary_original_price)
+                except ProductDetail.DoesNotExist:
+                    pass
+                if item.display_price <= 0 and product.price:
+                    item.display_price = Decimal(product.price)
+                if item.display_price <= 0 and product.original_price:
+                    item.display_price = Decimal(product.original_price)
+
+            # Nếu vẫn không có original_price, dùng summary_original_price để hiển thị gạch ngang khi phù hợp
+            if not item.original_price:
+                try:
+                    detail_for_orig = ProductDetail.objects.get(product=product)
+                    if detail_for_orig.summary_original_price and item.display_price and Decimal(detail_for_orig.summary_original_price) > item.display_price:
+                        item.original_price = Decimal(detail_for_orig.summary_original_price)
+                except ProductDetail.DoesNotExist:
+                    pass
+
             # Lấy variants để biết các màu có sẵn
             try:
                 detail = ProductDetail.objects.get(product=product)
                 variants = detail.variants.filter(is_active=True)
 
-                # Tìm original_price của variant hiện tại
+                # Tìm variant hiện tại (exact + normalized) để lấy giá và original_price
+                # Sử dụng biến đã strip ở trên
                 current_variant = variants.filter(
-                    color_name=item.color_name,
-                    storage=item.storage
+                    color_name=item_color_name,
+                    storage=item_storage
                 ).first()
-                if current_variant and current_variant.original_price > current_variant.price:
-                    item.original_price = current_variant.original_price
+                if not current_variant and (item_color_name or item_storage):
+                    ic = item_color_name
+                    ic_norm = ic.split(' - ', 1)[1].strip() if ' - ' in ic else ic
+                    for v in variants:
+                        vc = (v.color_name or '').strip()
+                        vc_norm = vc.split(' - ', 1)[1].strip() if ' - ' in vc else vc
+                        if vc_norm == ic_norm and (v.storage or '').strip() == item_storage:
+                            current_variant = v
+                            break
+                if current_variant:
+                    if current_variant.original_price and current_variant.original_price > current_variant.price:
+                        item.original_price = current_variant.original_price
+                    # Đảm bảo có giá hiển thị từ variant nếu item.price_at_add = 0
+                    if (not item.display_price or item.display_price <= 0) and current_variant.price:
+                        item.display_price = Decimal(current_variant.price)
+                    if (not item.price_at_add or item.price_at_add <= 0) and current_variant.price:
+                        item.price_at_add = Decimal(current_variant.price)
+                        item.save(update_fields=['price_at_add', 'updated_at'])
 
                 # Lấy unique colors với SKU
                 seen_colors = {}
@@ -562,42 +669,92 @@ def cart_detail(request):
                         seen_colors[v.color_name] = True
                         color_variants.append(v)
 
-                # Lấy ảnh thumbnail cho từng màu từ FolderColorImage
-                if product.brand_id:
-                    sku_list = list(set(v.sku for v in color_variants if v.sku))
-                    folder_images = {}
-                    if sku_list:
-                        imgs = FolderColorImage.objects.filter(
-                            brand_id=product.brand_id,
-                            sku__in=sku_list
-                        ).order_by('sku', 'order')
-                        for img in imgs:
-                            if img.sku not in folder_images:
-                                folder_images[img.sku] = img.image.url
+                # Lấy ảnh thumbnail cho từng màu từ FolderColorImage (nếu có)
+                sku_list = list(set(v.sku for v in color_variants if v.sku))
+                folder_images = {}
+                if product.brand_id and sku_list:
+                    imgs = FolderColorImage.objects.filter(
+                        brand_id=product.brand_id,
+                        sku__in=sku_list
+                    ).order_by('sku', 'order')
+                    for img in imgs:
+                        if img.sku not in folder_images:
+                            folder_images[img.sku] = img.image.url
 
-                    for v in color_variants:
-                        thumb = folder_images.get(v.sku, '')
-                        item.color_options.append({
-                            'color_name': v.color_name,
-                            'sku': v.sku or '',
-                            'thumbnail': thumb,
-                            'is_selected': v.color_name == item.color_name,
-                        })
-                        # Lưu thumbnail của màu hiện tại
-                        if v.color_name == item.color_name and thumb:
-                            item.color_thumbnail = thumb
+                # Luôn build color options kể cả khi không có thumbnail/brand
+                # Sử dụng flexible matching để tìm màu hiện tại (dùng biến đã strip ở trên)
+                item_color_normalized = item_color_name
+                if ' - ' in item_color_normalized:
+                    item_color_normalized = item_color_normalized.split(' - ', 1)[1].strip()
 
-                # Lấy storage options cho màu hiện tại
+                for v in color_variants:
+                    thumb = folder_images.get(v.sku, '')
+                    v_color_normalized = (v.color_name or '').strip()
+                    if ' - ' in v_color_normalized:
+                        v_color_normalized = v_color_normalized.split(' - ', 1)[1].strip()
+
+                    # Flexible matching: so khớp cả full name và normalized name
+                    is_selected = (v.color_name == item_color_name) or (v_color_normalized == item_color_normalized and item_color_normalized)
+
+                    item.color_options.append({
+                        'color_name': v.color_name,
+                        'sku': v.sku or '',
+                        'thumbnail': thumb,
+                        'is_selected': is_selected,
+                    })
+                    # Lưu thumbnail của màu hiện tại
+                    if is_selected and thumb:
+                        item.color_thumbnail = thumb
+                    # Đồng bộ nhãn dropdown: luôn lấy từ option đang được chọn để hiển thị đúng
+                    if is_selected:
+                        item.display_color = v.color_name
+
+                # Nếu chưa match được màu hiện tại sau flexible matching, KHÔNG ghi đè DB
+                if item.color_options and not any(opt['is_selected'] for opt in item.color_options):
+                    first_color = item.color_options[0]['color_name']
+                    item.display_color = first_color
+                    for opt in item.color_options:
+                        opt['is_selected'] = (opt['color_name'] == first_color)
+
+                # Lấy storage options cho màu hiện tại (dùng biến đã strip)
                 item.storage_options = []
+                # Sử dụng color_name gốc để filter storage
                 storage_variants = variants.filter(
-                    color_name=item.color_name
+                    color_name=item_color_name
                 ).order_by('price')
+
+                # Nếu màu hiện tại không map được storage, thử với normalized color
+                if not storage_variants.exists() and item_color_normalized:
+                    for v in variants:
+                        v_color_norm = (v.color_name or '').strip()
+                        if ' - ' in v_color_norm:
+                            v_color_norm = v_color_norm.split(' - ', 1)[1].strip()
+                        if v_color_norm == item_color_normalized:
+                            storage_variants = variants.filter(color_name=v.color_name).order_by('price')
+                            break
+
+                # Fallback lấy toàn bộ storage của product nếu vẫn không có
+                if not storage_variants.exists():
+                    storage_variants = variants.order_by('price')
+
                 for sv in storage_variants:
+                    is_s = sv.storage == item_storage
                     item.storage_options.append({
                         'storage': sv.storage,
                         'price': int(sv.price),
-                        'is_selected': sv.storage == item.storage,
+                        'is_selected': is_s,
                     })
+                    if is_s:
+                        item.display_storage = sv.storage
+
+                # Nếu chưa match được dung lượng hiện tại, chỉ hiển thị option đầu
+                if item.storage_options and not any(opt['is_selected'] for opt in item.storage_options):
+                    first_storage = item.storage_options[0]['storage']
+                    item.display_storage = first_storage
+                    for opt in item.storage_options:
+                        opt['is_selected'] = (opt['storage'] == first_storage)
+
+                # KHÔNG lưu vào DB ở đây - chỉ hiển thị đúng
             except ProductDetail.DoesNotExist:
                 pass
     else:
@@ -933,7 +1090,7 @@ def cart_add(request):
     """
     API thêm sản phẩm vào giỏ hàng (AJAX)
     """
-    from store.models import Cart, CartItem, Product
+    from store.models import Cart, CartItem, Product, ProductVariant
 
     # Kiểm tra user đã đăng nhập chưa
     if not request.user.is_authenticated:
@@ -943,13 +1100,19 @@ def cart_add(request):
             'require_login': True,
         }, status=401)
 
-    # Lấy thông tin từ request
-    product_id = request.POST.get('product_id')
+    # Lấy thông tin từ request (chuẩn hóa bỏ khoảng trắng thừa)
+    product_id = request.POST.get('product_id', '').strip()
     quantity = int(request.POST.get('quantity', 1))
-    color_name = request.POST.get('color_name', '')
-    color_code = request.POST.get('color_code', '')
-    storage = request.POST.get('storage', '')
-    price = request.POST.get('price', 0)
+    color_name = (request.POST.get('color_name') or '').strip()
+    color_code = (request.POST.get('color_code') or '').strip()
+    storage = (request.POST.get('storage') or '').strip()
+    raw_price = (request.POST.get('price') or '').strip()
+
+    # Chuẩn hóa giá từ request (có thể rỗng hoặc sai định dạng)
+    try:
+        price = Decimal(raw_price) if raw_price else Decimal('0')
+    except Exception:
+        price = Decimal('0')
 
     if not product_id:
         return JsonResponse({
@@ -967,22 +1130,82 @@ def cart_add(request):
 
     # Kiểm tra tồn kho trước khi thêm vào giỏ
     from store.models import ProductDetail
+    detail = None
+    variant = None
+    variants_qs = ProductVariant.objects.filter(detail__product=product)
+
+    try:
+        detail = ProductDetail.objects.get(product=product)
+    except ProductDetail.DoesNotExist:
+        detail = None
+
+    # Nếu thêm từ Home/Wishlist/... mà chưa có thông số, tự chọn ngẫu nhiên 1 biến thể active
+    if not color_name or not storage:
+        active_variants = list(variants_qs.filter(is_active=True))
+        candidate_variants = active_variants if active_variants else list(variants_qs)
+        if candidate_variants:
+            in_stock_variants = [v for v in candidate_variants if (v.stock_quantity or 0) > 0]
+            variant = random.choice(in_stock_variants if in_stock_variants else candidate_variants)
+            color_name = variant.color_name or ''
+            storage = variant.storage or ''
+            color_code = variant.color_hex or color_code
+
+    # Nếu đã có thông số (do user chọn ở trang chi tiết hoặc đã auto chọn), map ra biến thể tương ứng
+    if color_name and storage and variant is None:
+        variant = variants_qs.filter(
+            color_name=color_name,
+            storage=storage,
+            is_active=True
+        ).first()
+        if variant is None:
+            variant = variants_qs.filter(
+                color_name=color_name,
+                storage=storage
+            ).first()
+        # Flexible match: so khớp normalized color (bỏ prefix SKU) và storage
+        if variant is None:
+            color_norm = color_name.split(' - ', 1)[1].strip() if ' - ' in color_name else color_name
+            for v in variants_qs.filter(is_active=True):
+                v_norm = (v.color_name or '').strip()
+                if ' - ' in v_norm:
+                    v_norm = v_norm.split(' - ', 1)[1].strip()
+                if v_norm == color_norm and (v.storage or '').strip() == storage:
+                    variant = v
+                    color_name = v.color_name or color_name
+                    storage = v.storage or storage
+                    break
+        if variant is not None and (color_name != variant.color_name or storage != variant.storage):
+            color_name = variant.color_name or color_name
+            storage = variant.storage or storage
+
+    # Chốt cứng: nếu vẫn chưa có thông số nhưng DB có variant thì lấy 1 variant đầu tiên
+    if (not color_name or not storage) and variant is None:
+        variant = variants_qs.order_by('id').first()
+        if variant:
+            color_name = variant.color_name or color_name
+            storage = variant.storage or storage
+            color_code = variant.color_hex or color_code
+
+    # Nếu client không gửi giá (hoặc giá 0), fallback theo biến thể/chi tiết/sản phẩm
+    if price <= 0:
+        if variant and variant.price and Decimal(variant.price) > 0:
+            price = Decimal(variant.price)
+        elif detail and detail.discounted_price and Decimal(detail.discounted_price) > 0:
+            price = Decimal(detail.discounted_price)
+        elif detail and detail.summary_original_price and Decimal(detail.summary_original_price) > 0:
+            price = Decimal(detail.summary_original_price)
+        elif product.price and Decimal(product.price) > 0:
+            price = Decimal(product.price)
+        elif product.original_price and Decimal(product.original_price) > 0:
+            price = Decimal(product.original_price)
+
     available_stock = product.stock  # Mặc định dùng Product.stock
     
     # Nếu có color_name và storage, kiểm tra ProductVariant.stock_quantity
     if color_name and storage:
-        try:
-            detail = ProductDetail.objects.get(product=product)
-            variant = detail.variants.filter(
-                color_name=color_name,
-                storage=storage,
-                is_active=True
-            ).first()
-            if variant and variant.stock_quantity > 0:
-                available_stock = variant.stock_quantity
-            # Nếu variant không có stock riêng, giữ nguyên product.stock
-        except ProductDetail.DoesNotExist:
-            pass
+        if variant and variant.stock_quantity > 0:
+            available_stock = variant.stock_quantity
+        # Nếu variant không có stock riêng, giữ nguyên product.stock
     
     if available_stock <= 0:
         return JsonResponse({
@@ -1017,6 +1240,42 @@ def cart_add(request):
             }, status=400)
         # Tăng số lượng
         existing_item.quantity = new_quantity
+
+        # Đồng bộ thông số nếu item cũ đang thiếu dữ liệu
+        if color_name and not existing_item.color_name:
+            existing_item.color_name = color_name
+        if color_code and not existing_item.color_code:
+            existing_item.color_code = color_code
+        if storage and not existing_item.storage:
+            existing_item.storage = storage
+
+        # Nếu vẫn thiếu màu/dung lượng, truy vấn lại 1 biến thể mặc định để điền cứng
+        if not existing_item.color_name or not existing_item.storage:
+            fallback_variants = ProductVariant.objects.filter(detail__product=product, is_active=True)
+            if not fallback_variants.exists():
+                fallback_variants = ProductVariant.objects.filter(detail__product=product)
+            fallback_variant = fallback_variants.order_by('-stock_quantity', 'color_name', 'storage').first()
+            if fallback_variant:
+                existing_item.color_name = fallback_variant.color_name or existing_item.color_name
+                existing_item.color_code = fallback_variant.color_hex or existing_item.color_code
+                existing_item.storage = fallback_variant.storage or existing_item.storage
+                if not price or price <= 0:
+                    price = Decimal(fallback_variant.price) if fallback_variant.price else Decimal('0')
+
+        # Đảm bảo không lưu giá 0 cho item cũ
+        if not price or price <= 0:
+            if detail and detail.discounted_price:
+                price = Decimal(detail.discounted_price)
+            elif detail and detail.summary_original_price:
+                price = Decimal(detail.summary_original_price)
+            elif product.price:
+                price = Decimal(product.price)
+            elif product.original_price:
+                price = Decimal(product.original_price)
+
+        if (not existing_item.price_at_add or existing_item.price_at_add <= 0) and price > 0:
+            existing_item.price_at_add = price
+
         existing_item.save()
         item = existing_item
         message = 'Đã cập nhật số lượng sản phẩm trong giỏ hàng'
@@ -1041,6 +1300,9 @@ def cart_add(request):
         'message': message,
         'total_items': total_items,
         'item_quantity': item.quantity,
+        'selected_color': item.color_name,
+        'selected_storage': item.storage,
+        'selected_price': str(item.price_at_add),
     })
 
 
@@ -1162,7 +1424,7 @@ def cart_change_color(request):
         }, status=401)
 
     item_id = request.POST.get('item_id')
-    new_color = request.POST.get('color_name', '')
+    new_color = request.POST.get('color_name', '').strip()
 
     if not item_id or not new_color:
         return JsonResponse({
@@ -1181,25 +1443,72 @@ def cart_change_color(request):
     # Tìm variant mới theo color + storage
     try:
         detail = ProductDetail.objects.get(product=item.product)
-        new_variant = detail.variants.filter(
+        variants = detail.variants.filter(is_active=True)
+
+        # Chuẩn hóa storage hiện tại nếu item đang ở trạng thái mặc định/rỗng
+        current_storage = (item.storage or '').strip()
+        if not current_storage or current_storage == 'Mặc định':
+            # Tìm variant đầu tiên của màu được chọn (cần xử lý cả trường hợp stripped name)
+            for v in variants:
+                suffix = (v.color_name.split(' - ', 1)[1] if ' - ' in v.color_name else v.color_name).strip()
+                if suffix == new_color:
+                    current_storage = v.storage
+                    break
+            # Nếu không tìm được, lấy variant đầu tiên
+            if not current_storage or current_storage == 'Mặc định':
+                first_variant = variants.order_by('price').first()
+                if first_variant:
+                    current_storage = first_variant.storage
+
+        # Ưu tiên match exact color + storage (đã normalize)
+        new_color_norm = new_color.strip()
+        if ' - ' in new_color_norm:
+            new_color_norm = new_color_norm.split(' - ', 1)[1].strip()
+
+        new_variant = variants.filter(
             color_name=new_color,
-            storage=item.storage,
-            is_active=True
+            storage=current_storage
         ).first()
 
+        # Fallback 1: strip SKU prefix từ new_color rồi match
         if not new_variant:
-            # Nếu không tìm thấy variant cùng storage, lấy variant đầu tiên của màu đó
-            new_variant = detail.variants.filter(
-                color_name=new_color,
-                is_active=True
-            ).first()
+            for v in variants:
+                suffix = (v.color_name.split(' - ', 1)[1] if ' - ' in v.color_name else v.color_name).strip()
+                if suffix == new_color_norm and (not current_storage or v.storage == current_storage):
+                    new_variant = v
+                    break
+
+        # Fallback 2: tìm variant đầu tiên của màu được chọn
+        if not new_variant:
+            for v in variants:
+                suffix = (v.color_name.split(' - ', 1)[1] if ' - ' in v.color_name else v.color_name).strip()
+                if suffix == new_color_norm:
+                    new_variant = v
+                    break
+
+        # Fallback 3: partial match (chứa new_color trong color_name)
+        if not new_variant:
+            for v in variants:
+                if new_color_norm.lower() in v.color_name.lower():
+                    new_variant = v
+                    break
+
+        # Fallback cuối cùng: lấy variant đầu tiên bất kỳ
+        if not new_variant:
+            new_variant = variants.first()
 
         if new_variant:
+            # Sử dụng tên màu đầy đủ từ variant để đảm bảo consistency
+            final_color_name = new_variant.color_name
+            display_color_name = final_color_name
+            if ' - ' in display_color_name:
+                display_color_name = display_color_name.split(' - ', 1)[1].strip() or final_color_name
+
             # Kiểm tra xem đã có item cùng product + color + storage chưa
             existing = CartItem.objects.filter(
                 cart=item.cart,
                 product=item.product,
-                color_name=new_color,
+                color_name=final_color_name,
                 storage=new_variant.storage
             ).exclude(id=item.id).first()
 
@@ -1210,7 +1519,8 @@ def cart_change_color(request):
                 item.delete()
                 item = existing
             else:
-                item.color_name = new_color
+                item.color_name = final_color_name
+                item.color_code = new_variant.color_hex or item.color_code
                 item.storage = new_variant.storage
                 item.price_at_add = new_variant.price
                 item.save()
@@ -1233,13 +1543,13 @@ def cart_change_color(request):
 
             return JsonResponse({
                 'success': True,
-                'message': f'Đã đổi sang màu {new_color}',
+                'message': f'Đã đổi sang màu {display_color_name}',
                 'total_items': total_items,
                 'total_price': int(total_price),
                 'item_total': int(item_total),
                 'item_price': int(new_variant.price),
                 'original_price': int(new_variant.original_price) if new_variant.original_price > new_variant.price else 0,
-                'new_color': new_color,
+                'new_color': display_color_name,
                 'new_storage': new_variant.storage,
                 'new_thumbnail': new_thumbnail,
             })
@@ -1269,7 +1579,7 @@ def cart_change_storage(request):
         }, status=401)
 
     item_id = request.POST.get('item_id')
-    new_storage = request.POST.get('storage', '')
+    new_storage = request.POST.get('storage', '').strip()
 
     if not item_id or not new_storage:
         return JsonResponse({
@@ -1286,20 +1596,56 @@ def cart_change_storage(request):
         }, status=404)
 
     # Tìm variant mới theo color hiện tại + storage mới
+    # Normalize current_color để so khớp linh hoạt hơn
     try:
         detail = ProductDetail.objects.get(product=item.product)
-        new_variant = detail.variants.filter(
-            color_name=item.color_name,
-            storage=new_storage,
-            is_active=True
+        variants = detail.variants.filter(is_active=True)
+
+        # Normalize current_color
+        current_color = (item.color_name or '').strip()
+        current_color_norm = current_color
+        if ' - ' in current_color:
+            current_color_norm = current_color.split(' - ', 1)[1].strip()
+
+        # Ưu tiên exact match
+        new_variant = variants.filter(
+            color_name=current_color,
+            storage=new_storage
         ).first()
 
+        # Fallback 1: strip SKU prefix từ current_color rồi match
+        if not new_variant and current_color_norm:
+            for v in variants:
+                suffix = (v.color_name.split(' - ', 1)[1] if ' - ' in v.color_name else v.color_name).strip()
+                if suffix == current_color_norm and v.storage == new_storage:
+                    new_variant = v
+                    break
+
+        # Fallback 2: partial match (chứa current_color_norm trong color_name)
+        if not new_variant and current_color_norm:
+            for v in variants:
+                if current_color_norm.lower() in v.color_name.lower() and v.storage == new_storage:
+                    new_variant = v
+                    break
+
+        # Fallback 3: lấy variant đầu tiên với storage được chọn
+        if not new_variant:
+            new_variant = variants.filter(storage=new_storage).first()
+
+        # Fallback cuối cùng: lấy bất kỳ variant nào có storage
+        if not new_variant:
+            new_variant = detail.variants.filter(storage=new_storage).first()
+
         if new_variant:
+            # Sử dụng tên màu đầy đủ từ variant để đảm bảo consistency
+            final_color_name = new_variant.color_name or item.color_name
+            final_color_code = new_variant.color_hex or item.color_code
+
             # Kiểm tra xem đã có item cùng product + color + storage chưa
             existing = CartItem.objects.filter(
                 cart=item.cart,
                 product=item.product,
-                color_name=item.color_name,
+                color_name=final_color_name,
                 storage=new_storage
             ).exclude(id=item.id).first()
 
@@ -1310,6 +1656,8 @@ def cart_change_storage(request):
                 item.delete()
                 item = existing
             else:
+                item.color_name = final_color_name
+                item.color_code = final_color_code
                 item.storage = new_storage
                 item.price_at_add = new_variant.price
                 item.save()
@@ -1325,6 +1673,7 @@ def cart_change_storage(request):
                 'total_price': int(total_price),
                 'item_price': int(new_variant.price),
                 'original_price': int(new_variant.original_price) if new_variant.original_price > new_variant.price else 0,
+                'new_color': final_color_name,
                 'new_storage': new_storage,
             })
 

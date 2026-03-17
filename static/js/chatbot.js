@@ -197,7 +197,7 @@ const QHChat = (() => {
         el.innerHTML = html;
         container.appendChild(el);
         if (persist) pushHistory({ role: 'bot', text, suggestions: suggestions || [], cards: cards || [] });
-        scrollToBottom();
+        scrollToMessageStart(el);
     }
 
     function loadHistory() {
@@ -254,6 +254,18 @@ const QHChat = (() => {
         const container = $('#qh-chat-messages');
         requestAnimationFrame(() => {
             container.scrollTop = container.scrollHeight;
+        });
+    }
+
+    function scrollToMessageStart(messageEl) {
+        const container = $('#qh-chat-messages');
+        if (!container || !messageEl) return;
+
+        requestAnimationFrame(() => {
+            const containerRect = container.getBoundingClientRect();
+            const messageRect = messageEl.getBoundingClientRect();
+            const nextTop = messageRect.top - containerRect.top + container.scrollTop - 8;
+            container.scrollTop = Math.max(0, nextTop);
         });
     }
 

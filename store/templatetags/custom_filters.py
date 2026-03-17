@@ -43,7 +43,8 @@ def color_only(value):
     if not value or value == '—':
         return value
     if ' - ' in str(value):
-        return str(value).split(' - ', 1)[1]
+        suffix = str(value).split(' - ', 1)[1].strip()
+        return suffix if suffix else str(value)
     return value
 
 @register.filter

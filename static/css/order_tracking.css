@@ -3,6 +3,11 @@
    ======================================================== */
 
 /* ========== Page wrapper ========== */
+.qh-ot-page {
+    min-height: calc(100vh - 80px);
+    padding-bottom: 32px;
+}
+
 .qh-ot-page .qh-page-title {
     font-size: 28px;
     font-weight: 600;
@@ -450,11 +455,9 @@
 
 /* ========== Empty State ========== */
 .qh-ot-empty {
-    background: var(--qh-card-bg, var(--qh-white));
-    border-radius: 12px;
     padding: 60px;
     text-align: center;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    margin-bottom: 120px;
 }
 
 .qh-ot-empty-icon {
@@ -468,13 +471,26 @@
     font-size: 24px;
     font-weight: 600;
     color: var(--qh-text);
-    margin-bottom: 8px;
+    margin-bottom: 12px;
 }
 
 .qh-ot-empty p {
     font-size: 16px;
     color: var(--qh-text-light);
     margin-bottom: 24px;
+}
+
+.qh-ot-empty .qh-btn-primary {
+    background: #fee2e2;
+    color: #b91c1c;
+    border: 1.5px solid #b91c1c;
+}
+
+.qh-ot-empty .qh-btn-primary:hover {
+    background: #b91c1c;
+    color: #ffffff;
+    border-color: #b91c1c;
+    box-shadow: 0 8px 18px rgba(185, 28, 28, 0.3);
 }
 
 /* ========== Order group separator ========== */
@@ -488,6 +504,10 @@
 
 /* ========== Responsive ========== */
 @media (max-width: 768px) {
+    .qh-ot-empty {
+        margin-bottom: 80px;
+    }
+
     .qh-ot-table {
         font-size: 13px;
     }

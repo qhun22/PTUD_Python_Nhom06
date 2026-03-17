@@ -9,19 +9,19 @@ const QHCompare = {
     MAX_ITEMS: 4,
 
     // Lấy danh sách sản phẩm từ localStorage
-    getItems: function() {
+    getItems: function () {
         const data = localStorage.getItem(this.STORAGE_KEY);
         return data ? JSON.parse(data) : [];
     },
 
     // Lưu danh sách sản phẩm vào localStorage
-    saveItems: function(items) {
+    saveItems: function (items) {
         localStorage.setItem(this.STORAGE_KEY, JSON.stringify(items));
         this.updateUI();
     },
 
     // Thêm sản phẩm vào danh sách so sánh
-    addToCompare: function(id, name, image, price) {
+    addToCompare: function (id, name, image, price) {
         let items = this.getItems();
 
         // Kiểm tra xem sản phẩm đã tồn tại chưa
@@ -44,19 +44,19 @@ const QHCompare = {
     },
 
     // Xóa sản phẩm khỏi danh sách
-    removeFromCompare: function(id) {
+    removeFromCompare: function (id) {
         let items = this.getItems();
         items = items.filter(item => item.id !== id);
         this.saveItems(items);
     },
 
     // Xóa tất cả sản phẩm
-    clearCompare: function() {
+    clearCompare: function () {
         this.saveItems([]);
     },
 
     // Cập nhật giao diện (thanh so sánh, nút, badge)
-    updateUI: function() {
+    updateUI: function () {
         const items = this.getItems();
         const count = items.length;
 
@@ -76,8 +76,10 @@ const QHCompare = {
         // Cập nhật danh sách trong thanh so sánh
         const listContainer = document.getElementById('qh-compare-items');
         if (listContainer) {
+            listContainer.classList.toggle('qh-compare-bar-items--full', items.length === this.MAX_ITEMS);
+            listContainer.style.setProperty('--qh-compare-count', String(Math.max(items.length, 1)));
             if (items.length === 0) {
-                listContainer.innerHTML = '<p style="text-align:center;color:#999;padding:20px;">Chưa có sản phẩm nào</p>';
+                listContainer.innerHTML = '<p class="qh-compare-empty-state">No data</p>';
             } else {
                 listContainer.innerHTML = items.map(item => `
                     <div class="qh-compare-bar-item">
@@ -108,7 +110,7 @@ const QHCompare = {
     },
 
     // Chuyển đến trang so sánh
-    goToCompare: function() {
+    goToCompare: function () {
         const items = this.getItems();
         if (items.length < 2) {
             if (window.QHToast) QHToast.show('Cần ít nhất 2 sản phẩm để so sánh!', 'error');
@@ -119,14 +121,14 @@ const QHCompare = {
     },
 
     // Toggle hiển/ẩn thanh so sánh (nút So sánh nằm trong thanh contact đỏ)
-    toggleBar: function() {
+    toggleBar: function () {
         const bar = document.getElementById('qh-compare-bar');
         if (bar) bar.classList.toggle('active');
     }
 };
 
 // Khởi tạo khi trang tải xong
-document.addEventListener('DOMContentLoaded', function() {
+document.addEventListener('DOMContentLoaded', function () {
     QHCompare.updateUI();
 });
 

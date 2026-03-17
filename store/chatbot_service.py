@@ -853,12 +853,10 @@ class ChatbotService:
             tag_parts = []
             if product.is_featured:
                 tag_parts.append("Nổi bật")
-            if product.stock > 0:
-                tag_parts.append("Còn hàng")
-            else:
-                tag_parts.append("Hết hàng")
 
-            subtitle = f"{min_p or 'Liên hệ'} | {' • '.join(tag_parts)}"
+            subtitle = min_p or "Liên hệ"
+            if tag_parts:
+                subtitle = f"{subtitle} | {' • '.join(tag_parts)}"
             cards.append({
                 "title": product.name,
                 "image_url": image_url,
@@ -920,8 +918,7 @@ class ChatbotService:
         for p in products:
             min_p, max_p = _get_product_price_range(p)
             price_txt = f"từ {min_p}" if min_p else "Liên hệ"
-            stock_txt = "Còn hàng" if p.stock > 0 else "Hết hàng"
-            lines.append(f"  - {p.name} / {price_txt} ({stock_txt})")
+            lines.append(f"  - {p.name} / {price_txt}")
         lines.append("\nAnh/chị muốn tìm hiểu sản phẩm nào, cứ hỏi em nhé!")
         product_list = list(products)
         return {
@@ -947,9 +944,8 @@ class ChatbotService:
             badges = []
             if p.is_featured:
                 badges.append("Nổi bật")
-            if p.stock > 0:
-                badges.append("Còn hàng")
-            lines.append(f"  - {p.name} / từ {min_p or 'Liên hệ'} ({', '.join(badges)})")
+            badge_suffix = f" ({', '.join(badges)})" if badges else ""
+            lines.append(f"  - {p.name} / từ {min_p or 'Liên hệ'}{badge_suffix}")
         lines.append("\nAnh/chị muốn em tư vấn theo nhu cầu học tập, game hay camera luôn không?")
 
         return {
@@ -1253,8 +1249,7 @@ class ChatbotService:
             lines = ["Em gợi ý một số mẫu cho anh/chị:"]
             for p in featured_list:
                 min_p, _ = _get_product_price_range(p)
-                stock_txt = "Còn hàng" if p.stock > 0 else "Hết hàng"
-                lines.append(f"  - {p.name} / từ {min_p or 'Liên hệ'} ({stock_txt})")
+                lines.append(f"  - {p.name} / từ {min_p or 'Liên hệ'}")
             lines.append("\nAnh/chị quan tâm mẫu nào, hỏi em thêm nhé!")
             return {
                 "message": "\n".join(lines),
@@ -1326,12 +1321,10 @@ class ChatbotService:
         return self._fallback_product_response(product)
 
     def _fallback_product_response(self, product: Product) -> dict[str, Any]:
-        stock_txt = "Còn hàng" if product.stock > 0 else "Hết hàng"
         min_p, _ = _get_product_price_range(product)
         msg = (
             f"{product.name}\n"
-            f"Giá: {min_p or 'Liên hệ'}\n"
-            f"{stock_txt}"
+            f"Giá: {min_p or 'Liên hệ'}"
         )
         return {
             "message": msg,
