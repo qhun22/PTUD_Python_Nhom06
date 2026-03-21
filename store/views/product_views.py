@@ -287,9 +287,21 @@ def product_detail_view(request, product_id):
     from store.models import Product, ProductDetail, ProductVariant, FolderColorImage, ProductSpecification, ProductContent
     from django.shortcuts import get_object_or_404
     import json
-    
+
     product = get_object_or_404(Product, id=product_id)
-    
+
+    # -- Ghi log hành vi xem sản phẩm (dùng cho Hot Sale cá nhân hoá) --
+    if request.user.is_authenticated:
+        from store.models import UserBrowseLog
+        x_fwd = request.META.get('HTTP_X_FORWARDED_FOR')
+        _ip = x_fwd.split(',')[0] if x_fwd else request.META.get('REMOTE_ADDR')
+        UserBrowseLog.objects.create(
+            user=request.user,
+            ip_address=_ip,
+            product=product,
+            brand=product.brand,
+        )
+
     # Get or create product detail
     product_detail, created = ProductDetail.objects.get_or_create(product=product)
     
@@ -717,25 +729,84 @@ def home(request):
     from store.models import Brand
     context['brands'] = Brand.objects.filter(is_active=True).order_by('name')
     
-    # HOT SALE HÀNG NGÀY: 5 sản phẩm từ featured (products) + countdown 24h tự reset
+    # HOT SALE HÀNG NGÀY — cá nhân hoá theo lịch sử xem (chỉ user đăng nhập)
     import random
     from django.utils import timezone
     import datetime as dt
-    # Lấy tất cả products (đã được lọc và sắp xếp - là featured products)
-    all_featured = list(products_list)  # products_list là queryset gốc trước phân trang
-    if all_featured:
-        random.seed(timezone.now().date().toordinal())  # Seed theo ngày để mỗi ngày random khác nhau
-        random.shuffle(all_featured)
-        context['hot_sale_products'] = all_featured[:5]
+    import zoneinfo
+
+    ict = zoneinfo.ZoneInfo('Asia/Ho_Chi_Minh')
+    now_ict = dt.datetime.now(ict)
+    today_seed = now_ict.date().toordinal()   # seed ổn định trong ngày
+
+    all_active_ids = list(
+        Product.objects.filter(is_active=True, stock__gt=0).values_list('id', flat=True)
+    )
+
+    HOT_SALE_COUNT = 10  # tổng số SP hiển thị hot sale
+
+    if request.user.is_authenticated and all_active_ids:
+        from store.models import UserBrowseLog
+        from django.db.models import Count
+
+        # Lấy top brand user xem nhiều nhất (không giới hạn thời gian)
+        top_brands = (
+            UserBrowseLog.objects
+            .filter(user=request.user, brand__isnull=False)
+            .values('brand_id')
+            .annotate(cnt=Count('id'))
+            .order_by('-cnt')[:5]
+        )
+        top_brand_ids = [r['brand_id'] for r in top_brands]
+
+        if top_brand_ids:
+            # 70% (~7 slot) từ sản phẩm của brand user xem nhiều
+            personal_ids = list(
+                Product.objects.filter(
+                    is_active=True, stock__gt=0,
+                    brand_id__in=top_brand_ids
+                ).values_list('id', flat=True)
+            )
+            # 30% (~3 slot) random toàn bộ SP có hàng (ngoài personal)
+            other_ids = [i for i in all_active_ids if i not in personal_ids]
+
+            rng = random.Random(today_seed)
+            rng.shuffle(personal_ids)
+            rng.shuffle(other_ids)
+
+            personal_count = min(7, len(personal_ids), HOT_SALE_COUNT)
+            other_count = min(HOT_SALE_COUNT - personal_count, len(other_ids))
+
+            chosen_ids = personal_ids[:personal_count] + other_ids[:other_count]
+            # Nếu chưa đủ 10, bù thêm từ personal còn lại
+            if len(chosen_ids) < HOT_SALE_COUNT:
+                extra = [i for i in personal_ids[personal_count:] if i not in chosen_ids]
+                chosen_ids += extra[:HOT_SALE_COUNT - len(chosen_ids)]
+        else:
+            # User chưa có lịch sử → random toàn bộ
+            rng = random.Random(today_seed)
+            rng.shuffle(all_active_ids)
+            chosen_ids = all_active_ids[:HOT_SALE_COUNT]
+    else:
+        # Guest → 100% random, seed theo ngày
+        rng = random.Random(today_seed)
+        rng.shuffle(all_active_ids)
+        chosen_ids = all_active_ids[:HOT_SALE_COUNT]
+
+    if chosen_ids:
+        from django.db.models import Case, When, IntegerField as _IntField
+        _order = Case(*[When(id=i, then=pos) for pos, i in enumerate(chosen_ids)], output_field=_IntField())
+        context['hot_sale_products'] = list(
+            Product.objects.filter(id__in=chosen_ids)
+            .select_related('brand', 'detail')
+            .annotate(_hs_order=_order)
+            .order_by('_hs_order')
+        )
     else:
         context['hot_sale_products'] = []
+
     # Countdown đến 00:00 ngày mai (theo giờ Việt Nam ICT)
-    import zoneinfo
-    ict = zoneinfo.ZoneInfo('Asia/Ho_Chi_Minh')
-    now = datetime.datetime.now(ict)
-    # Tính thời gian đến 00:00 ngày mai
-    tomorrow = now.replace(hour=0, minute=0, second=0, microsecond=0) + datetime.timedelta(days=1)
-    # Truyền timestamp cho JavaScript
+    tomorrow = now_ict.replace(hour=0, minute=0, second=0, microsecond=0) + dt.timedelta(days=1)
     context['hot_sale_end_timestamp'] = int(tomorrow.timestamp())
 
     # Bốn banner ƯU ĐÃI ĐA NỀN TẢNG (IDs cấu hình từ dashboard)

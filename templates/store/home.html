@@ -64,12 +64,12 @@
                     </div>
                 </div>
 
-                <button type="button" class="qh-hero-nav prev" id="qhHeroPrev" aria-label="Slide trước">
+                <button type="button" class="qh-slider-nav qh-hero-nav prev" id="qhHeroPrev" aria-label="Slide trước">
                     <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                     </svg>
                 </button>
-                <button type="button" class="qh-hero-nav next" id="qhHeroNext" aria-label="Slide sau">
+                <button type="button" class="qh-slider-nav qh-hero-nav next" id="qhHeroNext" aria-label="Slide sau">
                     <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                     </svg>
@@ -93,12 +93,12 @@
             </div>
             
             <!-- Nút điều hướng -->
-            <button type="button" class="qh-banner-nav prev" id="qhBannerPrev" aria-label="Banner trước">
+            <button type="button" class="qh-slider-nav qh-banner-nav prev" id="qhBannerPrev" aria-label="Banner trước">
                 <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
                 </svg>
             </button>
-            <button type="button" class="qh-banner-nav next" id="qhBannerNext" aria-label="Banner sau">
+            <button type="button" class="qh-slider-nav qh-banner-nav next" id="qhBannerNext" aria-label="Banner sau">
                 <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
                 </svg>
@@ -171,7 +171,14 @@
             </div>
         </div>
         <div class="qh-hotsale-inner" style="background: #fff; padding: 20px;">
-            <div class="qh-product-grid" style="display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px;">
+            <div class="qh-hotsale-slider-wrap">
+                <button type="button" class="qh-slider-nav qh-hotsale-nav prev" id="qhHotsalePrev" aria-label="Trang trước">
+                    <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                    </svg>
+                </button>
+                <div class="qh-hotsale-overflow">
+                    <div class="qh-hotsale-track" id="qhHotsaleTrack">
                 {% if hot_sale_products and hot_sale_products|length > 0 %}
                 {% for product in hot_sale_products %}
                 <a href="{% url 'store:product_detail' product.id %}" class="qh-product-card qh-hotsale-card {% if product.stock == 0 %}out-of-stock{% endif %}" style="text-decoration: none; color: inherit; display: block; background: var(--qh-white); border: 1px solid #e5e5e5; border-radius: 12px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.08); transition: transform 0.3s, box-shadow 0.3s;">
@@ -255,8 +262,15 @@
                 </a>
                 {% endfor %}
                 {% else %}
-                <div style="grid-column: 1/-1; padding: 40px 0; text-align: center; color: #888; font-size: 1.1rem; font-weight: 500;">Chưa có sản phẩm hot sale.</div>
+                <div style="padding: 40px 0; text-align: center; color: #888; font-size: 1.1rem; font-weight: 500; white-space: nowrap;">Chưa có sản phẩm hot sale.</div>
                 {% endif %}
+                    </div>
+                </div>
+                <button type="button" class="qh-slider-nav qh-hotsale-nav next" id="qhHotsaleNext" aria-label="Trang sau">
+                    <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                    </svg>
+                </button>
             </div>
         </div>
     </div>
@@ -1158,23 +1172,57 @@ function toggleWishlist(button, productId) {
 <script src="{% static 'js/home.js' %}"></script>
 <script>
 (function() {
-    // Countdown 24h
-    var endEl = document.getElementById('qhHotsaleCountdown');
-    if (!endEl) return;
+    // ---- Hot Sale Slider ----
+    var track = document.getElementById('qhHotsaleTrack');
+    var prevBtn = document.getElementById('qhHotsalePrev');
+    var nextBtn = document.getElementById('qhHotsaleNext');
+    if (track && prevBtn && nextBtn) {
+        var overflow = track.parentElement;
+        var VISIBLE = 5;
+        var GAP = 16;
+        var page = 0;
+
+        function getCards() { return track.querySelectorAll('.qh-hotsale-card'); }
+
+        function setCardWidths() {
+            var w = overflow.offsetWidth;
+            var cardW = Math.floor((w - GAP * (VISIBLE - 1)) / VISIBLE);
+            getCards().forEach(function(c) {
+                c.style.flexBasis = cardW + 'px';
+                c.style.width = cardW + 'px';
+            });
+        }
+
+        function totalPages() { return Math.ceil(getCards().length / VISIBLE); }
+
+        function goTo(p) {
+            var w = overflow.offsetWidth;
+            var cardW = Math.floor((w - GAP * (VISIBLE - 1)) / VISIBLE);
+            var offset = p * (cardW + GAP) * VISIBLE;
+            track.style.transform = 'translateX(-' + offset + 'px)';
+            page = p;
+            prevBtn.disabled = (page === 0);
+            nextBtn.disabled = (page >= totalPages() - 1);
+        }
+
+        setCardWidths();
+        goTo(0);
+        prevBtn.addEventListener('click', function() { if (page > 0) goTo(page - 1); });
+        nextBtn.addEventListener('click', function() { if (page < totalPages() - 1) goTo(page + 1); });
+        window.addEventListener('resize', function() { setCardWidths(); goTo(page); });
+    }
+
+    // ---- Countdown 24h ----
     var endEl = document.getElementById('qhHotsaleCountdown');
     if (!endEl) return;
     var endTimestamp = parseInt(endEl.getAttribute('data-end-timestamp'));
     if (!endTimestamp || endTimestamp <= 0) return;
     function pad(n) { return (n < 10 ? '0' : '') + n; }
     function tick() {
-        var end = new Date(endTimestamp * 1000); // Convert seconds to milliseconds
+        var end = new Date(endTimestamp * 1000);
         var now = new Date();
         var diff = Math.max(0, Math.floor((end - now) / 1000));
-        if (diff <= 0) {
-            // Reset countdown - reload để lấy products mới cho ngày mới
-            location.reload();
-            return;
-        }
+        if (diff <= 0) { location.reload(); return; }
         var d = Math.floor(diff / 86400);
         var h = Math.floor((diff % 86400) / 3600);
         var m = Math.floor((diff % 3600) / 60);
