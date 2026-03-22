@@ -76,23 +76,33 @@ const QHCompare = {
         // Cập nhật danh sách trong thanh so sánh
         const listContainer = document.getElementById('qh-compare-items');
         if (listContainer) {
-            listContainer.classList.toggle('qh-compare-bar-items--full', items.length === this.MAX_ITEMS);
-            listContainer.style.setProperty('--qh-compare-count', String(Math.max(items.length, 1)));
             if (items.length === 0) {
-                listContainer.innerHTML = '<p class="qh-compare-empty-state">No data</p>';
+                listContainer.innerHTML = '<p class="qh-compare-empty-state"><i class="ri-arrow-left-right-line"></i>Hãy thêm sản phẩm!</p>';
             } else {
-                listContainer.innerHTML = items.map(item => `
+                // Luôn render đủ 4 slot
+                const slots = Array.from({ length: this.MAX_ITEMS }, (_, i) => {
+                    const item = items[i];
+                    if (item) {
+                        return `
                     <div class="qh-compare-bar-item">
                         <img src="${item.image}" alt="${item.name}">
                         <div class="qh-compare-bar-item-info">
-                            <div class="qh-compare-bar-item-name">${item.name}</div>
+                            <div class="qh-compare-bar-item-name" title="${item.name}">${item.name}</div>
                             <div class="qh-compare-bar-item-price">${item.price}</div>
                         </div>
-                        <button class="qh-compare-bar-item-remove" onclick="QHCompare.removeFromCompare(${item.id});QHCompare.updateUI();">
+                        <button class="qh-compare-bar-item-remove" onclick="QHCompare.removeFromCompare(${item.id});QHCompare.updateUI();" title="Xóa">
                             <i class="ri-close-line"></i>
                         </button>
-                    </div>
-                `).join('');
+                    </div>`;
+                    } else {
+                        return `
+                    <div class="qh-compare-bar-slot">
+                        <i class="ri-add-line"></i>
+                        <span>Thêm sản phẩm</span>
+                    </div>`;
+                    }
+                });
+                listContainer.innerHTML = slots.join('');
             }
         }
 
