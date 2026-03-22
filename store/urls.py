@@ -42,6 +42,7 @@ urlpatterns = [
     path('dashboard/', views.dashboard_view, name='dashboard'),
     path('dashboard/order-detail/', views.dashboard_order_detail, name='dashboard_order_detail'),
     path('dashboard/product-detail/', views.dashboard_product_detail, name='dashboard_product_detail'),
+    path('dashboard/save-cost-price/', views.dashboard_save_cost_price, name='dashboard_save_cost_price'),
     # Export
     path('export/month/', views.export_revenue_month, name='export_revenue_month'),
     path('export/year/', views.export_revenue_year, name='export_revenue_year'),

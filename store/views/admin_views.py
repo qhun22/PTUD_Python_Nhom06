@@ -194,6 +194,24 @@ def dashboard_view(request):
             'height': height,
         })
     
+    # Tổng chi phí nhập hàng (giá vốn × số lượng tồn)
+    all_products_for_cost = Product.objects.only('id', 'name', 'cost_price', 'stock').order_by('name')
+    total_import_cost = 0
+    has_cost_data = False
+    cost_price_products = []
+    for p in all_products_for_cost:
+        cp = p.cost_price
+        if cp is not None:
+            has_cost_data = True
+            total_import_cost += int(cp) * p.stock
+        cost_price_products.append({
+            'id': p.id,
+            'name': p.name,
+            'stock': p.stock,
+            'cost_price': int(cp) if cp is not None else None,
+            'subtotal': int(cp) * p.stock if cp is not None else None,
+        })
+
     context = {
         'users_paginated': users_paginated,
         'total_users': all_users.count(),
@@ -236,6 +254,10 @@ def dashboard_view(request):
         'active_products': Product.objects.filter(stock__gt=0).count(),
         'out_of_stock_products': Product.objects.filter(stock=0).count(),
         'total_stock': Product.objects.aggregate(t=Sum('stock'))['t'] or 0,
+        # Import cost stats
+        'total_import_cost': total_import_cost,
+        'cost_price_products': cost_price_products,
+        'has_cost_data': has_cost_data,
     }
     return render(request, 'store/dashboard.html', context)
 
@@ -576,92 +598,328 @@ def generate_slug(text):
 
 
 
+def _build_export_workbook(orders_qs, period_label, period_type):
+    """
+    Tạo workbook Excel 2 sheet: Danh sách đơn hàng + Báo cáo tổng hợp.
+    period_type: 'month' hoặc 'year'
+    """
+    import openpyxl
+    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
+    from store.models import OrderItem, ProductVariant
+    from django.db.models import Sum, Count
+
+    STATUS_VN = {
+        'awaiting_payment': 'Chờ thanh toán',
+        'pending': 'Đã đặt hàng',
+        'processing': 'Đang xử lý',
+        'shipped': 'Đang giao',
+        'delivered': 'Đã giao hàng',
+        'cancelled': 'Đã hủy',
+    }
+    PAYMENT_VN = {
+        'cod': 'COD (Tiền mặt)',
+        'vietqr': 'VietQR',
+        'vnpay': 'VNPay',
+        'momo': 'MoMo',
+    }
+
+    # Style helpers
+    hdr_fill   = PatternFill(start_color='1E293B', end_color='1E293B', fill_type='solid')
+    hdr_font   = Font(color='FFFFFF', bold=True, size=10, name='Calibri')
+    hdr_align  = Alignment(horizontal='center', vertical='center', wrap_text=True)
+    thin       = Side(style='thin', color='D1D5DB')
+    border     = Border(left=thin, right=thin, top=thin, bottom=thin)
+    money_fmt  = '#,##0'
+    total_fill = PatternFill(start_color='FEF3C7', end_color='FEF3C7', fill_type='solid')
+    total_font = Font(bold=True, color='92400E', name='Calibri')
+    section_fill = PatternFill(start_color='EFF6FF', end_color='EFF6FF', fill_type='solid')
+    section_font = Font(bold=True, color='1D4ED8', name='Calibri', size=11)
+    even_fill  = PatternFill(start_color='F8FAFC', end_color='F8FAFC', fill_type='solid')
+
+    def hdr_cell(ws, row, col, value, width=None):
+        c = ws.cell(row=row, column=col, value=value)
+        c.fill = hdr_fill; c.font = hdr_font
+        c.alignment = hdr_align; c.border = border
+        return c
+
+    def data_cell(ws, row, col, value, fmt=None, align='left', fill=None, bold=False):
+        c = ws.cell(row=row, column=col, value=value)
+        c.border = border
+        c.alignment = Alignment(vertical='center', horizontal=align, wrap_text=False)
+        if fmt: c.number_format = fmt
+        if fill: c.fill = fill
+        if bold: c.font = Font(bold=True, name='Calibri')
+        return c
+
+    # ── Lấy tất cả order items cùng một lúc ──────────────────────────────────
+    orders_list = list(orders_qs.prefetch_related('items').select_related('user'))
+    order_ids = [o.id for o in orders_list]
+    all_items = list(
+        OrderItem.objects.filter(order_id__in=order_ids)
+        .select_related('order__user', 'product')
+        .order_by('order_id')
+    )
+
+    # Batch-lookup variants để lấy SKU + giá gốc + % giảm
+    product_ids = [it.product_id for it in all_items if it.product_id]
+    variants = ProductVariant.objects.filter(
+        detail__product_id__in=product_ids
+    ).select_related('detail')
+    variant_map = {}  # (product_id, color_name, storage) -> variant
+    for v in variants:
+        key = (v.detail.product_id, v.color_name.strip().lower(), v.storage.strip().lower())
+        variant_map[key] = v
+
+    # ══════════════════════════════════════════════════════
+    # SHEET 1: DANH SÁCH ĐƠN HÀNG
+    # ══════════════════════════════════════════════════════
+    wb = openpyxl.Workbook()
+    ws1 = wb.active
+    ws1.title = 'Danh sách đơn hàng'
+    ws1.freeze_panes = 'A2'
+
+    S1_HEADERS = [
+        ('STT', 5), ('Mã đơn hàng', 18), ('Tên khách hàng', 22),
+        ('Email', 28), ('SĐT', 14), ('Tên sản phẩm', 36),
+        ('SKU', 22), ('Phiên bản (RAM/ROM)', 18), ('Màu sắc', 14),
+        ('Số lượng', 10), ('Giá gốc (đ)', 16), ('% Giảm', 8),
+        ('Giá sau giảm (đ)', 16), ('Thành tiền (đ)', 16),
+        ('Phương thức TT', 16), ('Trạng thái', 16),
+        ('Ngày tạo', 18), ('Tháng', 7), ('Năm', 7),
+    ]
+    for col, (h, w) in enumerate(S1_HEADERS, 1):
+        hdr_cell(ws1, 1, col, h)
+        from openpyxl.utils import get_column_letter
+        ws1.column_dimensions[get_column_letter(col)].width = w
+    ws1.row_dimensions[1].height = 30
+
+    row_num = 2
+    stt = 0
+    for order in orders_list:
+        order_items = [it for it in all_items if it.order_id == order.id]
+        if not order_items:
+            # Đơn không có sản phẩm — vẫn ghi 1 dòng
+            order_items = [None]
+        for item in order_items:
+            stt += 1
+            is_even = (stt % 2 == 0)
+            row_fill = even_fill if is_even else None
+
+            if item:
+                vkey = (
+                    item.product_id,
+                    item.color_name.strip().lower(),
+                    item.storage.strip().lower(),
+                ) if item.product_id else None
+                variant = variant_map.get(vkey) if vkey else None
+                sku         = variant.sku if variant else ''
+                orig_price  = int(variant.original_price) if variant and variant.original_price else int(item.price)
+                disc_pct    = variant.discount_percent if variant and variant.discount_percent else 0
+                after_disc  = int(item.price)
+                subtotal    = after_disc * item.quantity
+                product_name = item.product_name
+                storage      = item.storage or ''
+                color        = item.color_name or ''
+                qty          = item.quantity
+            else:
+                sku = orig_price = disc_pct = after_disc = subtotal = ''
+                product_name = storage = color = ''
+                qty = ''
+
+            row_data = [
+                (stt,           'center', None),
+                (order.order_code, 'center', None),
+                (f"{order.user.last_name} {order.user.first_name}".strip() if order.user else '', 'left', None),
+                (order.user.email if order.user else '', 'left', None),
+                (order.user.phone if order.user else '', 'center', None),
+                (product_name,  'left', None),
+                (sku,           'center', None),
+                (storage,       'center', None),
+                (color,         'center', None),
+                (qty,           'center', None),
+                (orig_price,    'right', money_fmt),
+                (disc_pct,      'center', '0"%"'),
+                (after_disc,    'right', money_fmt),
+                (subtotal,      'right', money_fmt),
+                (PAYMENT_VN.get(order.payment_method, order.payment_method), 'center', None),
+                (STATUS_VN.get(order.status, order.status), 'center', None),
+                (order.created_at.strftime('%d/%m/%Y %H:%M'), 'center', None),
+                (order.created_at.month, 'center', None),
+                (order.created_at.year,  'center', None),
+            ]
+            for col, (val, align, fmt) in enumerate(row_data, 1):
+                data_cell(ws1, row_num, col, val, fmt=fmt, align=align, fill=row_fill)
+            row_num += 1
+
+    # Dòng tổng
+    total_revenue_all = sum(int(o.total_amount) for o in orders_list if o.status == 'delivered')
+    tr = row_num
+    for c in range(1, 20):
+        cell = ws1.cell(row=tr, column=c)
+        cell.fill = total_fill; cell.border = border
+    ws1.cell(row=tr, column=1, value='TỔNG DOANH THU (đơn đã giao)').font = total_font
+    ws1.cell(row=tr, column=1).fill = total_fill
+    ws1.merge_cells(start_row=tr, start_column=1, end_row=tr, end_column=13)
+    rev = ws1.cell(row=tr, column=14, value=total_revenue_all)
+    rev.font = total_font; rev.fill = total_fill
+    rev.number_format = money_fmt
+    rev.alignment = Alignment(horizontal='right', vertical='center')
+
+    # ══════════════════════════════════════════════════════
+    # SHEET 2: BÁO CÁO TỔNG HỢP
+    # ══════════════════════════════════════════════════════
+    ws2 = wb.create_sheet('Báo cáo tổng hợp')
+    ws2.column_dimensions['A'].width = 32
+    ws2.column_dimensions['B'].width = 22
+    ws2.column_dimensions['C'].width = 22
+    ws2.column_dimensions['D'].width = 22
+
+    def section_title(ws, row, title):
+        c = ws.cell(row=row, column=1, value=title)
+        c.font = section_font; c.fill = section_fill
+        c.alignment = Alignment(vertical='center')
+        ws.merge_cells(start_row=row, start_column=1, end_row=row, end_column=4)
+        ws.row_dimensions[row].height = 22
+        return row + 1
+
+    def kv_row(ws, row, label, value, fmt=None, highlight=False):
+        lc = ws.cell(row=row, column=1, value=label)
+        vc = ws.cell(row=row, column=2, value=value)
+        lc.font = Font(name='Calibri')
+        vc.font = Font(bold=highlight, name='Calibri', color='DC2626' if highlight else '000000')
+        vc.alignment = Alignment(horizontal='right', vertical='center')
+        if fmt: vc.number_format = fmt
+        lc.border = border; vc.border = border
+        ws.merge_cells(start_row=row, start_column=2, end_row=row, end_column=4)
+        if highlight:
+            for c in range(1, 5):
+                ws.cell(row=row, column=c).fill = total_fill
+        return row + 1
+
+    r = 1
+    # --- Tiêu đề báo cáo ---
+    title_cell = ws2.cell(row=r, column=1, value=f'BÁO CÁO DOANH THU — {period_label.upper()}')
+    title_cell.font = Font(bold=True, size=14, color='1E293B', name='Calibri')
+    title_cell.alignment = Alignment(horizontal='center', vertical='center')
+    ws2.merge_cells(start_row=r, start_column=1, end_row=r, end_column=4)
+    ws2.row_dimensions[r].height = 28
+    r += 2
+
+    # --- 1. Tổng quan ---
+    r = section_title(ws2, r, '1. TỔNG QUAN')
+    total_orders  = len(orders_list)
+    total_qty     = sum(it.quantity for it in all_items)
+    total_revenue = sum(int(o.total_amount) for o in orders_list if o.status == 'delivered')
+    delivered_cnt = sum(1 for o in orders_list if o.status == 'delivered')
+    cancelled_cnt = sum(1 for o in orders_list if o.status == 'cancelled')
+
+    r = kv_row(ws2, r, 'Tổng số đơn hàng',   total_orders)
+    r = kv_row(ws2, r, 'Tổng sản phẩm đã bán', total_qty)
+    r = kv_row(ws2, r, 'Tổng số đơn đã giao', delivered_cnt)
+    r = kv_row(ws2, r, 'Tổng số đơn đã hủy',  cancelled_cnt)
+    r = kv_row(ws2, r, 'Tổng doanh thu (đơn đã giao)', total_revenue, fmt=money_fmt, highlight=True)
+    r += 1
+
+    # --- 2. Doanh thu theo ngày hoặc tháng ---
+    if period_type == 'month':
+        r = section_title(ws2, r, '2. DOANH THU THEO NGÀY')
+        hdr_cell(ws2, r, 1, 'Ngày'); hdr_cell(ws2, r, 2, 'Số đơn')
+        hdr_cell(ws2, r, 3, 'Doanh thu (đ)'); hdr_cell(ws2, r, 4, 'Đơn đã giao')
+        r += 1
+        by_day = {}
+        for o in orders_list:
+            d = o.created_at.day
+            if d not in by_day:
+                by_day[d] = {'count': 0, 'revenue': 0, 'delivered': 0}
+            by_day[d]['count'] += 1
+            if o.status == 'delivered':
+                by_day[d]['revenue'] += int(o.total_amount)
+                by_day[d]['delivered'] += 1
+        for day in sorted(by_day):
+            dd = by_day[day]
+            data_cell(ws2, r, 1, f'Ngày {day:02d}', align='center')
+            data_cell(ws2, r, 2, dd['count'], align='center')
+            data_cell(ws2, r, 3, dd['revenue'], fmt=money_fmt, align='right')
+            data_cell(ws2, r, 4, dd['delivered'], align='center')
+            r += 1
+    else:
+        r = section_title(ws2, r, '2. DOANH THU THEO THÁNG')
+        hdr_cell(ws2, r, 1, 'Tháng'); hdr_cell(ws2, r, 2, 'Số đơn')
+        hdr_cell(ws2, r, 3, 'Doanh thu (đ)'); hdr_cell(ws2, r, 4, 'Đơn đã giao')
+        r += 1
+        by_month = {m: {'count': 0, 'revenue': 0, 'delivered': 0} for m in range(1, 13)}
+        for o in orders_list:
+            m = o.created_at.month
+            by_month[m]['count'] += 1
+            if o.status == 'delivered':
+                by_month[m]['revenue'] += int(o.total_amount)
+                by_month[m]['delivered'] += 1
+        for m in range(1, 13):
+            dd = by_month[m]
+            data_cell(ws2, r, 1, f'Tháng {m:02d}', align='center')
+            data_cell(ws2, r, 2, dd['count'], align='center')
+            data_cell(ws2, r, 3, dd['revenue'], fmt=money_fmt, align='right')
+            data_cell(ws2, r, 4, dd['delivered'], align='center')
+            r += 1
+    r += 1
+
+    # --- 3. Top sản phẩm bán chạy ---
+    r = section_title(ws2, r, '3. TOP SẢN PHẨM BÁN CHẠY')
+    hdr_cell(ws2, r, 1, 'Tên sản phẩm')
+    hdr_cell(ws2, r, 2, 'Tổng SL bán')
+    hdr_cell(ws2, r, 3, 'Tổng doanh thu (đ)')
+    hdr_cell(ws2, r, 4, 'Số đơn hàng')
+    r += 1
+    product_stats = {}
+    for it in all_items:
+        if it.order.status == 'cancelled':
+            continue
+        key = it.product_name
+        if key not in product_stats:
+            product_stats[key] = {'qty': 0, 'revenue': 0, 'orders': set()}
+        product_stats[key]['qty'] += it.quantity
+        product_stats[key]['revenue'] += int(it.price) * it.quantity
+        product_stats[key]['orders'].add(it.order_id)
+    top_products = sorted(product_stats.items(), key=lambda x: x[1]['qty'], reverse=True)[:20]
+    for i, (name, stat) in enumerate(top_products):
+        fill = even_fill if i % 2 == 0 else None
+        data_cell(ws2, r, 1, name, align='left', fill=fill)
+        data_cell(ws2, r, 2, stat['qty'], align='center', fill=fill)
+        data_cell(ws2, r, 3, stat['revenue'], fmt=money_fmt, align='right', fill=fill)
+        data_cell(ws2, r, 4, len(stat['orders']), align='center', fill=fill)
+        r += 1
+
+    return wb
+
+
 @login_required
 @require_http_methods(["GET"])
 def export_revenue_month(request):
-    """Xuất thống kê đơn hàng tháng hiện tại ra file .xlsx"""
+    """Xuất báo cáo tháng ra file .xlsx (2 sheet)"""
     if not request.user.is_superuser:
         from django.http import HttpResponseForbidden
         return HttpResponseForbidden('Không có quyền!')
 
-    import openpyxl
-    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
     from django.http import HttpResponse
     from store.models import Order
 
     now = timezone.now()
-    qs = Order.objects.select_related('user').filter(
-        created_at__year=now.year,
-        created_at__month=now.month
-    ).order_by('-created_at')
+    try:
+        month = int(request.GET.get('month', now.month))
+        year  = int(request.GET.get('year',  now.year))
+        if not (1 <= month <= 12): month = now.month
+        if not (2000 <= year <= 2100): year = now.year
+    except (ValueError, TypeError):
+        month, year = now.month, now.year
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = f'Tháng {now.month}-{now.year}'
+    qs = Order.objects.filter(
+        created_at__year=year, created_at__month=month
+    ).order_by('created_at')
 
-    # Header
-    headers = ['STT', 'Mã đơn', 'Email khách hàng', 'SĐT', 'Tổng tiền (đ)', 'PTTT', 'Trạng thái', 'Ngày tạo']
-    STATUS_VN = {
-        'awaiting_payment': 'Chờ TT', 'pending': 'Đã đặt', 'processing': 'Xử lý',
-        'shipped': 'Đang giao', 'delivered': 'Đã giao', 'cancelled': 'Đã hủy',
-    }
-    hdr_fill = PatternFill(start_color='1E293B', end_color='1E293B', fill_type='solid')
-    hdr_font = Font(color='FFFFFF', bold=True, size=11)
-    hdr_align = Alignment(horizontal='center', vertical='center')
-    thin = Side(style='thin', color='E2E8F0')
-    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    period_label = f'Tháng {month:02d}/{year}'
+    wb = _build_export_workbook(qs, period_label, 'month')
 
-    for col, h in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=h)
-        cell.fill = hdr_fill
-        cell.font = hdr_font
-        cell.alignment = hdr_align
-        cell.border = border
-
-    # Data rows
-    total_revenue = 0
-    for idx, order in enumerate(qs, 1):
-        row = [
-            idx,
-            order.order_code,
-            order.user.email if order.user else '',
-            order.user.phone if order.user and hasattr(order.user, 'phone') else '',
-            int(order.total_amount),
-            order.payment_method.upper(),
-            STATUS_VN.get(order.status, order.status),
-            order.created_at.strftime('%d/%m/%Y %H:%M'),
-        ]
-        if order.status == 'delivered':
-            total_revenue += int(order.total_amount)
-        for col, val in enumerate(row, 1):
-            cell = ws.cell(row=idx + 1, column=col, value=val)
-            cell.border = border
-            cell.alignment = Alignment(vertical='center', horizontal='center' if col in (1, 6, 7, 8) else 'left')
-            if col == 5:
-                cell.number_format = '#,##0'
-                cell.alignment = Alignment(vertical='center', horizontal='right')
-
-    # Summary row
-    sum_row = len(list(qs)) + 2
-    ws.cell(row=sum_row, column=1, value='TỔNG DOANH THU (đã giao)').font = Font(bold=True)
-    ws.merge_cells(start_row=sum_row, start_column=1, end_row=sum_row, end_column=4)
-    rev_cell = ws.cell(row=sum_row, column=5, value=total_revenue)
-    rev_cell.font = Font(bold=True, color='DC2626')
-    rev_cell.number_format = '#,##0'
-    rev_cell.alignment = Alignment(horizontal='right', vertical='center')
-
-    # Column widths
-    ws.column_dimensions['A'].width = 6
-    ws.column_dimensions['B'].width = 20
-    ws.column_dimensions['C'].width = 28
-    ws.column_dimensions['D'].width = 14
-    ws.column_dimensions['E'].width = 18
-    ws.column_dimensions['F'].width = 10
-    ws.column_dimensions['G'].width = 14
-    ws.column_dimensions['H'].width = 18
-    ws.row_dimensions[1].height = 24
-
-    filename = f'doanh-thu-thang-{now.month:02d}-{now.year}.xlsx'
+    filename = f'bao-cao-thang-{month:02d}-{year}.xlsx'
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
@@ -672,112 +930,62 @@ def export_revenue_month(request):
 
 
 @login_required
+@require_POST
+def dashboard_save_cost_price(request):
+    """Lưu giá vốn nhập hàng cho từng sản phẩm (AJAX)."""
+    if not request.user.is_superuser:
+        return JsonResponse({'success': False, 'error': 'Không có quyền!'}, status=403)
+
+    from store.models import Product
+    try:
+        data = json.loads(request.body)
+        items = data.get('items', [])
+        if not isinstance(items, list):
+            return JsonResponse({'success': False, 'error': 'Dữ liệu không hợp lệ'}, status=400)
+
+        updated = 0
+        for item in items:
+            pid = item.get('id')
+            raw_cost = item.get('cost_price')
+            if pid is None:
+                continue
+            try:
+                pid = int(pid)
+                cost = None if (raw_cost is None or str(raw_cost).strip() == '') else int(str(raw_cost).replace(',', '').replace('.', ''))
+                Product.objects.filter(id=pid).update(cost_price=cost)
+                updated += 1
+            except (ValueError, TypeError):
+                continue
+
+        return JsonResponse({'success': True, 'updated': updated})
+    except json.JSONDecodeError:
+        return JsonResponse({'success': False, 'error': 'JSON không hợp lệ'}, status=400)
+
+
+@login_required
 @require_http_methods(["GET"])
 def export_revenue_year(request):
-    """Xuất thống kê đơn hàng năm hiện tại ra file .xlsx"""
+    """Xuất báo cáo năm ra file .xlsx (2 sheet)"""
     if not request.user.is_superuser:
         from django.http import HttpResponseForbidden
         return HttpResponseForbidden('Không có quyền!')
 
-    import openpyxl
-    from openpyxl.styles import Font, Alignment, PatternFill, Border, Side
     from django.http import HttpResponse
     from store.models import Order
 
     now = timezone.now()
-    qs = Order.objects.select_related('user').filter(
-        created_at__year=now.year
-    ).order_by('-created_at')
+    try:
+        year = int(request.GET.get('year', now.year))
+        if not (2000 <= year <= 2100): year = now.year
+    except (ValueError, TypeError):
+        year = now.year
 
-    wb = openpyxl.Workbook()
-    ws = wb.active
-    ws.title = f'Năm {now.year}'
+    qs = Order.objects.filter(created_at__year=year).order_by('created_at')
 
-    headers = ['STT', 'Mã đơn', 'Email khách hàng', 'SĐT', 'Tổng tiền (đ)', 'PTTT', 'Trạng thái', 'Tháng', 'Ngày tạo']
-    STATUS_VN = {
-        'awaiting_payment': 'Chờ TT', 'pending': 'Đã đặt', 'processing': 'Xử lý',
-        'shipped': 'Đang giao', 'delivered': 'Đã giao', 'cancelled': 'Đã hủy',
-    }
-    hdr_fill = PatternFill(start_color='1E293B', end_color='1E293B', fill_type='solid')
-    hdr_font = Font(color='FFFFFF', bold=True, size=11)
-    hdr_align = Alignment(horizontal='center', vertical='center')
-    thin = Side(style='thin', color='E2E8F0')
-    border = Border(left=thin, right=thin, top=thin, bottom=thin)
+    period_label = f'Năm {year}'
+    wb = _build_export_workbook(qs, period_label, 'year')
 
-    for col, h in enumerate(headers, 1):
-        cell = ws.cell(row=1, column=col, value=h)
-        cell.fill = hdr_fill
-        cell.font = hdr_font
-        cell.alignment = hdr_align
-        cell.border = border
-
-    total_revenue = 0
-    for idx, order in enumerate(qs, 1):
-        row = [
-            idx,
-            order.order_code,
-            order.user.email if order.user else '',
-            order.user.phone if order.user and hasattr(order.user, 'phone') else '',
-            int(order.total_amount),
-            order.payment_method.upper(),
-            STATUS_VN.get(order.status, order.status),
-            f'Tháng {order.created_at.month}',
-            order.created_at.strftime('%d/%m/%Y %H:%M'),
-        ]
-        if order.status == 'delivered':
-            total_revenue += int(order.total_amount)
-        for col, val in enumerate(row, 1):
-            cell = ws.cell(row=idx + 1, column=col, value=val)
-            cell.border = border
-            cell.alignment = Alignment(vertical='center', horizontal='center' if col in (1, 6, 7, 8, 9) else 'left')
-            if col == 5:
-                cell.number_format = '#,##0'
-                cell.alignment = Alignment(vertical='center', horizontal='right')
-
-    # Monthly summary sheet
-    ws2 = wb.create_sheet('Theo tháng')
-    ws2.cell(row=1, column=1, value='Tháng').font = Font(bold=True)
-    ws2.cell(row=1, column=2, value='Tổng đơn').font = Font(bold=True)
-    ws2.cell(row=1, column=3, value='Doanh thu (đã giao)').font = Font(bold=True)
-    monthly = {}
-    for order in qs:
-        m = order.created_at.month
-        if m not in monthly:
-            monthly[m] = {'count': 0, 'revenue': 0}
-        monthly[m]['count'] += 1
-        if order.status == 'delivered':
-            monthly[m]['revenue'] += int(order.total_amount)
-    for m in range(1, 13):
-        d = monthly.get(m, {'count': 0, 'revenue': 0})
-        ws2.cell(row=m + 1, column=1, value=f'Tháng {m}')
-        ws2.cell(row=m + 1, column=2, value=d['count'])
-        c = ws2.cell(row=m + 1, column=3, value=d['revenue'])
-        c.number_format = '#,##0'
-    ws2.column_dimensions['A'].width = 12
-    ws2.column_dimensions['B'].width = 12
-    ws2.column_dimensions['C'].width = 22
-
-    # Summary row on main sheet
-    sum_row = len(list(qs)) + 2
-    ws.cell(row=sum_row, column=1, value='TỔNG DOANH THU (đã giao)').font = Font(bold=True)
-    ws.merge_cells(start_row=sum_row, start_column=1, end_row=sum_row, end_column=4)
-    rev_cell = ws.cell(row=sum_row, column=5, value=total_revenue)
-    rev_cell.font = Font(bold=True, color='DC2626')
-    rev_cell.number_format = '#,##0'
-    rev_cell.alignment = Alignment(horizontal='right', vertical='center')
-
-    ws.column_dimensions['A'].width = 6
-    ws.column_dimensions['B'].width = 20
-    ws.column_dimensions['C'].width = 28
-    ws.column_dimensions['D'].width = 14
-    ws.column_dimensions['E'].width = 18
-    ws.column_dimensions['F'].width = 10
-    ws.column_dimensions['G'].width = 14
-    ws.column_dimensions['H'].width = 12
-    ws.column_dimensions['I'].width = 18
-    ws.row_dimensions[1].height = 24
-
-    filename = f'doanh-thu-nam-{now.year}.xlsx'
+    filename = f'bao-cao-nam-{year}.xlsx'
     response = HttpResponse(
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
     )
