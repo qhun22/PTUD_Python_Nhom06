@@ -382,6 +382,7 @@ class Product(models.Model):
     discount_percent = models.PositiveIntegerField(default=0, verbose_name='% Giảm giá')
     image = models.ImageField(upload_to='products/%Y/%m/', blank=True, null=True, verbose_name='Hình ảnh')
     stock = models.PositiveIntegerField(default=0, verbose_name='Số lượng trong kho')
+    cost_price = models.DecimalField(max_digits=15, decimal_places=0, null=True, blank=True, verbose_name='Giá vốn nhập hàng (VNĐ)')
     is_featured = models.BooleanField(default=False, verbose_name='Sản phẩm nổi bật')
     is_active = models.BooleanField(default=True, verbose_name='Hiển thị')
     created_at = models.DateTimeField(auto_now_add=True)
