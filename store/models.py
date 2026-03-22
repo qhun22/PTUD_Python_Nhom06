@@ -533,10 +533,30 @@ class SiteVisit(models.Model):
         return f"Visit at {self.visit_time.strftime('%Y-%m-%d %H:%M')}"
 
 
+class HotSaleProduct(models.Model):
+    """Sản phẩm HOT SALE do admin quản lý — hiển thị trong tab HOTSALE trang chủ."""
+    product = models.ForeignKey(
+        'Product', on_delete=models.CASCADE,
+        related_name='hot_sale_entries',
+        verbose_name='Sản phẩm',
+    )
+    sort_order = models.PositiveIntegerField(default=0, verbose_name='Thứ tự hiển thị')
+    is_active = models.BooleanField(default=True, verbose_name='Hiển thị')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = 'Sản phẩm Hot Sale'
+        verbose_name_plural = 'Sản phẩm Hot Sale'
+        ordering = ['sort_order', '-created_at']
+
+    def __str__(self):
+        return f"{self.product.name} (#{self.sort_order})"
+
+
 class UserBrowseLog(models.Model):
     """
     Ghi log hành vi xem sản phẩm của user/IP.
-    Dùng để cá nhân hoá Hot Sale hàng ngày:
+    Dùng để cá nhân hoá tab GỢI Ý trang chủ:
       - User đăng nhập   → 70% sản phẩm từ brand/category xem nhiều + 30% random từ toàn site
       - Guest (chưa login) → 100% random
     """
