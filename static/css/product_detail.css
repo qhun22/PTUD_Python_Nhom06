@@ -1766,11 +1766,29 @@
         grid-template-rows: auto auto;
         gap: 6px 12px;
     }
+
     /* user: cột 1 hàng 1, sao: cột 2 hàng 1, comment: span 2 hàng 2, ảnh: span 2 hàng 3 */
-    .pd-review-user { grid-column: 1; grid-row: 1; }
-    .pd-review-rating { grid-column: 2; grid-row: 1; justify-content: flex-end; }
-    .pd-review-text { grid-column: 1 / -1; grid-row: 2; }
-    .pd-review-img-col { grid-column: 1 / -1; grid-row: 3; justify-content: flex-start; }
+    .pd-review-user {
+        grid-column: 1;
+        grid-row: 1;
+    }
+
+    .pd-review-rating {
+        grid-column: 2;
+        grid-row: 1;
+        justify-content: flex-end;
+    }
+
+    .pd-review-text {
+        grid-column: 1 / -1;
+        grid-row: 2;
+    }
+
+    .pd-review-img-col {
+        grid-column: 1 / -1;
+        grid-row: 3;
+        justify-content: flex-start;
+    }
 }
 
 @media (max-width: 480px) {

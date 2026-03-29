@@ -1126,6 +1126,7 @@
     margin-bottom: 12px;
     min-height: 20px;
 }
+
 /* ---- Match Address Book sizing across profile tabs ---- */
 #tab-password .qh-pf-pw-section,
 #tab-student .qh-pf-pw-section,
@@ -1152,7 +1153,7 @@
 }
 
 #tab-coupon .qh-pf-coupon-card,
-#tab-coupon .qh-pf-coupon-grid > .qh-pf-coupon-card,
+#tab-coupon .qh-pf-coupon-grid>.qh-pf-coupon-card,
 #tab-history .qh-pf-order-card {
     width: 100%;
 }
