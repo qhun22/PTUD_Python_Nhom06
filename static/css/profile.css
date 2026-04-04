@@ -362,11 +362,17 @@
     padding: 40px 0;
 }
 
-.qh-pf-empty svg {
+.qh-pf-empty svg,
+.qh-pf-empty > i {
     width: 80px;
     height: 80px;
+    font-size: 64px;
     color: #d1d5db;
     margin-bottom: 16px;
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    line-height: 1;
 }
 
 .qh-pf-empty h3 {
@@ -968,60 +974,452 @@
 }
 
 @media (max-width: 768px) {
-    .qh-pf-info-card {
-        padding: 20px;
+    /* ── Page ── */
+    .qh-profile-page {
+        padding: 0;
+        gap: 0;
     }
 
+    /* ── Info Card ── */
+    .qh-pf-info-card {
+        padding: 16px;
+        border-radius: 10px;
+        margin-bottom: 10px;
+        gap: 0;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    .qh-pf-user {
+        gap: 12px;
+        padding-bottom: 14px;
+        border-bottom: 1px solid var(--qh-border);
+        margin-bottom: 0;
+    }
+
+    .qh-pf-avatar {
+        width: 42px;
+        height: 42px;
+    }
+
+    .qh-pf-avatar svg {
+        width: 20px;
+        height: 20px;
+    }
+
+    .qh-pf-name {
+        font-size: 16px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 60vw;
+    }
+
+    .qh-pf-detail {
+        font-size: 13px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        word-break: break-word;
+    }
+
+    /* ── Stats: 2-col grid ── */
     .qh-pf-stats {
-        flex-wrap: wrap;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0;
+        padding-top: 12px;
     }
 
     .qh-pf-stat {
-        flex: 1 1 50%;
-        padding: 12px 8px;
+        flex: unset;
+        padding: 10px 8px;
         border-right: none;
         border-bottom: 1px solid var(--qh-border);
+        gap: 8px;
+        justify-content: flex-start;
     }
 
+    .qh-pf-stat:nth-child(odd) {
+        border-right: 1px solid var(--qh-border);
+    }
+
+    .qh-pf-stat:nth-last-child(-n+2) {
+        border-bottom: none;
+    }
+
+    .qh-pf-stat-icon,
+    .qh-pf-rank-icon {
+        width: 34px;
+        height: 34px;
+        font-size: 18px;
+    }
+
+    .qh-pf-stat-icon i,
+    .qh-pf-rank-icon i {
+        font-size: 18px;
+    }
+
+    .qh-pf-stat-value {
+        font-size: 15px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .qh-pf-stat-label {
+        font-size: 11px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .qh-pf-stat-content {
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    .qh-pf-rank-label {
+        font-size: 12px;
+    }
+
+    /* ── Logout: ẩn trên mobile ── */
+    .qh-pf-logout-section {
+        display: none;
+    }
+
+    /* ── Tab Navigation ── */
     .qh-pf-tabs {
-        padding: 0 8px;
+        padding: 0;
+        border-radius: 10px;
+        margin-bottom: 10px;
         overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+    }
+
+    .qh-pf-tabs::-webkit-scrollbar {
+        display: none;
     }
 
     .qh-pf-tab {
         flex: 0 0 auto;
-        justify-content: flex-start;
-        padding: 14px 16px;
-        font-size: 14px;
+        padding: 11px 14px;
+        font-size: 13px;
+        gap: 5px;
+        white-space: nowrap;
     }
 
+    .qh-pf-tab svg,
+    .qh-pf-tab i {
+        width: 17px;
+        height: 17px;
+        font-size: 17px;
+    }
+
+    /* ── Tab Content ── */
     .qh-pf-content {
-        padding: 20px;
+        padding: 14px;
+        border-radius: 10px;
+        box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
     }
 
-    .qh-pf-order {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 12px;
+    /* ── All fixed min-heights OFF ── */
+    .qh-pf-pw-history,
+    .qh-pf-refund-body {
+        min-height: unset !important;
+        max-height: unset !important;
     }
 
-    .qh-pf-order-right {
-        width: 100%;
-        justify-content: space-between;
+    #tab-password .qh-pf-pw-section,
+    #tab-student .qh-pf-pw-section,
+    #tab-refund .qh-pf-pw-section {
+        min-height: unset !important;
     }
 
+    #tab-password .qh-pf-form,
+    #tab-student .qh-pf-form {
+        min-height: unset !important;
+    }
+
+    #tab-coupon #couponGridContainer,
+    #tab-history,
+    #tab-coupon .qh-pf-coupon-grid,
+    #tab-history .qh-pf-order-grid {
+        min-height: unset !important;
+    }
+
+    /* ── Address Book ── */
     .qh-pf-addr-grid {
         grid-template-columns: 1fr;
-        gap: 24px;
+        gap: 0;
+    }
+
+    .qh-pf-addr-grid > .qh-pf-addr-section + .qh-pf-addr-section {
+        padding-top: 16px;
+        margin-top: 16px;
+        border-top: 1px solid var(--qh-border);
     }
 
     .qh-pf-addr-form .qh-form-row {
         grid-template-columns: 1fr;
     }
 
+    .qh-pf-addr-title {
+        font-size: 15px;
+        margin-bottom: 14px;
+    }
+
+    .qh-pf-addr-card {
+        padding: 12px;
+    }
+
+    .qh-pf-addr-card-header {
+        flex-wrap: wrap;
+        gap: 4px;
+    }
+
+    .qh-pf-addr-name {
+        font-size: 14px;
+    }
+
+    .qh-pf-addr-phone {
+        font-size: 12px;
+    }
+
+    .qh-pf-addr-detail {
+        font-size: 12px;
+        word-break: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .qh-pf-addr-actions {
+        flex-wrap: wrap;
+        gap: 6px;
+    }
+
+    .qh-pf-addr-actions button {
+        font-size: 11px;
+        padding: 5px 10px;
+    }
+
+    .qh-pf-addr-list {
+        gap: 8px;
+    }
+
+    /* ── Password / Student / Refund 2-col → 1-col ── */
     .qh-pf-pw-grid {
         grid-template-columns: 1fr;
-        gap: 24px;
+        gap: 0;
+    }
+
+    .qh-pf-pw-grid > .qh-pf-pw-section + .qh-pf-pw-section {
+        padding-top: 16px;
+        margin-top: 16px;
+        border-top: 1px solid var(--qh-border);
+    }
+
+    .qh-pf-pw-title {
+        font-size: 15px;
+        margin-bottom: 14px;
+    }
+
+    .qh-pf-form .qh-form-group {
+        margin-bottom: 14px;
+    }
+
+    /* ── Coupon grid: 1 col ── */
+    .qh-pf-coupon-grid {
+        grid-template-columns: 1fr !important;
+        gap: 10px !important;
+    }
+
+    .qh-pf-coupon-card {
+        min-height: unset !important;
+        height: auto !important;
+    }
+
+    /* ── Order grid: 1 col ── */
+    .qh-pf-order-grid {
+        grid-template-columns: 1fr;
+        gap: 10px;
+    }
+
+    .qh-pf-order-card {
+        min-height: unset;
+        height: auto;
+        padding: 12px;
+        gap: 6px;
+    }
+
+    .qh-pf-order-card .qh-pf-order-id {
+        font-size: 13px;
+    }
+
+    .qh-pf-order-card .qh-pf-order-date {
+        font-size: 11px;
+    }
+
+    .qh-pf-order-card .qh-pf-order-product {
+        font-size: 12px;
+    }
+
+    .qh-pf-order-card .qh-pf-order-right {
+        padding-top: 6px;
+    }
+
+    .qh-pf-order-card .qh-pf-order-amount {
+        font-size: 14px;
+    }
+
+    .qh-pf-status {
+        font-size: 11px;
+        padding: 3px 8px;
+    }
+
+    /* ── Voucher ticket (Student tab) ── */
+    .qh-pf-voucher-ticket {
+        flex-direction: column;
+        border-radius: 10px;
+    }
+
+    .qh-pf-voucher-ticket-left {
+        flex-direction: row;
+        min-width: unset;
+        padding: 14px 16px;
+        gap: 8px;
+        align-items: center;
+    }
+
+    .qh-pf-voucher-ticket-left::after {
+        display: none;
+    }
+
+    .qh-pf-voucher-ticket-icon {
+        font-size: 22px;
+        margin-bottom: 0;
+    }
+
+    .qh-pf-voucher-ticket-discount {
+        font-size: 24px;
+    }
+
+    .qh-pf-voucher-ticket-off {
+        font-size: 11px;
+    }
+
+    .qh-pf-voucher-ticket-right {
+        padding: 14px 16px;
+        gap: 6px;
+    }
+
+    .qh-pf-voucher-ticket-title {
+        font-size: 14px;
+    }
+
+    .qh-pf-voucher-ticket-limit {
+        font-size: 12px;
+    }
+
+    .qh-pf-voucher-ticket-code-value {
+        font-size: 15px;
+    }
+
+    .qh-pf-voucher-ticket-expire {
+        font-size: 12px;
+    }
+
+    /* ── Student verification ── */
+    .qh-pf-student-desc {
+        font-size: 13px;
+        margin-bottom: 14px;
+    }
+
+    .qh-pf-student-verified-icon {
+        width: 48px;
+        height: 48px;
+        margin-bottom: 10px;
+    }
+
+    .qh-pf-student-verified-icon svg {
+        width: 24px;
+        height: 24px;
+    }
+
+    .qh-pf-student-verified-title {
+        font-size: 15px;
+        margin-bottom: 16px;
+    }
+
+    /* ── Refund ── */
+    .qh-refund-table {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .qh-refund-table th,
+    .qh-refund-table td {
+        font-size: 12px;
+        padding: 6px;
+        white-space: nowrap;
+    }
+
+    /* ── Pagination ── */
+    .qh-pf-pw-pagination,
+    .qh-pf-coupon-pagination,
+    .qh-pf-order-pagination {
+        gap: 6px;
+        margin-top: 12px;
+    }
+
+    .qh-pf-pw-page-btn {
+        width: 34px;
+        height: 34px;
+        font-size: 12px;
+    }
+
+    /* ── Empty state (smaller on mobile) ── */
+    .qh-pf-empty {
+        padding: 20px 0;
+    }
+
+    .qh-pf-empty svg,
+    .qh-pf-empty i {
+        width: 48px;
+        height: 48px;
+        font-size: 48px;
+    }
+
+    .qh-pf-empty h3 {
+        font-size: 15px;
+    }
+
+    .qh-pf-empty p {
+        font-size: 12px;
+        margin-bottom: 14px;
+    }
+
+    /* ── Forms: inputs compact ── */
+    .qh-label {
+        font-size: 13px;
+    }
+
+    .qh-input {
+        font-size: 14px;
+        padding: 10px 12px;
+    }
+
+    /* ── Modal ── */
+    .qh-modal-content {
+        padding: 20px;
+    }
+
+    .qh-modal-title {
+        font-size: 16px;
+    }
+
+    .qh-modal-text {
+        font-size: 13px;
     }
 }
 

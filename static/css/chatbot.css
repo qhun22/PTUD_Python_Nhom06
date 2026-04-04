@@ -1,9 +1,9 @@
 /* ==================== QHUN22 AI CHATBOT WIDGET ==================== */
 
 :root {
-    --qh-chat-primary: #059669;
-    --qh-chat-soft: #d1fae5;
-    --qh-chat-primary-dark: #047857;
+    --qh-chat-primary: var(--qh-primary, #b91c1c);
+    --qh-chat-soft: var(--qh-primary-light, #fee2e2);
+    --qh-chat-primary-dark: var(--qh-primary-hover, #991b1b);
 }
 
 .qh-chat-fab {
@@ -277,9 +277,9 @@
 }
 
 .qh-chat-suggestion-btn {
-    background: var(--qh-chat-soft);
-    border: 1px solid var(--qh-chat-primary);
-    color: var(--qh-chat-primary);
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    color: #374151;
     border-radius: 20px;
     padding: 5px 14px;
     font-size: 12.5px;
@@ -290,8 +290,9 @@
 }
 
 .qh-chat-suggestion-btn:hover {
-    background: var(--qh-chat-primary);
-    color: #fff;
+    background: #e5e7eb;
+    border-color: #9ca3af;
+    color: #1f2937;
 }
 
 /* ── Product cards in bot responses ─────────────────────── */
@@ -463,31 +464,189 @@
     transform: none;
 }
 
-/* ── Responsive ──────────────────────────────────────────── */
-@media (max-width: 480px) {
+/* ==================== CHATBOT MOBILE DRAWER (≤768px) ====================
+   Build riêng cho mobile — y hệt qh-advanced-filter-drawer + qh-compare-bar
+   PC (>768px) KHÔNG bị ảnh hưởng — không đụng vào bất kỳ rule nào ở trên
+   ====================================================================== */
+@media (max-width: 768px) {
+
+    /* 1. Biến chat window thành right drawer, dùng transform thay display toggle */
     .qh-chat-window {
+        /* Ghi đè hoàn toàn vị trí floating window */
+        bottom: unset !important;
+        top: 0;
         right: 0;
-        bottom: 0;
-        width: 100%;
+        width: 100vw;
+        height: 100dvh;
         max-height: 100dvh;
         border-radius: 0;
+        box-shadow: none;
+        /* Luôn là flex nhưng ẩn bằng transform — giống qh-advanced-filter-drawer */
+        display: flex !important;
+        transform: translateX(100%);
+        transition: transform 0.24s ease, visibility 0s ease 0.24s;
+        animation: none;
+        z-index: 12002;
+        pointer-events: none;
+        visibility: hidden;
     }
 
-    .qh-chat-fab {
-        bottom: 16px;
-        right: 16px;
+    .qh-chat-window.open {
+        transform: translateX(0);
+        pointer-events: auto;
+        visibility: visible;
+        box-shadow: -12px 0 28px rgba(15, 23, 42, 0.16);
+        transition: transform 0.24s ease, visibility 0s ease 0s;
     }
 
-    .qh-chat-messages {
-        max-height: calc(100dvh - 170px);
+    /* 2. Header — giống .qh-advanced-filter-head / .qh-compare-bar-head */
+    .qh-chat-header {
+        background: #fff;
+        color: #1f2937;
+        padding: 14px 14px;
+        padding-top: max(14px, env(safe-area-inset-top));
+        border-bottom: 1px solid #eef2f7;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 10px;
+        flex-shrink: 0;
     }
 
+    /* Avatar: nhỏ lại như icon kế tiêu đề */
+    .qh-chat-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        border: 1.5px solid #e5e7eb;
+        background: #f9fafb;
+        overflow: hidden;
+        flex-shrink: 0;
+    }
+
+    .qh-chat-bot-image {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+    }
+
+    /* Tiêu đề — giống .qh-advanced-filter-head h3 */
+    .qh-chat-header-info {
+        flex: 1;
+        min-width: 0;
+    }
+
+    .qh-chat-header-info h6 {
+        margin: 0;
+        font-size: 16px;
+        font-weight: 700;
+        color: #1f2937;
+        letter-spacing: 0.3px;
+    }
+
+    .qh-chat-header-info small {
+        display: none;
+    }
+
+    /* Actions wrapper */
     .qh-chat-header-actions {
-        gap: 6px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex-shrink: 0;
     }
 
-    .qh-chat-header-btn {
+    /* Reset button: pill nhẹ */
+    .qh-chat-header-btn--ghost {
+        border: 1px solid #d1d5db;
+        background: #f9fafb;
+        color: #374151;
         font-size: 12px;
+        font-weight: 600;
         padding: 5px 12px;
+        border-radius: 999px;
+        transition: background 0.15s;
+    }
+
+    .qh-chat-header-btn--ghost:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+        border-color: #d1d5db;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* Đóng button — giống .qh-advanced-filter-close */
+    .qh-chat-header-btn:not(.qh-chat-header-btn--ghost) {
+        width: 34px;
+        height: 34px;
+        border: 1px solid #d1d5db;
+        border-radius: 999px;
+        background: #f9fafb;
+        color: #334155;
+        font-size: 14px;
+        font-weight: 700;
+        line-height: 1;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        padding: 0;
+        transition: background 0.15s;
+    }
+
+    .qh-chat-header-btn:not(.qh-chat-header-btn--ghost):hover {
+        background: #e5e7eb;
+        transform: none;
+        box-shadow: none;
+    }
+
+    /* 3. Messages area — giống .qh-advanced-filter-body (scrollable flex body) */
+    .qh-chat-messages {
+        flex: 1;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        padding: 14px;
+        min-height: 0;
+        max-height: none;
+    }
+
+    /* Typing indicator */
+    .qh-chat-typing {
+        padding: 0 14px 8px;
+        flex-shrink: 0;
+    }
+
+    /* 4. Input area — giống .qh-advanced-filter-foot (footer ghim dưới) */
+    .qh-chat-input-area {
+        padding: 10px 12px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
+        border-top: 1px solid #eef2f7;
+        background: #fff;
+        flex-shrink: 0;
+        gap: 8px;
+    }
+
+    /* Input field */
+    .qh-chat-input {
+        height: 44px;
+        font-size: 14px;
+        border-radius: 8px;
+        padding: 0 14px;
+        background: #f9fafb;
+    }
+
+    .qh-chat-input:focus {
+        border-color: var(--qh-primary);
+        background: #fff;
+    }
+
+    /* Send button — hình vuông bo góc giống filter apply button */
+    .qh-chat-send {
+        width: 44px;
+        height: 44px;
+        border-radius: 8px;
+        flex-shrink: 0;
     }
 }

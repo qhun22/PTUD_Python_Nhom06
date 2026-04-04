@@ -365,6 +365,30 @@
 
 @media (max-width: 480px) {
     .qh-wishlist-page .qh-product-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 8px;
+    }
+
+    .qh-product-card .qh-product-name {
+        font-size: 13px;
+        min-height: 32px;
+    }
+
+    .qh-product-card .qh-product-info {
+        padding: 8px 10px 10px;
+    }
+
+    .qh-product-card .qh-product-price .discounted-price,
+    .qh-product-card .qh-product-price .regular-price {
+        font-size: 14px;
+    }
+
+    .qh-product-card .qh-product-price .original-price {
+        font-size: 11px;
+    }
+
+    .qh-product-card .qh-product-status .status-tag {
+        font-size: 10px;
+        padding: 3px 4px;
     }
 }

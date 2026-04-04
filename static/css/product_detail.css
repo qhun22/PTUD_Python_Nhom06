@@ -296,6 +296,11 @@
     color: #1e293b;
 }
 
+/* ========== Mobile Wishlist Button (hidden on PC) ========== */
+.pd-wishlist-mobile {
+    display: none;
+}
+
 /* ========== Buy Section (2 equal buttons) ========== */
 .pd-buy-section {
     margin-top: 24px;
@@ -872,43 +877,6 @@
     font-weight: 700;
     color: #1e293b;
     margin-bottom: 16px;
-}
-
-/* ========== Responsive ========== */
-@media (max-width: 768px) {
-    .pd-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
-    }
-
-    .pd-images {
-        position: static;
-    }
-
-    .pd-product-name {
-        font-size: 18px;
-    }
-
-    .pd-price-current {
-        font-size: 24px;
-    }
-
-    .pd-main-image {
-        aspect-ratio: auto;
-        min-height: 300px;
-    }
-
-    .pd-storage-options {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .pd-color-options {
-        grid-template-columns: repeat(2, 1fr);
-    }
-
-    .pd-buy-section {
-        grid-template-columns: 1fr;
-    }
 }
 
 /* ========== Product Content Panel Body (rich HTML from CKEditor) ========== */
@@ -1710,67 +1678,639 @@
     font-weight: 600;
 }
 
+/* Mobile review/related already handled above */
+
+/* ========== RESPONSIVE – MOBILE (must be LAST in file) ========== */
 @media (max-width: 768px) {
+
+    /* ============================
+       PAGE WRAPPER & GLOBAL
+       ============================ */
+    .pd-page {
+        padding: 0 0 20px;
+        overflow-x: clip;
+        overflow-x: hidden;
+        width: 100%;
+        max-width: 100vw;
+        box-sizing: border-box;
+    }
+
+    .pd-page *,
+    .pd-page *::before,
+    .pd-page *::after {
+        box-sizing: border-box;
+        max-width: 100%;
+    }
+
+    /* ============================
+       BREADCRUMB
+       ============================ */
+    .pd-breadcrumb {
+        font-size: 11px;
+        margin-bottom: 8px;
+        gap: 3px;
+    }
+
+    /* ============================
+       PRODUCT NAME
+       ============================ */
+    .pd-product-name {
+        font-size: 16px;
+        font-weight: 700;
+        margin-bottom: 10px;
+        line-height: 1.3;
+        word-break: break-word;
+    }
+
+    /* ============================
+       GRID → 1 COL
+       ============================ */
+    .pd-grid {
+        display: block;
+    }
+
+    .pd-images {
+        position: static;
+        width: 100%;
+    }
+
+    .pd-info {
+        width: 100%;
+        min-width: 0;
+        overflow: hidden;
+    }
+
+    /* ============================
+       MAIN IMAGE
+       ============================ */
+    .pd-main-image {
+        width: 100%;
+        aspect-ratio: 4 / 3;
+        max-height: 300px;
+        min-height: unset;
+        border-radius: 10px;
+        margin-bottom: 8px;
+        border: none;
+    }
+
+    .pd-main-image img {
+        max-width: 85%;
+        max-height: 85%;
+    }
+
+    .pd-img-nav {
+        width: 28px;
+        height: 28px;
+    }
+
+    .pd-img-nav svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .pd-img-nav.prev { left: 4px; }
+    .pd-img-nav.next { right: 4px; }
+
+    /* ============================
+       BOTTOM TABS – 2 rows: colors top, utils bottom
+       ============================ */
+    .pd-bottom-tabs {
+        display: flex !important;
+        flex-wrap: wrap;
+        grid-template-columns: none !important;
+        gap: 6px;
+        margin-top: 8px;
+        margin-bottom: 12px;
+        overflow-x: visible;
+        padding-bottom: 2px;
+        width: 100%;
+    }
+
+    .pd-bottom-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    /* Color tabs - first row, share width equally */
+    .pd-bottom-tab[data-color] {
+        flex: 1 1 0;
+        min-width: 0;
+        min-height: 56px;
+        padding: 6px 4px;
+        border-radius: 8px;
+        gap: 4px;
+        order: 0;
+    }
+
+    /* Force line break between color tabs and utility tabs */
+    .pd-bottom-tabs::after {
+        content: '';
+        flex-basis: 100%;
+        height: 0;
+        order: 1;
+    }
+
+    /* Utility tabs (no data-color) - second row, equal width */
+    .pd-bottom-tab:not([data-color]) {
+        flex: 1 1 0;
+        min-width: 0;
+        width: auto;
+        min-height: 48px;
+        padding: 6px 4px;
+        border-radius: 8px;
+        gap: 4px;
+        order: 2;
+    }
+
+    .pd-bottom-tab-icon {
+        width: 28px;
+        height: 28px;
+    }
+
+    .pd-bottom-tab-icon img { border-radius: 4px; }
+    .pd-bottom-tab-icon svg { width: 15px; height: 15px; }
+
+    .pd-bottom-tab-label {
+        font-size: 9px;
+        line-height: 1.1;
+        max-width: 58px;
+    }
+
+    /* ============================
+       PRICE SECTION
+       ============================ */
+    .pd-price-section {
+        margin-bottom: 2px;
+        gap: 6px;
+        width: 100%;
+    }
+
+    .pd-price-current {
+        font-size: 20px;
+    }
+
+    .pd-price-original {
+        font-size: 13px;
+    }
+
+    .pd-sku-inline {
+        font-size: 11px;
+        margin-left: 0;
+        flex-basis: 100%;
+        margin-top: 2px;
+    }
+
+    /* ============================
+       INSTALLMENT
+       ============================ */
+    .pd-installment {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    /* ============================
+       VARIANT SECTIONS
+       ============================ */
+    .pd-variant-section {
+        margin-bottom: 10px;
+        width: 100%;
+    }
+
+    .pd-variant-label {
+        font-size: 13px;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+
+    /* ── Storage ── */
+    .pd-storage-options {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        width: 100%;
+    }
+
+    .pd-storage-btn {
+        padding: 8px 6px;
+        border-radius: 8px;
+        border-width: 1.5px;
+        min-width: 0;
+    }
+
+    .pd-storage-name {
+        font-size: 13px;
+        font-weight: 600;
+    }
+
+    .pd-storage-price {
+        font-size: 11px;
+    }
+
+    .pd-storage-btn.selected::after {
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+        border-radius: 5px 0 6px 0;
+    }
+
+    /* ── Color ── */
+    .pd-color-options {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 6px;
+        width: 100%;
+    }
+
+    .pd-color-btn {
+        padding: 6px 8px;
+        gap: 6px;
+        border-radius: 8px;
+        border-width: 1.5px;
+        min-width: 0;
+    }
+
+    .pd-color-btn.selected::after {
+        width: 16px;
+        height: 16px;
+        font-size: 9px;
+        border-radius: 5px 0 6px 0;
+    }
+
+    .pd-color-thumb {
+        width: 30px;
+        height: 30px;
+        border-radius: 5px;
+        flex-shrink: 0;
+    }
+
+    .pd-color-name {
+        font-size: 12px;
+        min-width: 0;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    /* ============================
+       STOCK BADGE (inline style override)
+       ============================ */
+    #pdStockBadge {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+
+    /* ============================
+       BUY SECTION
+       ============================ */
+    .pd-buy-section {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px;
+        margin-top: 12px;
+        width: 100%;
+    }
+
+    .pd-btn-buy,
+    .pd-btn-cart {
+        padding: 11px 8px;
+        font-size: 13px;
+        border-radius: 8px;
+        gap: 5px;
+        min-width: 0;
+        overflow: hidden;
+        white-space: nowrap;
+    }
+
+    .pd-btn-buy svg,
+    .pd-btn-cart svg {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+    }
+
+    /* ============================
+       MOBILE WISHLIST BUTTON
+       ============================ */
+    .pd-wishlist-mobile {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        width: 100%;
+        padding: 10px;
+        margin-top: 8px;
+        background: #fff;
+        border: 1.5px solid #e2e8f0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-family: 'Signika', sans-serif;
+        font-size: 13px;
+        font-weight: 500;
+        color: #64748b;
+        transition: all 0.2s;
+    }
+
+    .pd-wishlist-mobile svg {
+        width: 18px;
+        height: 18px;
+        stroke: #64748b;
+        fill: none;
+        transition: all 0.2s;
+        flex-shrink: 0;
+    }
+
+    .pd-wishlist-mobile:active {
+        transform: scale(0.97);
+    }
+
+    .pd-wishlist-mobile.liked {
+        border-color: var(--qh-primary);
+        color: var(--qh-primary);
+        background: #fff5f5;
+    }
+
+    .pd-wishlist-mobile.liked svg {
+        fill: var(--qh-primary);
+        stroke: var(--qh-primary);
+    }
+
+    /* ============================
+       PROMO BANNER
+       ============================ */
+    .pd-promo-banner {
+        display: flex;
+        height: 56px;
+        margin-top: 10px;
+        border-radius: 8px;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+    }
+
+    .pd-promo-banner-img {
+        min-width: 0;
+        flex: 1;
+        overflow: hidden;
+    }
+
+    .pd-promo-banner-img img {
+        object-fit: cover;
+        width: 100%;
+        height: 100%;
+    }
+
+    .pd-promo-banner-btn {
+        padding: 0 8px;
+        font-size: 10px;
+        min-width: 0;
+        white-space: nowrap;
+        flex-shrink: 0;
+    }
+
+    .pd-promo-banner-btn svg {
+        width: 12px;
+        height: 12px;
+    }
+
+    /* ============================
+       EXTRA ROW (Video + Cam kết) → 1 col
+       ============================ */
     .pd-extra-row {
         grid-template-columns: 1fr;
-        gap: 16px;
+        gap: 10px;
+        margin-top: 16px;
+        width: 100%;
     }
 
+    .pd-extra-box {
+        border-radius: 10px;
+        width: 100%;
+        max-width: 100%;
+        overflow: hidden;
+        margin-top: 16px !important;
+    }
+
+    .pd-extra-title {
+        font-size: 14px;
+        padding: 10px 12px;
+        gap: 6px;
+    }
+
+    .pd-extra-title svg {
+        width: 17px;
+        height: 17px;
+        flex-shrink: 0;
+    }
+
+    /* ── Video ── */
     .pd-video-wrapper {
         aspect-ratio: 16 / 9;
+        padding-bottom: 56.25%;
+        overflow: hidden;
+        width: 100%;
     }
 
-    .pd-review-body,
-    .pd-related-body {
-        padding: 16px;
+    .pd-video-wrapper iframe {
+        max-width: 100% !important;
     }
 
-    .pd-related-body .qh-product-grid {
-        grid-template-columns: repeat(2, 1fr) !important;
-        gap: 12px !important;
+    /* ── Cam kết ── */
+    .pd-commit-content {
+        padding: 10px 12px;
     }
 
-    .qh-product-card:hover {
-        transform: translateY(-2px);
+    .pd-commit-list {
+        gap: 10px;
+    }
+
+    .pd-commit-list li {
+        font-size: 12px;
+        gap: 8px;
+        line-height: 1.4;
+        min-width: 0;
+    }
+
+    .pd-commit-list li span:last-child {
+        min-width: 0;
+        word-break: break-word;
+    }
+
+    .pd-commit-icon {
+        width: 22px;
+        height: 22px;
+        flex-shrink: 0;
+    }
+
+    .pd-commit-icon i {
+        font-size: 12px;
+    }
+
+    /* ============================
+       REVIEW SECTION
+       ============================ */
+    .pd-review-section {
+        margin-top: 16px !important;
+    }
+
+    .pd-review-body {
+        padding: 12px;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .pd-review-summary {
+        font-size: 11px;
+    }
+
+    /* Avg rating */
+    .pd-review-avg {
+        padding: 8px 10px;
+        gap: 6px;
+        margin-bottom: 12px;
+        border-radius: 8px;
+    }
+
+    .pd-star {
+        width: 16px;
+        height: 16px;
+    }
+
+    .pd-review-avg-text {
+        font-size: 15px;
+    }
+
+    .pd-review-avg-count {
+        font-size: 11px;
+    }
+
+    /* Review form */
+    .pd-review-login-msg,
+    .pd-review-done-msg {
+        font-size: 12px;
+        padding: 10px 12px;
+        border-radius: 8px;
     }
 
     .pd-review-input {
         flex-direction: column;
-        align-items: flex-start;
+        align-items: stretch;
+        width: 100%;
     }
 
     .pd-review-grid {
         grid-template-columns: 1fr;
+        gap: 0;
         min-height: 0;
-        /* 'auto' not supported in Firefox 22+; use 0 */
     }
 
     .pd-review-left {
         border-right: none;
         padding-right: 0;
-        padding-bottom: 16px;
+        padding-bottom: 12px;
+        margin-bottom: 12px;
         border-bottom: 1px solid #e2e8f0;
+        gap: 12px;
+    }
+
+    .pd-review-right {
+        gap: 6px;
+    }
+
+    .pd-review-label {
+        font-size: 12px;
+    }
+
+    .pd-star-btn {
+        width: 26px;
+        height: 26px;
+    }
+
+    .pd-review-comment {
+        min-height: 90px;
+        font-size: 13px;
+        padding: 10px;
+        border-radius: 8px;
+        width: 100%;
     }
 
     .pd-review-images-row {
         grid-template-columns: 1fr;
+        gap: 8px;
     }
 
     .pd-review-images-upload-cell,
     .pd-review-preview-wrap {
-        min-height: 80px;
+        min-height: 60px;
+        padding: 8px;
+        border-radius: 8px;
+    }
+
+    .pd-review-upload-btn {
+        font-size: 12px;
+        padding: 7px 16px;
+        border-radius: 6px;
+    }
+
+    .pd-review-preview > div {
+        width: 48px;
+        height: 48px;
+        border-radius: 6px;
+    }
+
+    .pd-review-footer {
+        margin-top: 12px;
+        padding-top: 10px;
+        gap: 8px;
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .pd-review-msg {
+        font-size: 11px;
+    }
+
+    .pd-review-submit {
+        padding: 10px 20px;
+        font-size: 13px;
+        border-radius: 8px;
+        width: 100%;
+    }
+
+    /* ── Review list items ── */
+    .pd-review-list {
+        gap: 0;
     }
 
     .pd-review-item {
-        grid-template-columns: 1fr 1fr;
-        grid-template-rows: auto auto;
-        gap: 6px 12px;
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-rows: auto auto auto;
+        gap: 3px 8px;
+        padding: 10px 0;
+        max-width: 100%;
+        overflow: hidden;
     }
 
-    /* user: cột 1 hàng 1, sao: cột 2 hàng 1, comment: span 2 hàng 2, ảnh: span 2 hàng 3 */
     .pd-review-user {
         grid-column: 1;
         grid-row: 1;
+        gap: 6px;
+        min-width: 0;
+    }
+
+    .pd-review-avatar {
+        width: 28px;
+        height: 28px;
+        font-size: 11px;
+        flex-shrink: 0;
+    }
+
+    .pd-review-name {
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .pd-review-date {
+        font-size: 10px;
     }
 
     .pd-review-rating {
@@ -1779,20 +2319,346 @@
         justify-content: flex-end;
     }
 
+    .pd-star-sm {
+        width: 13px;
+        height: 13px;
+    }
+
     .pd-review-text {
         grid-column: 1 / -1;
         grid-row: 2;
+        font-size: 12px;
+        margin-top: 3px;
+        line-height: 1.45;
+        word-break: break-word;
     }
 
     .pd-review-img-col {
         grid-column: 1 / -1;
         grid-row: 3;
+        display: flex;
         justify-content: flex-start;
+        margin-top: 4px;
+        gap: 4px;
+        overflow-x: auto;
+    }
+
+    .pd-review-thumb {
+        width: 48px;
+        height: 48px;
+        border-radius: 5px;
+        flex-shrink: 0;
+    }
+
+    /* ============================
+       RELATED PRODUCTS
+       ============================ */
+    .pd-related-body {
+        padding: 10px;
+        overflow: hidden;
+        width: 100%;
+    }
+
+    .pd-related-body .qh-product-grid {
+        display: grid !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 8px !important;
+        width: 100% !important;
+    }
+
+    .pd-related-body .qh-product-card {
+        border-radius: 8px !important;
+        border-width: 1px !important;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06) !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        width: 100% !important;
+    }
+
+    .pd-related-body .qh-product-card .qh-product-image {
+        aspect-ratio: 1 !important;
+    }
+
+    .pd-related-body .qh-product-card .qh-product-name,
+    .qh-product-card .qh-product-name {
+        font-size: 12px !important;
+        min-height: 30px !important;
+        line-height: 1.3 !important;
+        margin-bottom: 2px !important;
+    }
+
+    .pd-related-body .qh-product-card .qh-product-info {
+        padding: 6px 8px 8px !important;
+        border-top: 1px solid #f0f0f0 !important;
+    }
+
+    .pd-related-body .qh-product-card .qh-product-price {
+        margin-bottom: 3px !important;
+    }
+
+    .pd-related-body .qh-product-card .qh-product-price span {
+        font-size: 13px !important;
+    }
+
+    .pd-related-body .qh-product-card .qh-product-price span[style*="line-through"] {
+        font-size: 10px !important;
+    }
+
+    /* Status badges */
+    .pd-related-body .qh-product-card div[style*="display: flex"][style*="gap: 6px"] {
+        margin-bottom: 6px !important;
+        flex-wrap: wrap !important;
+    }
+
+    .pd-related-body .qh-product-card div[style*="display: flex"][style*="gap: 6px"] span {
+        font-size: 10px !important;
+        padding: 2px 5px !important;
+    }
+
+    /* Action buttons */
+    .pd-related-body .qh-product-card .qh-cart-quick-btn,
+    .pd-related-body .qh-product-card .qh-compare-btn {
+        padding: 5px 2px !important;
+        font-size: 10px !important;
+        border-radius: 5px !important;
+        gap: 2px !important;
+        min-width: 0 !important;
+        overflow: hidden !important;
+        white-space: nowrap !important;
+    }
+
+    .pd-related-body .qh-product-card div[style*="display: flex"][style*="gap: 6px"]:last-child {
+        gap: 4px !important;
+    }
+
+    .pd-related-body .qh-product-card:hover,
+    .qh-product-card:hover {
+        transform: translateY(-1px);
+    }
+
+    .wishlist-btn {
+        opacity: 1;
+        transform: scale(1);
+        width: 26px;
+        height: 26px;
+        top: 6px;
+        right: 6px;
+    }
+
+    .wishlist-btn svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .discount-badge {
+        font-size: 10px;
+        padding: 3px 6px;
+    }
+
+    /* ============================
+       GALLERY LIGHTBOX
+       ============================ */
+    .pd-gallery-overlay {
+        padding: 0;
+    }
+
+    .pd-gallery-box {
+        max-width: 100%;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    .pd-gallery-color-tabs {
+        padding: 0 10px;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+
+    .pd-gallery-color-tabs::-webkit-scrollbar {
+        display: none;
+    }
+
+    .pd-gallery-color-tab {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .pd-gallery-close {
+        right: 8px;
+        width: 28px;
+        height: 28px;
+    }
+
+    .pd-gallery-close svg {
+        width: 14px;
+        height: 14px;
+    }
+
+    .pd-gallery-main-img {
+        max-width: 90%;
+        max-height: 50vh;
+    }
+
+    .pd-gallery-nav {
+        width: 32px;
+        height: 32px;
+    }
+
+    .pd-gallery-nav svg { width: 16px; height: 16px; }
+    .pd-gallery-nav.prev { left: 6px; }
+    .pd-gallery-nav.next { right: 6px; }
+
+    .pd-gallery-thumbs {
+        padding: 8px 10px 12px;
+        gap: 6px;
+    }
+
+    .pd-gallery-thumb {
+        width: 48px;
+        height: 48px;
+        border-radius: 5px;
+    }
+
+    /* ============================
+       SPEC PANEL
+       ============================ */
+    .pd-spec-panel {
+        width: 100%;
+        max-width: 100vw;
+    }
+
+    .pd-spec-panel-header {
+        padding: 12px 14px;
+    }
+
+    .pd-spec-panel-title {
+        font-size: 15px;
+    }
+
+    .pd-spec-tabs {
+        padding: 0 14px;
+    }
+
+    .pd-spec-tab {
+        padding: 8px 10px;
+        font-size: 12px;
+    }
+
+    .pd-spec-group-title {
+        font-size: 13px;
+        padding: 10px 14px 6px;
+    }
+
+    .pd-spec-group td {
+        padding: 8px 14px;
+        font-size: 12px;
+    }
+
+    .pd-spec-group td:first-child {
+        width: 38%;
+    }
+
+    /* ============================
+       CONTENT BODY (CKEditor)
+       ============================ */
+    .pd-content-body {
+        padding: 12px 14px;
+        font-size: 13px;
+        line-height: 1.65;
+        overflow-x: auto;
+        word-wrap: break-word;
+        overflow-wrap: break-word;
+    }
+
+    .pd-content-body h1 { font-size: 17px; }
+    .pd-content-body h2 { font-size: 15px; }
+    .pd-content-body h3 { font-size: 14px; }
+    .pd-content-body h4 { font-size: 13px; }
+    .pd-content-body p { margin-bottom: 8px; }
+
+    .pd-content-body img {
+        max-width: 100% !important;
+        height: auto !important;
+        border-radius: 6px;
+        margin: 8px 0;
+    }
+
+    .pd-content-body ul,
+    .pd-content-body ol {
+        padding-left: 18px;
+    }
+
+    .pd-content-body table {
+        display: block;
+        overflow-x: auto;
+        max-width: 100%;
+    }
+
+    .pd-content-body table td,
+    .pd-content-body table th {
+        padding: 6px 8px;
+        font-size: 11px;
+    }
+
+    .pd-content-body iframe {
+        max-width: 100% !important;
+    }
+
+    .pd-content-body blockquote {
+        padding: 8px 12px;
+        margin: 8px 0;
+        font-size: 12px;
+    }
+
+    /* ============================
+       DESCRIPTION SECTION
+       ============================ */
+    .pd-spec-section {
+        margin-top: 16px;
+        padding-top: 12px;
+    }
+
+    .pd-spec-title {
+        font-size: 15px;
+        margin-bottom: 10px;
     }
 }
 
+/* ── Extra small (≤480px) ── */
 @media (max-width: 480px) {
     .pd-related-body .qh-product-grid {
-        grid-template-columns: 1fr !important;
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 6px !important;
+    }
+
+    .pd-main-image {
+        max-height: 260px;
+    }
+
+    .pd-bottom-tab[data-color] {
+        min-height: 50px;
+    }
+
+    .pd-price-current {
+        font-size: 18px;
+    }
+
+    .pd-storage-name {
+        font-size: 12px;
+    }
+
+    .pd-storage-price {
+        font-size: 10px;
+    }
+
+    .pd-color-name {
+        font-size: 11px;
+    }
+
+    .pd-btn-buy,
+    .pd-btn-cart {
+        padding: 10px 6px;
+        font-size: 12px;
     }
 }

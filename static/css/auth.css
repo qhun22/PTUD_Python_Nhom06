@@ -584,35 +584,33 @@
     flex-shrink: 0;
 }
 
+/* ===================================================
+   MOBILE — Proper scrollable layout (≤900px)
+   Core problem on desktop: height:calc(100vh-80px) +
+   overflow:hidden locks the container. On mobile we
+   must release that lock so the page scrolls naturally.
+   =================================================== */
 @media (max-width: 900px) {
+
+    /* 1. Release the fixed-height viewport lock */
     .auth-page {
-        flex-direction: column-reverse;
+        flex-direction: column-reverse; /* visual banner on top, form below */
+        height: auto;                   /* no more fixed height */
+        min-height: 0;
+        overflow: visible;              /* no more clip */
     }
 
+    /* 2. Visual section → compact top banner */
     .auth-visual-section {
         flex: 0 0 auto;
         width: 100%;
-        min-height: 180px;
-        padding: 24px 24px;
-        background: #fafafa;
+        height: auto;
+        min-height: auto;
+        padding: 20px 24px 16px;
+        background: linear-gradient(160deg, #fff5f5 0%, #fff 100%);
         border-left: none;
         border-bottom: 1px solid #f0f0f0;
-    }
-
-    .auth-visual-emoji {
-        font-size: 42px;
-        margin-bottom: 8px;
-        animation: none;
-    }
-
-    .auth-visual-title {
-        font-size: 18px;
-        color: var(--qh-text);
-    }
-
-    .auth-visual-desc,
-    .auth-feature-list {
-        display: none;
+        overflow: visible;
     }
 
     .auth-visual-section::before,
@@ -624,19 +622,55 @@
         display: none;
     }
 
+    .auth-visual-icon {
+        font-size: 48px;
+        margin-bottom: 6px;
+        animation: none;
+    }
+
+    .auth-visual-title {
+        font-size: 18px;
+        margin-bottom: 4px;
+    }
+
+    .auth-visual-desc,
+    .auth-feature-list {
+        display: none;
+    }
+
+    /* 3. Form section → natural height, page-level scroll */
     .auth-form-section {
         flex: 1;
         width: 100%;
-        padding: 32px 24px;
+        height: auto;
+        padding: 28px 24px 72px; /* bottom pad for floating contact bar */
+        overflow-y: visible;     /* no internal scroll — let the page scroll */
+    }
+
+    /* 4. Inner form → top-aligned, remove vertical centering */
+    .auth-form-inner {
+        margin: 0;
     }
 }
 
 @media (max-width: 480px) {
     .auth-form-section {
-        padding: 24px 16px;
+        padding: 24px 16px 64px;
     }
 
     .auth-heading {
         font-size: 22px;
+    }
+
+    .auth-visual-section {
+        padding: 16px 16px 12px;
+    }
+
+    .auth-visual-icon {
+        font-size: 40px;
+    }
+
+    .auth-visual-title {
+        font-size: 16px;
     }
 }

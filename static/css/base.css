@@ -1,50 +1,72 @@
 /* ==================== BASE STYLES - Compare Bar ==================== */
 
 /* Compare Bar */
-.qh-compare-bar {
+.qh-compare-overlay {
     position: fixed;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    z-index: 10001;
-    background: var(--qh-white);
-    box-shadow: 0 -4px 20px var(--qh-shadow);
-    border-top: 2px solid var(--qh-primary);
-    padding: 8px 24px;
-    transform: translateY(100%);
+    inset: 0;
+    background: rgba(15, 23, 42, 0.35);
     opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.22s ease;
+    z-index: 12000;
     pointer-events: none;
-    transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
 }
 
-.qh-compare-bar.active {
-    transform: translateY(0);
+.qh-compare-overlay.active {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
 }
 
-.qh-compare-bar-inner {
-    max-width: 1400px;
-    margin: 0 auto;
+/* Overlay hiện cả desktop vì drawer dùng ở mọi kích thước */
+
+/* ══ Drawer: y hệt qh-advanced-filter-drawer ══ */
+.qh-compare-bar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    z-index: 12001;
+    width: min(440px, 92vw);
+    height: 100dvh;
+    background: #fff;
+    box-shadow: -12px 0 28px rgba(15, 23, 42, 0.16);
+    transform: translateX(100%);
+    transition: transform 0.24s ease;
     display: flex;
-    align-items: center;
-    gap: 16px;
-    height: 64px;
+    flex-direction: column;
+    overflow: hidden;
+    pointer-events: none;
 }
 
-.qh-compare-bar-items {
-    display: grid;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-    gap: 10px;
+.qh-compare-bar.active {
+    transform: translateX(0);
+    pointer-events: auto;
+}
+
+/* Inner = flex column: items cuộn, actions ghim dưới — giống qh-advanced-filter-drawer */
+.qh-compare-bar-inner {
     flex: 1;
-    overflow: visible;
-    padding: 0 8px;
-    height: 52px;
-    align-items: center;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Items = scrollable body, giống qh-advanced-filter-body */
+.qh-compare-bar-items {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    height: auto;
+    padding: 14px 18px 8px;
+    gap: 10px;
+    align-items: stretch;
+    box-sizing: border-box;
 }
 
 .qh-compare-bar-items.qh-compare-bar-items--has-items {
-    display: grid;
+    display: flex;
 }
 
 .qh-compare-empty-state {
@@ -72,11 +94,12 @@
     gap: 10px;
     background: var(--qh-white);
     border-radius: var(--qh-radius-sm);
-    padding: 7px 34px 7px 10px;
+    padding: 10px 34px 10px 12px;
     min-width: 0;
     max-width: none;
     width: 100%;
-    height: 100%;
+    height: 64px;
+    flex-shrink: 0;
     position: relative;
     border: 1px solid var(--qh-border);
     border-left: 3px solid var(--qh-primary);
@@ -91,11 +114,8 @@
 }
 
 .qh-compare-bar-items.qh-compare-bar-items--full {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-.qh-compare-bar-items.qh-compare-bar-items--full .qh-compare-bar-item {
-    max-width: none;
+    display: flex;
+    flex-direction: column;
 }
 
 .qh-compare-bar-item img {
@@ -160,86 +180,95 @@
 
 .qh-compare-bar-slot {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
     justify-content: center;
-    gap: 2px;
+    gap: 6px;
     background: transparent;
     border: 2px dashed #e5e7eb;
     border-radius: var(--qh-radius-sm);
-    height: 100%;
+    height: 56px;
+    flex-shrink: 0;
     color: #d1d5db;
     transition: border-color 0.2s, color 0.2s;
     cursor: default;
+    box-sizing: border-box;
 }
 
 .qh-compare-bar-slot i {
-    font-size: 16px;
+    font-size: 18px;
 }
 
 .qh-compare-bar-slot span {
-    font-size: 11px;
-    font-weight: 400;
+    font-size: 13px;
+    font-weight: 500;
 }
 
+/* Actions = footer ghim dưới, giống qh-advanced-filter-foot */
 .qh-compare-bar-actions {
     display: flex;
-    gap: 8px;
+    gap: 10px;
     align-items: center;
     flex-shrink: 0;
+    padding: 14px 18px 18px;
+    border-top: 1px solid #eef2f7;
+    background: #fff;
 }
 
+/* Nút Xóa — giống .qh-filter-btn + .qh-filter-btn-reset */
 .qh-compare-bar-clear {
-    width: 132px;
-    height: 42px;
-    padding: 0 12px;
-    border-radius: 8px;
-    border: 1px solid #d1d5db;
-    background: #f3f4f6;
-    color: #4b5563;
-    cursor: pointer;
-    font-size: 13px;
-    font-weight: 600;
-    font-family: 'Signika', sans-serif;
-    transition: all 0.3s ease;
-    white-space: nowrap;
+    flex: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: 'Signika', sans-serif;
+    line-height: 1.4;
+    background: #f3f4f6;
+    color: #555;
+    border: 1.5px solid #e0e0e0;
 }
 
 .qh-compare-bar-clear:hover {
     background: #e5e7eb;
-    color: #374151;
-    border-color: #cbd5e1;
+    color: #333;
+    border-color: #d0d0d0;
+    transform: translateY(-1px);
 }
 
+/* Nút So sánh ngay — giống .qh-filter-btn + #qhAdvancedFilterApply */
 .qh-compare-bar-go {
-    width: 132px;
-    height: 42px;
-    padding: 0 12px;
-    border-radius: var(--qh-radius-sm);
-    border: 1px solid var(--qh-primary);
-    background: var(--qh-primary-light);
-    color: var(--qh-primary);
-    font-size: 13px;
-    font-weight: 600;
-    font-family: 'Signika', sans-serif;
-    transition: all 0.3s ease;
-    white-space: nowrap;
-    cursor: pointer;
+    flex: 1;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     gap: 6px;
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    white-space: nowrap;
+    font-family: 'Signika', sans-serif;
+    line-height: 1.4;
+    background: var(--qh-primary);
+    color: #fff;
+    border: 1.5px solid var(--qh-primary);
 }
 
 .qh-compare-bar-go:hover:not(:disabled) {
-    transform: translateY(-2px);
-    background: var(--qh-primary);
-    color: #ffffff;
-    box-shadow: 0 6px 20px rgba(230, 0, 35, 0.28);
+    background: var(--qh-primary-hover);
+    color: #fff;
+    border-color: var(--qh-primary-hover);
+    transform: translateY(-1px);
 }
 
 .qh-compare-bar-go:disabled {
@@ -265,6 +294,57 @@
     background: var(--qh-bg);
     transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(169, 204, 240, 0.3);
+}
+
+/* Header bar — giống qh-advanced-filter-head, hiện cả desktop */
+.qh-compare-bar-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 18px;
+    border-bottom: 1px solid #eef2f7;
+    background: #fff;
+    flex-shrink: 0;
+}
+
+.qh-compare-bar-head-title {
+    font-size: 20px;
+    font-weight: 700;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Icon trong tiêu đề — giống .qh-advanced-filter-head h3 i */
+.qh-compare-bar-head-title i {
+    font-size: 22px;
+    color: #1f2937;
+    flex-shrink: 0;
+    line-height: 1;
+}
+
+/* Nút đóng — giống .qh-advanced-filter-close */
+.qh-compare-bar-head .qh-compare-bar-toggle {
+    width: 34px;
+    height: 34px;
+    border: 1px solid #d1d5db;
+    border-radius: 999px;
+    background: #f9fafb;
+    color: #334155;
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.qh-compare-bar-head .qh-compare-bar-toggle:hover {
+    background: #e5e7eb;
+    transform: none;
+    box-shadow: none;
 }
 
 /* Compare FAB */
@@ -318,36 +398,36 @@
     border: 2px solid var(--qh-white);
 }
 
-/* Responsive */
+/* Responsive: Desktop đã là right drawer, mobile chỉ override width + safe-area */
 @media (max-width: 768px) {
     .qh-compare-bar {
-        padding: 10px 12px;
+        width: 100vw;
+    }
+
+    .qh-compare-bar-head {
+        padding: 14px;
+        padding-top: max(14px, env(safe-area-inset-top));
+    }
+
+    .qh-compare-bar-head-title {
+        font-size: 16px;
     }
 
     .qh-compare-bar-items {
-        overflow-x: auto;
+        padding: 12px 12px 6px;
     }
 
-    .qh-compare-bar-items.qh-compare-bar-items--full {
-        display: flex;
-        gap: 10px;
+    /* Actions footer — giống .qh-advanced-filter-foot mobile */
+    .qh-compare-bar-actions {
+        padding: 10px 12px;
+        padding-bottom: max(10px, env(safe-area-inset-bottom));
     }
 
-    .qh-compare-bar-item {
-        min-width: 160px;
-        max-width: 180px;
-        padding: 6px 10px;
-    }
-
-    .qh-compare-bar-item img {
-        width: 36px;
-        height: 36px;
-    }
-
-    .qh-compare-bar-slot {
-        min-width: 160px;
-        max-width: 180px;
-        height: 48px;
+    .qh-compare-bar-clear,
+    .qh-compare-bar-go {
+        height: 44px;
+        font-size: 13px;
+        padding: 0 12px;
     }
 
     .qh-compare-fab {
@@ -355,13 +435,5 @@
         left: 16px;
         width: 46px;
         height: 46px;
-    }
-
-    .qh-compare-bar-clear,
-    .qh-compare-bar-go {
-        width: auto;
-        min-width: 118px;
-        height: 38px;
-        padding: 0 10px;
     }
 }

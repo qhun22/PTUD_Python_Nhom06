@@ -1,8 +1,21 @@
 /* Hide horizontal scrollbar globally */
-html,
-body {
-    overflow-x: hidden !important;
+html {
+    overflow-x: hidden;
     min-height: 100vh;
+    background: #fff;
+}
+body {
+    overflow-x: hidden;
+    min-height: 100vh;
+    background: #fff;
+    width: 100%;
+}
+
+/* Overflow wrapper - chặn tràn ngang triệt để trên mọi trình duyệt */
+#qhPageWrap {
+    width: 100%;
+    overflow-x: hidden;
+    position: relative;
 }
 
 /*
@@ -14,39 +27,45 @@ body {
 /* Import Google Font */
 @import url('https://fonts.googleapis.com/css2?family=Signika:wght@300;400;500;600;700&display=swap');
 
-/* ==================== CUSTOM SCROLLBAR - THIN & COMPACT ==================== */
-::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
+/* ==================== CUSTOM SCROLLBAR ==================== */
+/* PC: hiện thanh cuộn mỏng cho html/body và mọi elements */
+@media (min-width: 769px) {
+    ::-webkit-scrollbar,
+    *::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+    }
+
+    ::-webkit-scrollbar-track,
+    *::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb,
+    *::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover,
+    *::-webkit-scrollbar-thumb:hover {
+        background: #a1a1a1;
+    }
 }
 
-::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
-}
-
-::-webkit-scrollbar-thumb:hover {
-    background: #a1a1a1;
-}
-
-/* Scrollbar - webkit-based (Chrome, Safari, Edge) */
-*::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-}
-
-*::-webkit-scrollbar-track {
-    background: #f1f1f1;
-}
-
-*::-webkit-scrollbar-thumb {
-    background: #c1c1c1;
-    border-radius: 3px;
+/* Mobile: ẩn hoàn toàn thanh cuộn */
+@media (max-width: 768px) {
+    ::-webkit-scrollbar,
+    *::-webkit-scrollbar {
+        display: none !important;
+        width: 0 !important;
+        height: 0 !important;
+    }
+    html, body, * {
+        scrollbar-width: none !important;
+        -ms-overflow-style: none !important;
+    }
 }
 
 /* CSS Variables - Brand Colors */
@@ -60,7 +79,7 @@ body {
     --qh-secondary-dark: #991b1b;
     --qh-text: #333333;
     --qh-text-light: #666666;
-    --qh-bg: #F8F9FA;
+    --qh-bg: #FFFFFF;
     --qh-white: #FFFFFF;
     --qh-border: #EEEEEE;
     --qh-shadow: rgba(0, 0, 0, 0.08);
@@ -78,7 +97,7 @@ body {
 
 body {
     font-family: 'Signika', sans-serif;
-    background-color: var(--qh-bg);
+    background-color: #fff;
     color: var(--qh-text);
     line-height: 1.6;
 }
@@ -141,7 +160,7 @@ body {
     display: flex;
     align-items: center;
     border: 2px solid var(--qh-primary);
-    border-radius: var(--qh-radius-lg);
+    border-radius: var(--qh-radius);
     overflow: hidden;
     background: #ffffff;
     transition: border-color 0.2s ease, box-shadow 0.2s ease;
@@ -205,7 +224,7 @@ body {
     background: var(--qh-white);
     border: 1px solid var(--qh-border);
     border-top: none;
-    border-radius: 0 0 var(--qh-radius-lg) var(--qh-radius-lg);
+    border-radius: 0 0 var(--qh-radius) var(--qh-radius);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
     max-height: 400px;
     overflow-y: auto;
@@ -618,7 +637,7 @@ body {
     position: fixed;
     top: 90px;
     right: 24px;
-    z-index: 9999;
+    z-index: 99999;
     display: flex;
     flex-direction: column;
     gap: 12px;
@@ -636,7 +655,7 @@ body {
     max-width: 400px;
     opacity: 0;
     transform: translateX(100%);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .qh-toast-show {
@@ -685,6 +704,48 @@ body {
 
 .qh-toast-warning .qh-toast-icon {
     color: #f59e0b;
+}
+
+/* ===== TOAST MOBILE ===== */
+@media (max-width: 768px) {
+    .qh-toast-container {
+        top: 76px;
+        right: 12px;
+        left: 12px;
+        align-items: stretch;
+        gap: 8px;
+    }
+
+    .qh-toast {
+        min-width: 0;
+        max-width: 100%;
+        width: 100%;
+        padding: 12px 14px;
+        gap: 10px;
+        border-radius: 10px;
+        box-shadow: 0 4px 16px rgba(0,0,0,0.13);
+        transform: translateY(-16px);
+        opacity: 0;
+    }
+
+    .qh-toast-show {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    .qh-toast-hide {
+        opacity: 0;
+        transform: translateY(-12px);
+    }
+
+    .qh-toast-text {
+        font-size: 13px;
+    }
+
+    .qh-toast-icon svg {
+        width: 18px;
+        height: 18px;
+    }
 }
 
 /* ==================== MODAL STYLES ==================== */
@@ -818,15 +879,9 @@ body {
 
 /* ==================== USP SECTION ==================== */
 .qh-usp-section {
-    background: #f8fafc;
+    background: #fff;
     padding: 24px 0 32px;
     margin-top: 10px;
-    width: 100vw;
-    position: relative;
-    left: 50%;
-    transform: translateX(-50%);
-    margin-left: 0;
-    margin-right: 0;
 }
 
 .qh-usp-container {
@@ -1231,29 +1286,29 @@ body {
 
 /* ----- Footer Responsive ----- */
 @media (max-width: 1024px) {
-    .qh-footer-top-inner {
-        grid-template-columns: 1fr;
-        gap: 28px;
-    }
-
-    .qh-footer-contact-block {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 24px;
-    }
-
-    .qh-footer-social-block {
-        justify-content: flex-start;
-    }
-
     .qh-footer-grid {
         grid-template-columns: repeat(3, 1fr);
     }
 }
 
 @media (max-width: 768px) {
+    /* === FOOTER TOP === */
     .qh-footer-top {
-        padding: 32px 0 28px;
+        padding: 28px 0 24px;
+    }
+
+    /* 3 cột → 1 cột, mỗi phần căn giữa */
+    .qh-footer-top-inner {
+        grid-template-columns: 1fr;
+        gap: 28px;
+        text-align: center;
+    }
+
+    /* Cột 1: NHẬN TƯ VẤN */
+    .qh-footer-feedback-desc {
+        max-width: 100%;
+        margin-left: auto;
+        margin-right: auto;
     }
 
     .qh-footer-feedback-form {
@@ -1264,25 +1319,47 @@ body {
     .qh-footer-feedback-input {
         border-right: none;
         border-bottom: 1px solid #fff;
+        text-align: left;
     }
 
     .qh-footer-feedback-btn {
         border-radius: 0;
+        justify-content: center;
     }
 
+    /* Cột 2: LIÊN HỆ — full width, căn giữa, icon+text xếp cột */
+    .qh-footer-contact-block {
+        justify-self: stretch;
+        flex-direction: column;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .qh-footer-contact-row {
+        justify-content: center;
+    }
+
+    /* Cột 3: KẾT NỐI — full width, căn giữa */
+    .qh-footer-social-block {
+        justify-self: stretch;
+        align-items: center;
+    }
+
+    /* === FOOTER MID === */
     .qh-footer-mid {
-        padding: 36px 0 28px;
+        padding: 32px 0 24px;
     }
 
     .qh-footer-grid {
         grid-template-columns: repeat(2, 1fr);
-        gap: 32px 24px;
+        gap: 28px 20px;
     }
 
     .qh-footer-col-subtitle {
-        margin-top: 24px;
+        margin-top: 20px;
     }
 
+    /* === FOOTER BOTTOM === */
     .qh-footer-bottom-inner {
         justify-content: center;
         text-align: center;
@@ -1296,10 +1373,7 @@ body {
 @media (max-width: 480px) {
     .qh-footer-grid {
         grid-template-columns: 1fr;
-    }
-
-    .qh-footer-contact-block {
-        flex-direction: column;
+        gap: 24px;
     }
 }
 
@@ -1394,8 +1468,8 @@ body {
 
 @media (max-width: 640px) {
     .qh-usp-section {
-        padding: 22px 0 28px;
-        margin-top: 10px;
+        padding: 16px 0 24px;
+        margin-top: 0;
     }
 
     .qh-usp-title {
@@ -1404,8 +1478,8 @@ body {
     }
 
     .qh-usp-grid {
-        grid-template-columns: 1fr;
-        gap: 20px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 14px;
     }
 
     .qh-usp-card {
@@ -1419,6 +1493,15 @@ body {
     margin: 0 auto;
     padding: 40px 24px;
     min-height: calc(100vh - 200px);
+    background: #fff;
+}
+
+@media (max-width: 768px) {
+    .qh-main {
+        padding: 12px 10px;
+        max-width: 100%;
+        overflow-x: clip;
+    }
 }
 
 .qh-page-title {
