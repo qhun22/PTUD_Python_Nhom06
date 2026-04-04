@@ -3,7 +3,7 @@
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
     <title>{% block title %}QHUN22 Mobile - Điện Thoại Chính Hãng{% endblock %}</title>
 
     <!-- ===== SEO META ===== -->
@@ -37,6 +37,7 @@
     <link rel="stylesheet" href="{% static 'css/base.css' %}">
     <link rel="stylesheet" href="{% static 'css/chatbot.css' %}">
     <link rel="stylesheet" href="{% static 'css/contact-bar.css' %}">
+    <link rel="stylesheet" href="{% static 'css/mobile-header.css' %}">
 
     <!-- Font Google - Signika -->
     <link href="https://fonts.googleapis.com/css2?family=Signika:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -52,6 +53,7 @@
     <script src="{% static 'js/banner.js' %}" defer></script>
 </head>
 <body>
+    <div id="qhPageWrap">
 
     <!-- Tin nhắn thông báo -->
     {% if messages %}
@@ -77,6 +79,19 @@
 
     <!-- Đầu trang (Header) -->
     <header class="qh-header">
+        <!-- ===== THANH HEADER MOBILE (chỉ hiện ≤768px) ===== -->
+        <div class="qh-mobile-header-bar">
+            <button class="qh-mhb-btn" id="qhMobMenuBtn" aria-label="Mở menu">
+                <i class="ri-menu-line"></i>
+            </button>
+            <a href="{% url 'store:home' %}" class="qh-mhb-logo" aria-label="Trang chủ QHUN22">
+                <img src="{% static 'logos/sean.gif' %}" alt="QHUN22 Mobile">
+            </a>
+            <button class="qh-mhb-btn" id="qhMobSearchBtn" aria-label="Tìm kiếm">
+                <i class="ri-search-line"></i>
+            </button>
+        </div>
+        <!-- ===== PC HEADER (ẩn trên mobile) ===== -->
         <div class="qh-header-container">
             <div class="qh-header-inner">
                 <!-- Logo cửa hàng -->
@@ -179,7 +194,120 @@
         </div>
     </header>
 
-    <!-- Nội dung chính -->
+    <!-- ==================== MOBILE HEADER DRAWER ==================== -->
+    <!-- Lớp phủ tối khi mở drawer -->
+    <div class="qh-mobile-drawer-overlay" id="qhMobDrawerOverlay"></div>
+
+    <!-- Drawer menu trượt từ trái -->
+    <div class="qh-mobile-drawer" id="qhMobDrawer" role="dialog" aria-modal="true" aria-label="Menu điều hướng">
+        <div class="qh-drawer-head">
+            <div class="qh-drawer-head-logo">
+                <img src="{% static 'logos/sean.gif' %}" alt="QHUN22 Mobile">
+            </div>
+            <button class="qh-drawer-head-close" id="qhMobDrawerClose" aria-label="Đóng menu">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
+        <!-- Greeting row -->
+        <div class="qh-drawer-greeting-row">
+            {% if user.is_authenticated %}
+                <div class="qh-drawer-greeting-name">{{ user_display_name }}</div>
+                <div class="qh-drawer-greeting-sub">Xin chào,</div>
+            {% else %}
+                <div class="qh-drawer-greeting-name">Khách</div>
+                <div class="qh-drawer-greeting-sub">Xin chào,</div>
+            {% endif %}
+        </div>
+        <nav class="qh-drawer-nav">
+            <a href="{% url 'store:home' %}" class="qh-drawer-nav-item">
+                <i class="ri-home-5-line"></i> Trang chủ
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'store:profile' %}" class="qh-drawer-nav-item">
+                <i class="ri-user-3-line"></i> Trang cá nhân
+            </a>
+            {% endif %}
+            <a href="{% url 'store:wishlist' %}" class="qh-drawer-nav-item">
+                <i class="ri-heart-3-line"></i> Yêu thích
+                {% if wishlist_count %}<span style="margin-left:auto;background:var(--qh-primary);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;">{{ wishlist_count }}</span>{% endif %}
+            </a>
+            <a href="{% url 'store:cart_detail' %}" class="qh-drawer-nav-item">
+                <i class="ri-shopping-cart-2-line"></i> Giỏ hàng
+                {% if cart_count %}<span style="margin-left:auto;background:var(--qh-primary);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;">{{ cart_count }}</span>{% endif %}
+            </a>
+            <a href="{% url 'store:order_tracking' %}" class="qh-drawer-nav-item">
+                <i class="ri-file-list-3-line"></i> Tra cứu đơn
+                {% if order_count %}<span style="margin-left:auto;background:var(--qh-primary);color:#fff;font-size:11px;font-weight:700;padding:2px 7px;border-radius:999px;">{{ order_count }}</span>{% endif %}
+            </a>
+            {% if user.is_authenticated %}
+            <a href="{% url 'account_logout' %}" class="qh-drawer-nav-item qh-drawer-logout">
+                <i class="ri-logout-box-r-line"></i> Đăng xuất
+            </a>
+            {% else %}
+            <a href="{% url 'store:login' %}" class="qh-drawer-nav-item">
+                <i class="ri-login-box-line"></i> Đăng nhập
+            </a>
+            {% endif %}
+        </nav>
+    </div>
+
+    <!-- ==================== MOBILE SEARCH PANEL ==================== -->
+    <div class="qh-mobile-search-panel" id="qhMobSearchPanel" role="dialog" aria-modal="true" aria-label="Tìm kiếm sản phẩm">
+        <div class="qh-msp-head">
+            <button class="qh-msp-back" id="qhMobSearchBack" aria-label="Quay lại">
+                <i class="ri-arrow-left-line"></i>
+            </button>
+            <form action="{% url 'store:product_search' %}" method="GET" class="qh-msp-form" id="qhMobSearchForm">
+                <input type="text"
+                       name="q"
+                       id="qhMobSearchInput"
+                       class="qh-msp-input"
+                       placeholder="Nhập sản phẩm bạn cần tìm"
+                       autocomplete="off"
+                       inputmode="search">
+                <button type="submit" class="qh-msp-submit" aria-label="Tìm kiếm">
+                    <i class="ri-search-2-line"></i>
+                </button>
+            </form>
+        </div>
+        <div class="qh-msp-body">
+            <!-- Kết quả tìm kiếm thời gian thực (ẩn mặc định) -->
+            <div class="qh-msp-live-results" id="qhMobLiveResults"></div>
+
+            <!-- Nội dung mặc định khi chưa gõ -->
+            <div class="qh-msp-default-view" id="qhMobDefaultView">
+                <!-- Xu hướng tìm kiếm -->
+                <div class="qh-msp-section">
+                    <div class="qh-msp-section-title">Xu hướng tìm kiếm</div>
+                    <div class="qh-msp-chips">
+                        <a href="{% url 'store:product_search' %}?q=iPhone+17" class="qh-msp-chip"><i class="ri-fire-line"></i> iPhone 17</a>
+                        <a href="{% url 'store:product_search' %}?q=Laptop" class="qh-msp-chip"><i class="ri-fire-line"></i> Laptop</a>
+                        <a href="{% url 'store:product_search' %}?q=Samsung" class="qh-msp-chip"><i class="ri-fire-line"></i> Điện thoại Samsung</a>
+                        <a href="{% url 'store:product_search' %}?q=iPhone+16" class="qh-msp-chip"><i class="ri-fire-line"></i> iPhone 16</a>
+                        <a href="{% url 'store:product_search' %}?q=Samsung+Galaxy+S26" class="qh-msp-chip"><i class="ri-fire-line"></i> Samsung Galaxy S26</a>
+                        <a href="{% url 'store:product_search' %}?q=M%C3%A1y+l%E1%BA%A1nh" class="qh-msp-chip"><i class="ri-fire-line"></i> Máy lạnh</a>
+                    </div>
+                </div>
+
+                <!-- Tìm kiếm gần đây -->
+                <div class="qh-msp-section" id="qhMobRecentSection">
+                    <div class="qh-msp-section-title">Tìm kiếm gần đây</div>
+                    <ul class="qh-msp-recent-list" id="qhMobRecentList">
+                        <li class="qh-msp-recent-empty">Chưa có lịch sử tìm kiếm</li>
+                    </ul>
+                </div>
+
+                <!-- Gợi ý cho bạn -->
+                <div class="qh-msp-section" id="qhMobSuggestSection">
+                    <div class="qh-msp-section-title" id="qhMobSuggestTitle">Gợi ý cho bạn</div>
+                    <div class="qh-msp-products" id="qhMobSuggestGrid">
+                        <!-- Được load bằng JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- ==================== END MOBILE HEADER DRAWER ==================== -->
     <main class="qh-main">
         {% block content %}{% endblock %}
     </main>
@@ -372,7 +500,14 @@
     </script>
 
     <!-- Thanh so sánh -->
+    <div id="qh-compare-overlay" class="qh-compare-overlay"></div>
     <div id="qh-compare-bar" class="qh-compare-bar">
+        <div class="qh-compare-bar-head">
+            <span class="qh-compare-bar-head-title"><i class="ri-arrow-left-right-line"></i> SO SÁNH SẢN PHẨM</span>
+            <button class="qh-compare-bar-toggle" onclick="QHCompare.toggleBar()" title="Đóng">
+                <i class="ri-close-line"></i>
+            </button>
+        </div>
         <div class="qh-compare-bar-inner">
             <div id="qh-compare-items" class="qh-compare-bar-items"></div>
             <div class="qh-compare-bar-actions">
@@ -381,9 +516,6 @@
                 </button>
                 <button id="qh-compare-go-btn" class="qh-compare-bar-go" onclick="QHCompare.goToCompare()" disabled>
                     <i class="ri-arrow-left-right-line"></i> So sánh ngay
-                </button>
-                <button class="qh-compare-bar-toggle" onclick="QHCompare.toggleBar()" title="Thu gọn">
-                    <i class="ri-arrow-down-s-line" style="font-size:18px;color:var(--qh-text-light);"></i>
                 </button>
             </div>
         </div>
@@ -403,7 +535,9 @@
             </div>
             <div class="qh-chat-header-actions">
                 <button id="qh-chat-reset" class="qh-chat-header-btn qh-chat-header-btn--ghost" title="Reset">Reset</button>
-                <button id="qh-chat-close" class="qh-chat-header-btn" title="Đóng">Đóng</button>
+                <button id="qh-chat-close" class="qh-chat-header-btn" title="Đóng" aria-label="Đóng">
+                    <i class="ri-close-line"></i>
+                </button>
             </div>
         </div>
         <div id="qh-chat-messages" class="qh-chat-messages"></div>
@@ -652,6 +786,274 @@
     })();
     </script>
 
+    <!-- ==================== MOBILE HEADER JS ==================== -->
+    <script>
+    (function() {
+        var AUTOCOMPLETE_URL = '{% url "store:autocomplete_search" %}';
+        var RECENT_KEY = 'qhMobRecentSearches';
+        var MAX_RECENT = 8;
+
+        // Elements
+        var menuBtn       = document.getElementById('qhMobMenuBtn');
+        var searchBtn     = document.getElementById('qhMobSearchBtn');
+        var drawer        = document.getElementById('qhMobDrawer');
+        var drawerClose   = document.getElementById('qhMobDrawerClose');
+        var overlay       = document.getElementById('qhMobDrawerOverlay');
+        var searchPanel   = document.getElementById('qhMobSearchPanel');
+        var searchBack    = document.getElementById('qhMobSearchBack');
+        var searchInput   = document.getElementById('qhMobSearchInput');
+        var searchForm    = document.getElementById('qhMobSearchForm');
+        var liveResults   = document.getElementById('qhMobLiveResults');
+        var defaultView   = document.getElementById('qhMobDefaultView');
+        var recentList    = document.getElementById('qhMobRecentList');
+        var suggestGrid   = document.getElementById('qhMobSuggestGrid');
+        var debounceTimer = null;
+
+        // ===== Drawer =====
+        function openDrawer() {
+            if (!drawer) return;
+            drawer.classList.add('qh-mob-active');
+            overlay.classList.add('qh-mob-active');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeDrawer() {
+            if (!drawer) return;
+            drawer.classList.remove('qh-mob-active');
+            overlay.classList.remove('qh-mob-active');
+            document.body.style.overflow = '';
+        }
+
+        if (menuBtn)     menuBtn.addEventListener('click', openDrawer);
+        if (drawerClose) drawerClose.addEventListener('click', closeDrawer);
+        if (overlay)     overlay.addEventListener('click', closeDrawer);
+
+        // ===== Search Panel =====
+        function openSearch() {
+            if (!searchPanel) return;
+            searchPanel.classList.add('qh-mob-active');
+            document.body.style.overflow = 'hidden';
+            setTimeout(function() {
+                if (searchInput) searchInput.focus();
+            }, 320);
+            renderRecent();
+            loadSuggestions();
+        }
+
+        function closeSearch() {
+            if (!searchPanel) return;
+            searchPanel.classList.remove('qh-mob-active');
+            document.body.style.overflow = '';
+            clearLive();
+        }
+
+        if (searchBtn)  searchBtn.addEventListener('click', openSearch);
+        if (searchBack) searchBack.addEventListener('click', closeSearch);
+
+        // ===== Recent Searches (localStorage) =====
+        function getRecent() {
+            try {
+                return JSON.parse(localStorage.getItem(RECENT_KEY) || '[]');
+            } catch(e) { return []; }
+        }
+
+        function saveRecent(arr) {
+            try { localStorage.setItem(RECENT_KEY, JSON.stringify(arr)); } catch(e) {}
+        }
+
+        function addRecent(q) {
+            if (!q || q.length < 2) return;
+            var arr = getRecent().filter(function(x) { return x !== q; });
+            arr.unshift(q);
+            if (arr.length > MAX_RECENT) arr = arr.slice(0, MAX_RECENT);
+            saveRecent(arr);
+        }
+
+        function removeRecent(q) {
+            var arr = getRecent().filter(function(x) { return x !== q; });
+            saveRecent(arr);
+            renderRecent();
+        }
+
+        function renderRecent() {
+            if (!recentList) return;
+            var arr = getRecent();
+            if (arr.length === 0) {
+                recentList.innerHTML = '<li class="qh-msp-recent-empty">Chưa có lịch sử tìm kiếm</li>';
+                return;
+            }
+            recentList.innerHTML = arr.map(function(q) {
+                var safeQ = escHtml(q);
+                var encQ  = encodeURIComponent(q);
+                return '<li class="qh-msp-recent-item" onclick="window.location.href=\'{% url "store:product_search" %}?q=' + encQ + '\'">'
+                     + '<i class="ri-history-line"></i>'
+                     + '<span class="qh-msp-recent-text">' + safeQ + '</span>'
+                     + '<button class="qh-msp-recent-remove" onclick="event.stopPropagation();qhMobRemoveRecent(' + JSON.stringify(q) + ')" aria-label="Xóa"><i class="ri-close-line"></i></button>'
+                     + '</li>';
+            }).join('');
+        }
+
+        // Expose để onclick trong HTML gọi được
+        window.qhMobRemoveRecent = function(q) {
+            removeRecent(q);
+        };
+
+        // Lưu lịch sử khi submit search
+        if (searchForm) {
+            searchForm.addEventListener('submit', function() {
+                var q = searchInput ? searchInput.value.trim() : '';
+                if (q) addRecent(q);
+            });
+        }
+
+        // ===== Gợi ý sản phẩm mặc định =====
+        function loadSuggestions() {
+            if (!suggestGrid) return;
+            suggestGrid.innerHTML = '<div class="qh-msp-loading"><i class="ri-loader-4-line"></i></div>';
+            var url = AUTOCOMPLETE_URL + '?q=' + encodeURIComponent('điện thoại');
+            fetch(url)
+                .then(function(r) { return r.ok ? r.json() : {suggestions:[]}; })
+                .then(function(data) {
+                    var items = (data.suggestions || []).filter(function(s) { return (s.slug || s.id); }).slice(0, 6);
+                    if (items.length === 0) {
+                        document.getElementById('qhMobSuggestSection') && (document.getElementById('qhMobSuggestSection').style.display = 'none');
+                        return;
+                    }
+                    suggestGrid.innerHTML = items.map(function(p) {
+                        var url = p.slug ? '/product/' + p.slug + '/' : '#';
+                        var imgTag = p.image
+                            ? '<img src="' + escHtml(p.image) + '" alt="' + escHtml(p.name) + '" class="qh-msp-product-img" loading="lazy">'
+                            : '<div class="qh-msp-product-img-ph"><i class="ri-image-line"></i></div>';
+                        var priceTag = p.price ? '<div class="qh-msp-product-price">' + fmtPrice(p.price) + '</div>' : '';
+                        return '<a href="' + url + '" class="qh-msp-product-card">'
+                             + imgTag
+                             + '<div class="qh-msp-product-info">'
+                             + '<div class="qh-msp-product-name">' + escHtml(p.name) + '</div>'
+                             + priceTag
+                             + '</div></a>';
+                    }).join('');
+                })
+                .catch(function() {
+                    var sec = document.getElementById('qhMobSuggestSection');
+                    if (sec) sec.style.display = 'none';
+                });
+        }
+
+        // ===== Live autocomplete =====
+        function showLive() {
+            if (liveResults) liveResults.classList.add('qh-mob-active');
+            if (defaultView) defaultView.classList.add('qh-mob-hidden');
+        }
+
+        function clearLive() {
+            if (liveResults) { liveResults.classList.remove('qh-mob-active'); liveResults.innerHTML = ''; }
+            if (defaultView) defaultView.classList.remove('qh-mob-hidden');
+        }
+
+        if (searchInput) {
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                var q = this.value.trim();
+                if (q.length < 2) { clearLive(); return; }
+                debounceTimer = setTimeout(function() { fetchLive(q); }, 280);
+            });
+        }
+
+        function fetchLive(q) {
+            if (!liveResults) return;
+            liveResults.innerHTML = '<div class="qh-msp-loading"><i class="ri-loader-4-line"></i></div>';
+            showLive();
+            var url = AUTOCOMPLETE_URL + '?q=' + encodeURIComponent(q);
+            fetch(url)
+                .then(function(r) { return r.ok ? r.json() : {suggestions:[]}; })
+                .then(function(data) {
+                    renderLive(data.suggestions || [], q);
+                })
+                .catch(function() {
+                    renderLive([], q);
+                });
+            // Lưu lịch sử ngay khi user gõ đủ ký tự (debounced)
+            addRecent(q);
+        }
+
+        function renderLive(list, q) {
+            if (!liveResults) return;
+            if (list.length === 0) {
+                liveResults.innerHTML = '<div class="qh-msp-no-result"><i class="ri-search-line" style="font-size:28px;display:block;margin-bottom:8px;color:#ddd"></i>Không tìm thấy kết quả cho "<strong>' + escHtml(q) + '</strong>"</div>';
+                showLive();
+                return;
+            }
+            var products = list.filter(function(s) { return s.slug || s.id; });
+            var keywords = list.filter(function(s) { return !s.slug && !s.id; });
+            var html = '';
+
+            if (products.length > 0) {
+                html += '<div class="qh-msp-section-title" style="margin-bottom:8px">Sản phẩm</div>';
+                products.forEach(function(p) {
+                    var detailUrl = p.slug ? '/product/' + p.slug + '/' : '#';
+                    var imgTag = p.image
+                        ? '<img src="' + escHtml(p.image) + '" alt="' + escHtml(p.name) + '" class="qh-msp-result-img">'
+                        : '<div class="qh-msp-result-img-ph"><i class="ri-image-line"></i></div>';
+                    var priceTag = p.price ? '<span class="qh-msp-result-price">' + fmtPrice(p.price) + '</span>' : '';
+                    html += '<a href="' + detailUrl + '" class="qh-msp-result-item">'
+                          + imgTag
+                          + '<div class="qh-msp-result-info">'
+                          + '<div class="qh-msp-result-name">' + hlMatch(p.name, q) + '</div>'
+                          + (p.brand ? '<div class="qh-msp-result-brand">' + escHtml(p.brand) + '</div>' : '')
+                          + '</div>' + priceTag + '</a>';
+                });
+            }
+
+            if (keywords.length > 0) {
+                if (products.length > 0) html += '<div style="height:1px;background:var(--qh-border);margin:4px 0"></div>';
+                html += '<div class="qh-msp-section-title" style="margin-bottom:8px">Gợi ý tìm kiếm</div>';
+                keywords.forEach(function(kw) {
+                    html += '<a href="{% url "store:product_search" %}?q=' + encodeURIComponent(kw.name) + '" class="qh-msp-result-kw">'
+                          + '<i class="ri-search-line"></i>'
+                          + '<span class="qh-msp-result-kw-text">' + hlMatch(kw.name, q) + '</span>'
+                          + '</a>';
+                });
+            }
+
+            liveResults.innerHTML = html;
+            showLive();
+        }
+
+        // ===== Helpers =====
+        function escHtml(str) {
+            if (str == null) return '';
+            var d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function fmtPrice(p) {
+            if (!p) return '';
+            return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(p);
+        }
+
+        function escRegex(s) {
+            return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function hlMatch(text, q) {
+            var safe = escHtml(text);
+            var re = new RegExp('(' + escRegex(escHtml(q)) + ')', 'gi');
+            return safe.replace(re, '<strong>$1</strong>');
+        }
+
+        // Đóng search nếu bấm ESC
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                if (searchPanel && searchPanel.classList.contains('qh-mob-active')) closeSearch();
+                if (drawer && drawer.classList.contains('qh-mob-active')) closeDrawer();
+            }
+        });
+    })();
+    </script>
+    <!-- ==================== END MOBILE HEADER JS ==================== -->
+
     {% block extra_js %}{% endblock %}
+    </div><!-- #qhPageWrap -->
 </body>
 </html>

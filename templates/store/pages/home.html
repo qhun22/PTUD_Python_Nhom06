@@ -67,8 +67,6 @@
                     </video>
                     <div class="qh-hero-overlay">
                         <div class="qh-hero-text">
-                            <h2>IPHONE</h2>
-                            <p>Trải nghiệm công nghệ vượt trội</p>
                         </div>
                     </div>
                 </div>
@@ -79,8 +77,6 @@
                     </video>
                     <div class="qh-hero-overlay">
                         <div class="qh-hero-text">
-                            <h2>SAMSUNG</h2>
-                            <p>Camera siêu zoom 100x</p>
                         </div>
                     </div>
                 </div>
@@ -91,8 +87,6 @@
                     </video>
                     <div class="qh-hero-overlay">
                         <div class="qh-hero-text">
-                            <h2>XIAOMI</h2>
-                            <p>Snapdragon 8 Elite – Hiệu năng vượt xa</p>
                         </div>
                     </div>
                 </div>
@@ -103,8 +97,6 @@
                     </video>
                     <div class="qh-hero-overlay">
                         <div class="qh-hero-text">
-                            <h2>OPPO</h2>
-                            <p>Hệ thống camera Hasselblad</p>
                         </div>
                     </div>
                 </div>
@@ -434,8 +426,8 @@
     <div class="qh-advanced-filter-overlay" id="qhAdvancedFilterOverlay"></div>
     <aside class="qh-advanced-filter-drawer" id="qhAdvancedFilterDrawer" aria-hidden="true">
         <div class="qh-advanced-filter-head">
-            <h3>CHỌN THÔNG SỐ YÊU THÍCH</h3>
-            <button type="button" class="qh-advanced-filter-close" id="qhAdvancedFilterClose" aria-label="Đóng bộ lọc">×</button>
+            <h3><i class="ri-equalizer-line"></i>CHỌN THÔNG SỐ YÊU THÍCH</h3>
+            <button type="button" class="qh-advanced-filter-close" id="qhAdvancedFilterClose" aria-label="Đóng bộ lọc"><i class="ri-close-line"></i></button>
         </div>
         <div class="qh-advanced-filter-body" id="qhAdvancedFilterBody">
             <section class="qh-af-group" data-group="os" data-mode="multi">
@@ -540,8 +532,8 @@
             </section>
         </div>
         <div class="qh-advanced-filter-foot">
-            <button type="button" class="qh-filter-btn qh-filter-btn-reset" id="qhAdvancedFilterClear">Xóa lọc nâng cao</button>
-            <button type="button" class="qh-filter-btn qh-filter-btn-search" id="qhAdvancedFilterApply">Áp dụng bộ lọc</button>
+            <button type="button" class="qh-filter-btn qh-filter-btn-reset" id="qhAdvancedFilterClear"><i class="ri-delete-bin-line"></i> Xóa lọc nâng cao</button>
+            <button type="button" class="qh-filter-btn qh-filter-btn-search" id="qhAdvancedFilterApply"><i class="ri-check-line"></i> Áp dụng bộ lọc</button>
         </div>
     </aside>
 
@@ -1149,8 +1141,8 @@ function toggleWishlist(button, productId) {
         var nextBtn = document.getElementById(nextId);
         if (!track || !prevBtn || !nextBtn) return;
         var overflow = track.parentElement;
-        var VISIBLE = 5;
-        var GAP = 12;
+        var VISIBLE = window.innerWidth <= 768 ? 2 : 5;
+        var GAP = window.innerWidth <= 768 ? 8 : 12;
         var index = 0;
         function getCards() { return track.querySelectorAll('.qh-hotsale-card'); }
         function setCardWidths() {
@@ -1176,7 +1168,12 @@ function toggleWishlist(button, productId) {
         goTo(0);
         prevBtn.addEventListener('click', function() { goTo(index - 1); });
         nextBtn.addEventListener('click', function() { goTo(index + 1); });
-        window.addEventListener('resize', function() { setCardWidths(); goTo(index); });
+        window.addEventListener('resize', function() {
+            VISIBLE = window.innerWidth <= 768 ? 2 : 5;
+            GAP = window.innerWidth <= 768 ? 8 : 12;
+            setCardWidths();
+            goTo(index);
+        });
     }
 
     // ---- Gợi ý Slider (active by default) ----
@@ -1207,6 +1204,48 @@ function toggleWishlist(button, productId) {
             }
         });
     });
+
+    // ---- Review Slider: 3 visible desktop / 2 mobile, scroll 1 at a time ----
+    (function () {
+        var track = document.getElementById('qhReviewTrack');
+        var prevBtn = document.getElementById('qhReviewPrev');
+        var nextBtn = document.getElementById('qhReviewNext');
+        if (!track || !prevBtn || !nextBtn) return;
+        var overflow = track.parentElement;
+        var VISIBLE = window.innerWidth <= 768 ? 2 : (window.innerWidth <= 992 ? 3 : 5);
+        var GAP = window.innerWidth <= 768 ? 10 : 16;
+        var index = 0;
+        function getCards() { return track.querySelectorAll('.qh-review-card'); }
+        function setCardWidths() {
+            var w = overflow.offsetWidth;
+            var cardW = Math.floor((w - GAP * (VISIBLE - 1)) / VISIBLE);
+            getCards().forEach(function (c) {
+                c.style.flexBasis = cardW + 'px';
+                c.style.width = cardW + 'px';
+            });
+        }
+        function goTo(i) {
+            var total = getCards().length;
+            var maxIndex = Math.max(0, total - VISIBLE);
+            index = Math.min(Math.max(i, 0), maxIndex);
+            var w = overflow.offsetWidth;
+            var cardW = Math.floor((w - GAP * (VISIBLE - 1)) / VISIBLE);
+            var offset = index * (cardW + GAP);
+            track.style.transform = 'translateX(-' + offset + 'px)';
+            prevBtn.disabled = (index === 0);
+            nextBtn.disabled = (index >= maxIndex);
+        }
+        setCardWidths();
+        goTo(0);
+        prevBtn.addEventListener('click', function () { goTo(index - 1); });
+        nextBtn.addEventListener('click', function () { goTo(index + 1); });
+        window.addEventListener('resize', function () {
+            VISIBLE = window.innerWidth <= 768 ? 2 : (window.innerWidth <= 992 ? 3 : 5);
+            GAP = window.innerWidth <= 768 ? 10 : 16;
+            setCardWidths();
+            goTo(index);
+        });
+    })();
 
     // ---- Countdown 24h ----
     var endEl = document.getElementById('qhHotsaleCountdown');
@@ -1246,35 +1285,47 @@ function toggleWishlist(button, productId) {
         </div>
     </div>
     <div class="qh-review-inner">
-        <div class="qh-review-grid">
-            <div class="qh-review-card">
-                <div class="qh-review-video">
-                    <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/l-FBAfNRoCo" title="Redmi 9 Power Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+        <div class="qh-review-slider-wrap">
+            <!-- Nút điều hướng -->
+            <button type="button" class="qh-slider-nav qh-review-nav prev" id="qhReviewPrev" aria-label="Slide trước">
+                <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"/>
+                </svg>
+            </button>
+            <div class="qh-review-overflow">
+                <div class="qh-review-track" id="qhReviewTrack">
+                    <div class="qh-review-card">
+                        <div class="qh-review-video">
+                            <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/l-FBAfNRoCo" title="Redmi 9 Power Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <div class="qh-review-card">
+                        <div class="qh-review-video">
+                            <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/WoRySc2P4KM" title="Nothing Phone 3a Unboxing" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <div class="qh-review-card">
+                        <div class="qh-review-video">
+                            <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/Pc1P-Xch0YU" title="Review điện thoại Shorts" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <div class="qh-review-card">
+                        <div class="qh-review-video">
+                            <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/HCHKwLL5VQw" title="iPhone 13 vs Samsung A53" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                    </div>
+                    <div class="qh-review-card">
+                        <div class="qh-review-video">
+                            <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/hzz9qEh0W8g" title="Xiaomi 17 Pro Max Quick Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                        </div>
+                    </div>
                 </div>
-                {% comment %} <div class="qh-review-info">
-                    <h3 class="qh-review-product-name">Redmi 9 Power - Review pin trâu, giá rẻ</h3>
-                </div> {% endcomment %}
             </div>
-            <div class="qh-review-card">
-                <div class="qh-review-video">
-                    <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/WoRySc2P4KM" title="Nothing Phone 3a Unboxing" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                </div>
-            </div>
-            <div class="qh-review-card">
-                <div class="qh-review-video">
-                    <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/Pc1P-Xch0YU" title="Review điện thoại Shorts" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                </div>
-            </div>
-            <div class="qh-review-card">
-                <div class="qh-review-video">
-                    <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/HCHKwLL5VQw" title="iPhone 13 vs Samsung A53" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                </div>
-            </div>
-            <div class="qh-review-card">
-                <div class="qh-review-video">
-                    <iframe referrerpolicy="strict-origin-when-cross-origin" src="https://www.youtube-nocookie.com/embed/hzz9qEh0W8g" title="Xiaomi 17 Pro Max Quick Review" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
-                </div>
-            </div>
+            <button type="button" class="qh-slider-nav qh-review-nav next" id="qhReviewNext" aria-label="Slide sau">
+                <svg style="width:20px;height:20px" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"/>
+                </svg>
+            </button>
         </div>
     </div>
 </section>

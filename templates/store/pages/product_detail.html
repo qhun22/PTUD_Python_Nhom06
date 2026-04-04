@@ -161,6 +161,14 @@
                 </button>
             </div>
 
+            <!-- Nút yêu thích (chỉ hiện trên mobile) -->
+            <button class="pd-wishlist-mobile{% if product.id in wishlist_product_ids %} liked{% endif %}" id="pdWishlistMobile" onclick="togglePdWishlist(this)">
+                <svg viewBox="0 0 24 24" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/>
+                </svg>
+                <span id="pdWishlistText">{% if product.id in wishlist_product_ids %}Xóa yêu thích{% else %}Thêm yêu thích{% endif %}</span>
+            </button>
+
             <!-- Banner khuyến mãi -->
             {% if promo_banner %}
             <div class="pd-promo-banner">
@@ -176,11 +184,11 @@
         </div>
     </div>
 
-    <!-- Phần mô tả sản phẩm -->
+    {% comment %} <!-- Phần mô tả sản phẩm -->
     <div class="pd-spec-section" id="pdDescSection" style="display: none;">
         <h2 class="pd-spec-title">THÔNG TIN SẢN PHẨM</h2>
         <div id="pdDescContent" style="font-size: 14px; color: #334155; line-height: 1.7; white-space: pre-line;"></div>
-    </div>
+    </div> {% endcomment %}
 
     <!-- Video về sản phẩm & Cam kết sản phẩm -->
     {% if youtube_id %}
@@ -266,7 +274,7 @@
                 {% if must_login %}
                 <div class="pd-review-login-msg">
                     <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/></svg>
-                    Vui lòng <a href="{% url 'store:login' %}">đăng nhập</a> để đánh giá sản phẩm.
+                    Vui lòng <a href="{% url 'store:login' %}">Đăng nhập</a> để đánh giá sản phẩm.
                 </div>
                 {% elif user_review %}
                 <div class="pd-review-done-msg">
@@ -450,7 +458,7 @@
 <div class="pd-spec-overlay" id="pdContentOverlay" onclick="closeContentModal(event)">
     <div class="pd-spec-panel" id="pdContentPanel" onclick="event.stopPropagation()">
         <div class="pd-spec-panel-header">
-            <h2 class="pd-spec-panel-title">Thông tin sản phẩm</h2>
+            <h2 class="pd-spec-panel-title">THÔNG TIN SẢN PHẨM</h2>
             <button class="pd-spec-panel-close" onclick="closeContentModalBtn()">
                 <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
@@ -583,6 +591,46 @@ function updateWishlistBadge(count) {
     if (badge) {
         badge.textContent = count;
     }
+}
+
+function togglePdWishlist(button) {
+    fetch('{% url "store:wishlist_toggle" %}', {
+        method: 'POST',
+        headers: {'X-CSRFToken': '{{ csrf_token }}', 'Content-Type': 'application/x-www-form-urlencoded'},
+        body: 'product_id=' + productId
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            if (data.status === 'added' || data.is_liked) {
+                button.classList.add('liked');
+                document.getElementById('pdWishlistText').textContent = 'Xóa yêu thích';
+            } else {
+                button.classList.remove('liked');
+                document.getElementById('pdWishlistText').textContent = 'Thêm yêu thích';
+            }
+            updateWishlistBadge(data.total_wishlist);
+            if (window.QHToast) {
+                QHToast.show(
+                    (data.status === 'added' || data.is_liked) ? 'Đã thêm vào danh sách yêu thích' : 'Đã xóa khỏi danh sách yêu thích',
+                    'success'
+                );
+            }
+        } else if (data.require_login || (data.message && data.message.includes('đăng nhập'))) {
+            if (window.QHConfirm) {
+                QHConfirm.show(data.message + '. Bạn có muốn đăng nhập không?', function() {
+                    window.location.href = '{% url "store:login" %}';
+                });
+            } else if (confirm(data.message)) {
+                window.location.href = '{% url "store:login" %}';
+            }
+        } else {
+            if (window.QHToast) QHToast.show(data.message || 'Có lỗi xảy ra', 'error');
+        }
+    })
+    .catch(function() {
+        if (window.QHToast) QHToast.show('Có lỗi xảy ra', 'error');
+    });
 }
 
 function toggleWishlist(button, productId) {

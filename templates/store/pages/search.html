@@ -3,18 +3,10 @@
 {% load humanize %}
 {% load custom_filters %}
 
-{% if current_brand %}
-{% block title %}Điện Thoại {{ current_brand.name }} Chính Hãng Giá Tốt - QHUN22 Mobile{% endblock %}
-{% block meta_description %}Mua điện thoại {{ current_brand.name }} chính hãng tại QHUN22 Mobile. Tìm thấy {{ products.paginator.count }} sản phẩm. Giá tốt, trả góp 0%, bảo hành chính hãng.{% endblock %}
-{% block canonical %}{{ request.scheme }}://{{ request.get_host }}/products/search/?brand={{ current_brand.slug }}{% endblock %}
-{% elif query %}
-{% block title %}Tìm kiếm "{{ query }}" - QHUN22 Mobile{% endblock %}
-{% block meta_description %}Kết quả tìm kiếm "{{ query }}" tại QHUN22 Mobile. Tìm thấy {{ products.paginator.count }} sản phẩm điện thoại chính hãng.{% endblock %}
-{% block meta_robots %}noindex, follow{% endblock %}
-{% else %}
-{% block title %}Tìm Kiếm Điện Thoại - QHUN22 Mobile{% endblock %}
-{% block meta_robots %}noindex, follow{% endblock %}
-{% endif %}
+{% block title %}{% if current_brand %}Điện Thoại {{ current_brand.name }} Chính Hãng Giá Tốt - QHUN22 Mobile{% elif query %}Tìm kiếm "{{ query }}" - QHUN22 Mobile{% else %}Tìm Kiếm Điện Thoại - QHUN22 Mobile{% endif %}{% endblock %}
+{% block meta_description %}{% if current_brand %}Mua điện thoại {{ current_brand.name }} chính hãng tại QHUN22 Mobile. Tìm thấy {{ products.paginator.count }} sản phẩm. Giá tốt, trả góp 0%, bảo hành chính hãng.{% elif query %}Kết quả tìm kiếm "{{ query }}" tại QHUN22 Mobile. Tìm thấy {{ products.paginator.count }} sản phẩm điện thoại chính hãng.{% endif %}{% endblock %}
+{% block meta_robots %}{% if not current_brand %}noindex, follow{% endif %}{% endblock %}
+{% block canonical %}{% if current_brand %}{{ request.scheme }}://{{ request.get_host }}/products/search/?brand={{ current_brand.slug }}{% endif %}{% endblock %}
 
 {% block extra_css %}
 <link rel="stylesheet" href="{% static 'css/home.css' %}">
